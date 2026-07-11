@@ -19,6 +19,7 @@
     </div>
     <div class="controls">
       <span class="timestamp" id="timestamp"></span>
+      <button class="btn" id="auto-refresh" data-i18n="auto_refresh" data-i18n-title="auto_refresh_title"></button>
       <button class="btn" id="refresh" data-i18n="refresh"></button>
       <div class="lang-toggle" role="group" aria-label="Language">
         <button id="lang-de">DE</button>
@@ -42,16 +43,31 @@
   <section id="panel-warzones" class="hidden">
     <div class="section-title" data-i18n="sec_warzones"></div>
     <div class="warzones" id="warzones"></div>
+    <div class="section-title" data-i18n="sec_map"></div>
+    <div class="notice pre-table" data-i18n="map_hint"></div>
+    <div class="wz-maps" id="wz-maps"></div>
     <div class="section-title" data-i18n="sec_contested"></div>
+    <div class="toolbar">
+      <label for="wz-home" data-i18n="home_label"></label>
+      <input id="wz-home" type="text" list="wz-home-list" data-i18n-placeholder="home_placeholder" autocomplete="off">
+      <datalist id="wz-home-list"></datalist>
+      <label for="wz-filter" data-i18n="wz_filter_label"></label>
+      <select id="wz-filter"></select>
+      <label for="wz-sort" data-i18n="wz_sort_label"></label>
+      <select id="wz-sort"></select>
+    </div>
+    <div class="notice pre-table" data-i18n="advantage_note"></div>
     <table>
       <thead>
         <tr>
           <th data-i18n="th_system"></th>
-          <th data-i18n="th_warzone"></th>
+          <th data-i18n="th_region"></th>
           <th data-i18n="th_occupier"></th>
+          <th data-i18n="th_class"></th>
           <th data-i18n="th_status"></th>
           <th data-i18n="th_vp"></th>
-          <th></th>
+          <th data-i18n="th_kills1h"></th>
+          <th data-i18n="th_jumps"></th>
         </tr>
       </thead>
       <tbody id="contested-body"></tbody>
@@ -68,6 +84,7 @@
       <span class="mode-badge" id="lp-mode"></span>
     </div>
     <div class="notice pre-table" data-i18n="lp_note"></div>
+    <div class="notice pre-table hidden" id="lp-depth-note" data-i18n="lp_depth_note"></div>
     <table>
       <thead>
         <tr>
@@ -77,6 +94,7 @@
           <th data-i18n="th_isk_cost"></th>
           <th data-i18n="th_req"></th>
           <th data-i18n="th_value"></th>
+          <th data-i18n="th_depth"></th>
           <th data-i18n="th_isk_per_lp"></th>
         </tr>
       </thead>
@@ -129,9 +147,11 @@
 
 </div>
 
+<script src="js/data/staticdata.js"></script>
 <script src="js/config.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/esi.js"></script>
+<script src="js/fwlogic.js"></script>
 <script src="js/warzones.js"></script>
 <script src="js/lpstore.js"></script>
 <script src="js/jobs.js"></script>

@@ -268,6 +268,76 @@ td.rank { color: var(--muted); width: 32px; }
 .status-pill.hot { color: var(--danger); }
 .status-pill.dim { opacity: 0.6; }
 
+/* ---------- Warzone maps ---------- */
+.wz-maps { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 860px) { .wz-maps { grid-template-columns: 1fr; } }
+
+.map-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 14px 16px 8px;
+}
+.map-head {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.wz-map { width: 100%; height: auto; display: block; }
+.map-edges line { stroke: var(--line); stroke-width: 1; }
+.map-node { opacity: 0.92; cursor: default; }
+.map-node:hover { opacity: 1; }
+.map-ring {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.65);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 2;
+}
+.map-label {
+  fill: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+/* ---------- System role tags ---------- */
+.class-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 3px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.class-tag.class-frontline { border-color: var(--danger); color: var(--danger); }
+.class-tag.class-command { border-color: var(--caldari); color: var(--caldari); }
+
+.depth-thin { color: var(--danger); }
+
+/* ---------- Campaign objectives ---------- */
+.cmp-objectives { margin-top: 10px; }
+.cmp-objectives summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+}
+.cmp-objectives ul { margin: 8px 0 0 18px; font-size: 13px; }
+.cmp-objectives li { margin-bottom: 6px; }
+.obj-career {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-right: 6px;
+}
+.obj-reward { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; }
+
 /* ---------- Toolbar rows ---------- */
 .toolbar {
   display: flex;
@@ -285,7 +355,8 @@ td.rank { color: var(--muted); width: 32px; }
 .btn.active-mode { border-color: var(--caldari); color: var(--caldari); }
 .btn:disabled { opacity: 0.5; cursor: wait; }
 
-.toolbar select {
+.toolbar select,
+.toolbar input[type="text"] {
   background: var(--panel-2);
   border: 1px solid var(--line);
   border-radius: 4px;
@@ -293,6 +364,11 @@ td.rank { color: var(--muted); width: 32px; }
   font-family: var(--font-mono);
   font-size: 13px;
   padding: 6px 10px;
+}
+.toolbar input[type="text"] { width: 150px; }
+.toolbar input[type="text"]:focus-visible {
+  outline: 2px solid var(--caldari);
+  outline-offset: 2px;
 }
 
 /* ---------- Freelance jobs ---------- */

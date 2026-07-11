@@ -12,6 +12,7 @@ const App = (() => {
 
   let activeTab = "warzones";
   const loaded = new Set();
+  let autoTimer = null;
 
   const $ = (id) => document.getElementById(id);
 
@@ -62,6 +63,18 @@ const App = (() => {
     for (const tabId of loaded) TABS[tabId].view.render();
   }
 
+  function setAutoRefresh(on) {
+    localStorage.setItem("tow_auto_refresh", on ? "1" : "0");
+    $("auto-refresh").classList.toggle("active-mode", on);
+    if (autoTimer) clearInterval(autoTimer);
+    autoTimer = on
+      ? setInterval(() => {
+          loaded.delete(activeTab);
+          runTab(activeTab, true);
+        }, CONFIG.AUTO_REFRESH_MS)
+      : null;
+  }
+
   function init() {
     for (const tabId of Object.keys(TABS)) {
       $("tab-" + tabId).addEventListener("click", () => runTab(tabId));
@@ -70,6 +83,10 @@ const App = (() => {
       loaded.delete(activeTab);
       runTab(activeTab, true);
     });
+    $("auto-refresh").addEventListener("click", () => {
+      setAutoRefresh(!autoTimer);
+    });
+    setAutoRefresh(localStorage.getItem("tow_auto_refresh") === "1");
     $("lang-de").addEventListener("click", () => { LANG = "de"; rerenderAll(); });
     $("lang-en").addEventListener("click", () => { LANG = "en"; rerenderAll(); });
     $("jobs-more").addEventListener("click", () => JobsView.loadMore());

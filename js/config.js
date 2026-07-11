@@ -10,7 +10,8 @@ const CONFIG = {
   JITA_REGION: 10000002,
   JITA_STATION: 60003760,
   MARKET_CONCURRENCY: 4,
-  JOBS_PAGE_LIMIT: 50
+  JOBS_PAGE_LIMIT: 50,
+  AUTO_REFRESH_MS: 5 * 60 * 1000
 };
 
 const FACTIONS = {
@@ -35,61 +36,7 @@ function warzoneOf(factionId) {
 }
 
 /*
- * Static campaign data (Cradle of War, June 2026).
- * The 2026-06-09 ESI spec exposes no route for Military Campaign progress;
- * this block is maintained manually until such a route exists.
+ * Campaign content comes from the SDE via js/data/staticdata.js
+ * (see tools/build_static_data.py). ESI exposes no route for live
+ * campaign progress.
  */
-const CAMPAIGNS = [
-  {
-    faction: 500001,
-    name: "The State Corridor Initiative",
-    nameConfirmed: true,
-    desc: {
-      de: "Die Caldari wollen ihre direkten Stargate-Routen stärken: Bau eines Stargates von Black Rise nach Syndicate.",
-      en: "The Caldari aim to strengthen their direct stargate routes: construction of a stargate from Black Rise to Syndicate."
-    },
-    goal: {
-      de: "Ziel: Neue Stargate-Verbindung Black Rise → Syndicate.",
-      en: "Goal: New stargate connection Black Rise → Syndicate."
-    }
-  },
-  {
-    faction: 500002,
-    name: "The Starkmanir Restoration",
-    nameConfirmed: true,
-    desc: {
-      de: "Aufruf an die Minmatar-Stämme, die Souveränität über Arzad und Ezzara zurückzuerobern.",
-      en: "A rallying cry for the Minmatar tribes to reclaim sovereignty of Arzad and Ezzara."
-    },
-    goal: {
-      de: "Ziel: Rückeroberung von Arzad & Ezzara, Phased Fields im Minmatar-Highsec.",
-      en: "Goal: Reclaim Arzad & Ezzara, reveal Phased Fields in Minmatar highsec."
-    }
-  },
-  {
-    faction: 500003,
-    name: null,
-    nameConfirmed: false,
-    desc: {
-      de: "Amarr-Kampagne rund um eine Station: Bei Erfolg werden Steuern und Brokergebühren an dieser Station deutlich gesenkt.",
-      en: "Amarr campaign centered on a station: on success, taxes and brokerage fees at that station will be significantly reduced."
-    },
-    goal: {
-      de: "Ziel: Reduzierte Steuern und Brokergebühren.",
-      en: "Goal: Reduced taxes and brokerage fees."
-    }
-  },
-  {
-    faction: 500004,
-    name: "Operation Rogue Edge",
-    nameConfirmed: true,
-    desc: {
-      de: "Die Gallente wollen Rogue-Drone-Technologie für ihre Militärlogistik nutzbar machen.",
-      en: "The Gallente aim to master Rogue Drone technologies to strengthen their military logistics."
-    },
-    goal: {
-      de: "Ziel: Route Dodixie–Intaki auf 6 Jumps verkürzen, Low-Waste-Variante der Excavator-Drohne.",
-      en: "Goal: Shorten the Dodixie–Intaki route to 6 jumps, develop a low-waste Excavator drone variant."
-    }
-  }
-];

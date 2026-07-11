@@ -39,17 +39,22 @@ const LpStoreView = (() => {
       type_id: typeId,
       order_type: "all"
     });
-    let buy = 0;
+    const buys = [];
     let sell = 0;
     for (const o of orders) {
       if (o.location_id !== CONFIG.JITA_STATION) continue;
       if (o.is_buy_order) {
-        if (o.price > buy) buy = o.price;
+        buys.push(o);
       } else {
         if (sell === 0 || o.price < sell) sell = o.price;
       }
     }
-    jitaMap.set(typeId, { buy, sell });
+    const buy = buys.reduce((max, o) => Math.max(max, o.price), 0);
+    /* Executable depth: units sellable into buy orders within 5% of best. */
+    const buyDepth = buys
+      .filter(o => o.price >= buy * 0.95)
+      .reduce((sum, o) => sum + (o.volume_remain || 0), 0);
+    jitaMap.set(typeId, { buy, sell, buyDepth });
   }
 
   async function fetchJitaBatch(typeIds) {
@@ -85,14 +90,18 @@ const LpStoreView = (() => {
         const reqCost = (o.required_items || [])
           .reduce((sum, r) => sum + materialPrice(r.type_id) * r.quantity, 0);
         const net = value - (o.isk_cost || 0) - reqCost;
-        return { ...o, value, reqCost, net, iskPerLp: net / o.lp_cost };
+        const depth = useJita ? (jitaMap.get(o.type_id)?.buyDepth ?? null) : null;
+        return { ...o, value, reqCost, net, iskPerLp: net / o.lp_cost, depth };
       })
       .filter(r => r.value > 0)
       .sort((a, b) => b.iskPerLp - a.iskPerLp);
   }
 
   function currentRows() {
-    const offers = offerCache.get(currentCorp) || [];
+    let offers = offerCache.get(currentCorp) || [];
+    /* In Jita mode only the shortlist was repriced; ranking items that
+       still carry average prices against it would skew the list. */
+    if (jitaMode) offers = offers.filter(o => jitaMap.has(o.type_id));
     const rows = evaluate(offers, jitaMode);
     return rows.slice(0, jitaMode ? CONFIG.LP_JITA_ROWS : CONFIG.LP_ROWS);
   }
@@ -175,9 +184,11 @@ const LpStoreView = (() => {
     const body = document.getElementById("lp-body");
     body.innerHTML = "";
 
+    document.getElementById("lp-depth-note").classList.toggle("hidden", !jitaMode);
+
     const rows = currentRows();
     if (rows.length === 0) {
-      body.innerHTML = `<tr><td colspan="7" class="status-pill">${t("lp_none")}</td></tr>`;
+      body.innerHTML = `<tr><td colspan="8" class="status-pill">${t("lp_none")}</td></tr>`;
       return;
     }
 
@@ -185,6 +196,10 @@ const LpStoreView = (() => {
       const req = (r.required_items || [])
         .map(x => `${fmtNum(x.quantity)}× ${esc(ESI.name(x.type_id))}`)
         .join(", ") || t("req_none");
+      const thin = r.depth !== null && r.depth < r.quantity;
+      const depthCell = r.depth === null
+        ? "—"
+        : `<span class="${thin ? "depth-thin" : ""}" title="${thin ? t("lp_thin") : ""}">${fmtNum(r.depth)}</span>`;
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${esc(ESI.name(r.type_id))}</td>
@@ -193,6 +208,7 @@ const LpStoreView = (() => {
         <td class="mono">${fmtIsk(r.isk_cost)}</td>
         <td class="req">${req}</td>
         <td class="mono">${fmtIsk(r.value)}</td>
+        <td class="mono">${depthCell}</td>
         <td class="mono strong">${fmtNum(Math.round(r.iskPerLp))}</td>
       `;
       body.appendChild(tr);
