@@ -24,11 +24,11 @@ opening `index.html` directly via `file://` — ESI allows any origin
 
 | Tab            | Data source                                        | Notes                                        |
 |----------------|----------------------------------------------------|----------------------------------------------|
-| Warzones       | `/fw/systems`, `/fw/stats`                         | Front bars, faction stats, contested table   |
-| LP store       | `/loyalty/stores/{corp}/offers`, `/markets/prices`, `/markets/{region}/orders` | ISK/LP ranking; optional Jita 4-4 order-book refinement |
+| Warzones       | `/fw/systems`, `/fw/stats`, `/universe/system_kills`, `/universe/system_jumps` + SDE | Front bars, SVG warzone maps, frontline/command/rearguard roles, kills last hour, jump distance from a home system |
+| LP store       | `/loyalty/stores/{corp}/offers`, `/markets/prices`, `/markets/{region}/orders` | ISK/LP ranking; Jita 4-4 order-book refinement with executable buy depth |
 | Freelance jobs | `/freelance-jobs`, `/freelance-jobs/{id}`          | Public jobs board, cursor pagination         |
 | Leaderboards   | `/fw/leaderboards/characters`, `/corporations`     | Top 10 by kills and VP (yesterday)           |
-| Campaigns      | static (`js/config.js`)                            | No ESI route for campaign progress exists    |
+| Campaigns      | SDE (`js/data/staticdata.js`)                      | Official titles/objectives; no ESI route for live progress |
 
 All requests are pinned to compatibility date `2026-06-09`
 (see `CONFIG.COMPAT_DATE` in `js/config.js`).
@@ -39,18 +39,27 @@ Plain scripts, loaded in order, no modules — this keeps `file://` usage
 working without a dev server.
 
 ```
-index.html          shell, tab navigation, panels
-serve.py            local dev server (http://localhost:8080)
-css/app.css         design system (ops-console theme, empire colors)
-js/config.js        constants, factions, militia corps, static campaigns
-js/i18n.js          DE/EN strings, formatting helpers, HTML escaping
-js/esi.js           fetch helpers, /universe/names cache
-js/warzones.js      warzones view
-js/lpstore.js       LP store view (avg + Jita pricing)
-js/jobs.js          freelance jobs view
-js/boards.js        leaderboards view
-js/campaigns.js     campaigns view
-js/app.js           tab router, loading/error states, bootstrap
+index.html               shell, tab navigation, panels
+serve.py                 local dev server (http://localhost:8080)
+css/app.css              design system (ops-console theme, empire colors)
+js/data/staticdata.js    generated: gate graph, names, FW systems, campaigns
+js/config.js             constants, factions, militia corps
+js/i18n.js               DE/EN strings, formatting helpers, HTML escaping
+js/esi.js                fetch helpers, /universe/names cache
+js/fwlogic.js            frontline classification, BFS jumps, system search
+js/warzones.js           warzones view (cards, SVG maps, systems table)
+js/lpstore.js            LP store view (avg + Jita pricing, buy depth)
+js/jobs.js               freelance jobs view
+js/boards.js             leaderboards view
+js/campaigns.js          campaigns view (SDE data)
+js/app.js                tab router, auto refresh, error states, bootstrap
+tools/build_static_data.py  regenerates js/data/staticdata.js from an SDE zip
+```
+
+Regenerate the static data after an SDE release:
+
+```
+python tools/build_static_data.py path/to/eve-online-static-data-<build>-jsonl.zip
 ```
 
 Each view exposes `load()` (async data fetch) and `render()`. The router in
@@ -62,13 +71,17 @@ and corporation names) are HTML-escaped before rendering.
 ## Known limitations
 
 - Default LP valuation uses ESI average prices (`/markets/prices`).
-  The "Load Jita prices" button refines the top offers with the live Jita 4-4
-  order book (highest buy for the product, lowest sell for materials),
-  fetched with a concurrency limit of 4 to respect ESI rate limits.
+  The "Load Jita prices" button reprices the top offers with the live Jita
+  4-4 order book (highest buy for the product, lowest sell for materials,
+  buy depth within 5% of best price), fetched with a concurrency limit of 4
+  to respect ESI rate limits. In Jita mode only repriced offers are ranked.
+- The Advantage value is not exposed by ESI
+  (open since 2022: github.com/esi/esi-issues/issues/1335). Frontline /
+  Command Ops / Rearguard roles are computed from occupancy + stargate
+  adjacency instead.
 - Military Campaign progress is not exposed by ESI (verified against the
-  2026-06-09 OpenAPI spec, 203 paths). The Campaigns tab is static data,
-  maintained in `js/config.js`.
-- The Amarr campaign name is unconfirmed and rendered as such.
+  2026-06-09 OpenAPI spec, 203 paths). Campaign content comes from the SDE.
+- Jump distances use the shortest gate route and ignore security status.
 - No persistence. Front-line history needs polling over time (see roadmap).
 
 ## Roadmap
