@@ -285,10 +285,43 @@ td.rank { color: var(--muted); width: 32px; }
   color: var(--muted);
   margin-bottom: 6px;
 }
-.wz-map { width: 100%; height: auto; display: block; }
-.map-edges line { stroke: var(--line); stroke-width: 1; }
+.map-frame { position: relative; }
+.wz-map {
+  width: 100%;
+  height: auto;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+.wz-map.panning { cursor: grabbing; }
+.map-edges line { stroke: var(--line); stroke-width: calc(1px * var(--fk, 1)); }
 .map-node { opacity: 0.92; cursor: default; }
 .map-node:hover { opacity: 1; }
+.map-label-minor { display: none; }
+.wz-map.zoomed .map-label-minor { display: block; }
+.map-ring { stroke-width: calc(1.5px * var(--fk, 1)); }
+
+.map-controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.map-controls button {
+  width: 26px;
+  height: 26px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.map-controls button:hover { border-color: var(--muted); }
 .map-ring {
   fill: none;
   stroke: rgba(255, 255, 255, 0.65);
@@ -298,7 +331,7 @@ td.rank { color: var(--muted); width: 32px; }
 .map-label {
   fill: var(--muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: calc(10px * var(--fk, 1));
   text-anchor: middle;
   pointer-events: none;
 }

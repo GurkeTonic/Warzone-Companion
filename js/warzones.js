@@ -187,7 +187,7 @@ const WarzonesView = (() => {
       const r = 4 + 8 * Math.sqrt(k / maxKills);
       const contested = s.contested !== "uncontested";
       const ring = contested
-        ? `<circle cx="${px(id).toFixed(1)}" cy="${py(id).toFixed(1)}" r="${(r + 3).toFixed(1)}" class="map-ring"/>`
+        ? `<circle cx="${px(id).toFixed(1)}" cy="${py(id).toFixed(1)}" r="${(r + 3).toFixed(1)}" data-r="${(r + 3).toFixed(1)}" class="map-ring"/>`
         : "";
       const cls = classes.get(id) || "rearguard";
       const jmp = jumps?.get(id);
@@ -201,12 +201,14 @@ const WarzonesView = (() => {
         adv && adv.occ !== null ? `${t("th_adv")}: ${adv.occ}:${adv.enemy}` : null,
         jmp !== undefined && jmp !== null ? `${t("th_jumps")}: ${jmp}` : null
       ].filter(Boolean).join(" · ");
-      return `${ring}<circle cx="${px(id).toFixed(1)}" cy="${py(id).toFixed(1)}" r="${r.toFixed(1)}" fill="${fac.color}" class="map-node"><title>${esc(tip)}</title></circle>`;
+      return `${ring}<circle cx="${px(id).toFixed(1)}" cy="${py(id).toFixed(1)}" r="${r.toFixed(1)}" data-r="${r.toFixed(1)}" fill="${fac.color}" class="map-node"><title>${esc(tip)}</title></circle>`;
     }).join("");
 
     const labels = ids
-      .filter(id => (classes.get(id) === "frontline") || (kills.get(id) || 0) > maxKills * 0.5)
-      .map(id => `<text x="${px(id).toFixed(1)}" y="${(py(id) - 12).toFixed(1)}" class="map-label">${esc(sysName(id))}</text>`)
+      .map(id => {
+        const major = (classes.get(id) === "frontline") || (kills.get(id) || 0) > maxKills * 0.5;
+        return `<text x="${px(id).toFixed(1)}" y="${(py(id) - 12).toFixed(1)}" class="map-label${major ? "" : " map-label-minor"}">${esc(sysName(id))}</text>`;
+      })
       .join("");
 
     const facA = factionOf(wz.a);
@@ -217,17 +219,100 @@ const WarzonesView = (() => {
           <span style="color:${facA.color}">${facA.name}</span> vs
           <span style="color:${facB.color}">${facB.name}</span>
         </div>
-        <svg viewBox="0 0 ${MAP_W} ${MAP_H}" class="wz-map" role="img">
-          <g class="map-edges">${edges.join("")}</g>
-          ${nodes}
-          ${labels}
-        </svg>
+        <div class="map-frame">
+          <svg viewBox="0 0 ${MAP_W} ${MAP_H}" class="wz-map" role="img">
+            <g class="map-edges">${edges.join("")}</g>
+            ${nodes}
+            ${labels}
+          </svg>
+          <div class="map-controls">
+            <button type="button" data-zoom="in" title="${t("map_zoom_in")}">+</button>
+            <button type="button" data-zoom="out" title="${t("map_zoom_out")}">−</button>
+            <button type="button" data-zoom="reset" title="${t("map_zoom_reset")}">⌂</button>
+          </div>
+        </div>
       </div>
     `;
   }
 
+  /* Pan/zoom via viewBox: wheel zooms toward the cursor, drag pans,
+     double click or the home button resets. Zoomed in, all labels show. */
+  function bindMapInteractions(svg) {
+    const base = { x: 0, y: 0, w: MAP_W, h: MAP_H };
+    let vb = { ...base };
+    const MIN_W = MAP_W / 10;
+
+    function apply() {
+      svg.setAttribute("viewBox", `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+      svg.classList.toggle("zoomed", base.w / vb.w >= 2);
+      /* Counter-scale nodes, labels, and edges (damped via sqrt) so zooming
+         magnifies distances, not symbols. */
+      const f = Math.min(1, Math.max(0.3, Math.sqrt(vb.w / base.w)));
+      svg.style.setProperty("--fk", f);
+      svg.querySelectorAll("circle[data-r]").forEach(c => {
+        c.setAttribute("r", (Number(c.dataset.r) * f).toFixed(2));
+      });
+    }
+
+    function toSvgPoint(evt) {
+      const r = svg.getBoundingClientRect();
+      return {
+        x: vb.x + ((evt.clientX - r.left) / r.width) * vb.w,
+        y: vb.y + ((evt.clientY - r.top) / r.height) * vb.h
+      };
+    }
+
+    function zoomAt(factor, cx, cy) {
+      const w = Math.min(base.w, Math.max(MIN_W, vb.w * factor));
+      const scale = w / vb.w;
+      vb = {
+        x: cx - (cx - vb.x) * scale,
+        y: cy - (cy - vb.y) * scale,
+        w,
+        h: vb.h * scale
+      };
+      if (w >= base.w) vb = { ...base };
+      apply();
+    }
+
+    svg.addEventListener("wheel", e => {
+      e.preventDefault();
+      const p = toSvgPoint(e);
+      zoomAt(e.deltaY < 0 ? 0.75 : 1 / 0.75, p.x, p.y);
+    }, { passive: false });
+
+    let drag = null;
+    svg.addEventListener("pointerdown", e => {
+      drag = { px: e.clientX, py: e.clientY, vx: vb.x, vy: vb.y };
+      svg.setPointerCapture(e.pointerId);
+      svg.classList.add("panning");
+    });
+    svg.addEventListener("pointermove", e => {
+      if (!drag) return;
+      const r = svg.getBoundingClientRect();
+      vb.x = drag.vx - ((e.clientX - drag.px) / r.width) * vb.w;
+      vb.y = drag.vy - ((e.clientY - drag.py) / r.height) * vb.h;
+      apply();
+    });
+    const endDrag = () => { drag = null; svg.classList.remove("panning"); };
+    svg.addEventListener("pointerup", endDrag);
+    svg.addEventListener("pointercancel", endDrag);
+
+    svg.addEventListener("dblclick", () => { vb = { ...base }; apply(); });
+
+    svg.parentElement.querySelectorAll(".map-controls button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const mode = btn.dataset.zoom;
+        if (mode === "reset") { vb = { ...base }; apply(); return; }
+        zoomAt(mode === "in" ? 0.75 : 1 / 0.75, vb.x + vb.w / 2, vb.y + vb.h / 2);
+      });
+    });
+  }
+
   function renderMaps() {
-    document.getElementById("wz-maps").innerHTML = WARZONES.map(renderMap).join("");
+    const container = document.getElementById("wz-maps");
+    container.innerHTML = WARZONES.map(renderMap).join("");
+    container.querySelectorAll(".wz-map").forEach(bindMapInteractions);
   }
 
   /* ---------- systems table ---------- */
