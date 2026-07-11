@@ -4,11 +4,13 @@
 const App = (() => {
   const TABS = {
     warzones:  { view: WarzonesView,  panel: "panel-warzones" },
+    map:       { view: MapView,       panel: "panel-map" },
     history:   { view: HistoryView,   panel: "panel-history" },
     lp:        { view: LpStoreView,   panel: "panel-lp" },
     jobs:      { view: JobsView,      panel: "panel-jobs" },
     boards:    { view: BoardsView,    panel: "panel-boards" },
-    campaigns: { view: CampaignsView, panel: "panel-campaigns" }
+    campaigns: { view: CampaignsView, panel: "panel-campaigns" },
+    faq:       { view: FaqView,       panel: "panel-faq" }
   };
 
   let activeTab = "warzones";

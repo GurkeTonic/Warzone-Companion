@@ -28,11 +28,13 @@
 
   <nav>
     <button id="tab-warzones" data-i18n="tab_warzones"></button>
+    <button id="tab-map" data-i18n="tab_map"></button>
     <button id="tab-history" data-i18n="tab_history"></button>
     <button id="tab-lp" data-i18n="tab_lp"></button>
     <button id="tab-jobs" data-i18n="tab_jobs"></button>
     <button id="tab-boards" data-i18n="tab_boards"></button>
     <button id="tab-campaigns" data-i18n="tab_campaigns"></button>
+    <button id="tab-faq" data-i18n="tab_faq"></button>
   </nav>
 
   <div class="loading hidden" id="loading" data-i18n="loading"></div>
@@ -42,9 +44,6 @@
   <section id="panel-warzones" class="hidden">
     <div class="section-title" data-i18n="sec_warzones"></div>
     <div class="warzones" id="warzones"></div>
-    <div class="section-title" data-i18n="sec_map"></div>
-    <div class="notice pre-table" data-i18n="map_hint"></div>
-    <div class="wz-maps" id="wz-maps"></div>
     <div class="section-title" data-i18n="sec_contested"></div>
     <div class="toolbar">
       <label for="wz-home" data-i18n="home_label"></label>
@@ -55,7 +54,6 @@
       <label for="wz-sort" data-i18n="wz_sort_label"></label>
       <select id="wz-sort"></select>
     </div>
-    <div class="notice pre-table" data-i18n="advantage_note"></div>
     <table>
       <thead>
         <tr>
@@ -75,6 +73,12 @@
     </table>
   </section>
 
+  <!-- Map -->
+  <section id="panel-map" class="hidden">
+    <div class="section-title" data-i18n="sec_map"></div>
+    <div class="wz-maps" id="wz-maps"></div>
+  </section>
+
   <!-- History -->
   <section id="panel-history" class="hidden">
     <div class="section-title" data-i18n="sec_history"></div>
@@ -84,7 +88,6 @@
       <button class="btn" data-days="30" data-i18n="hist_range_30"></button>
       <button class="btn" data-days="90" data-i18n="hist_range_90"></button>
     </div>
-    <div class="notice pre-table" data-i18n="hist_note"></div>
     <div class="hist-charts" id="hist-charts"></div>
     <div class="section-title" data-i18n="sec_flips"></div>
     <table>
@@ -109,8 +112,6 @@
       <button class="btn" id="lp-jita"></button>
       <span class="mode-badge" id="lp-mode"></span>
     </div>
-    <div class="notice pre-table" data-i18n="lp_note"></div>
-    <div class="notice pre-table hidden" id="lp-depth-note" data-i18n="lp_depth_note"></div>
     <table>
       <thead>
         <tr>
@@ -135,7 +136,6 @@
       <label for="jobs-state" data-i18n="jobs_filter_state"></label>
       <select id="jobs-state"></select>
     </div>
-    <div class="notice pre-table" data-i18n="jobs_note"></div>
     <table>
       <thead>
         <tr>
@@ -162,7 +162,12 @@
   <section id="panel-campaigns" class="hidden">
     <div class="section-title" data-i18n="sec_campaigns"></div>
     <div class="campaigns" id="campaigns"></div>
-    <div class="notice" data-i18n="campaign_notice"></div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="panel-faq" class="hidden">
+    <div class="section-title" data-i18n="sec_faq"></div>
+    <div class="faq" id="faq"></div>
   </section>
 
   <footer>
@@ -185,6 +190,7 @@
 <script src="js/jobs.js"></script>
 <script src="js/boards.js"></script>
 <script src="js/campaigns.js"></script>
+<script src="js/faq.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

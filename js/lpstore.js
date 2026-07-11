@@ -184,8 +184,6 @@ const LpStoreView = (() => {
     const body = document.getElementById("lp-body");
     body.innerHTML = "";
 
-    document.getElementById("lp-depth-note").classList.toggle("hidden", !jitaMode);
-
     const rows = currentRows();
     if (rows.length === 0) {
       body.innerHTML = `<tr><td colspan="8" class="status-pill">${t("lp_none")}</td></tr>`;

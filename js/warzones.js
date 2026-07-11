@@ -1,8 +1,9 @@
-/* Warzones view: front bars, faction stats, SVG maps, systems table.
+/* Warzones view (front bars, faction stats, systems table) and Map view
+   (SVG warzone maps). Both share one data load.
    Depends on config.js, i18n.js, esi.js, fwlogic.js (SDATA). */
 "use strict";
 
-const WarzonesView = (() => {
+const [WarzonesView, MapView] = (() => {
   let data = null;         // { systems, stats }
   let occupier = null;     // system_id -> occupier_faction_id
   let classes = null;      // system_id -> frontline | command | rearguard
@@ -87,7 +88,12 @@ const WarzonesView = (() => {
     return Number.isFinite(stored) && stored > 0 ? stored : null;
   }
 
+  /* Shared by the Warzones and Map tabs; a short reuse window avoids
+     double-fetching when both tabs are opened back to back. */
+  let loadedAt = 0;
+
   async function load() {
+    if (data && Date.now() - loadedAt < 60 * 1000) return;
     const [systems, stats, killRows, jumpRows] = await Promise.all([
       ESI.get("/fw/systems"),
       ESI.get("/fw/stats"),
@@ -97,6 +103,7 @@ const WarzonesView = (() => {
       loadHistory()
     ]);
     data = { systems, stats };
+    loadedAt = Date.now();
     occupier = new Map(systems.map(s => [s.solar_system_id, s.occupier_faction_id]));
     classes = FwLogic.classify(occupier);
     kills = new Map(killRows.map(k => [k.system_id, (k.ship_kills || 0) + (k.pod_kills || 0)]));
@@ -539,9 +546,16 @@ const WarzonesView = (() => {
   function render() {
     if (!data) return;
     renderCards();
-    renderMaps();
     renderTable();
   }
 
-  return { load, render };
+  function renderMapTab() {
+    if (!data) return;
+    renderMaps();
+  }
+
+  return [
+    { load, render },
+    { load, render: renderMapTab }
+  ];
 })();

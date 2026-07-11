@@ -12,8 +12,10 @@ requests except ESI.
 
 | Tab            | What it does |
 |----------------|--------------|
-| Warzones       | Interactive warzone maps (zoom/pan), frontline / command ops / rearguard roles, Advantage per system, contested status with VP progress and 24h trend, kills last hour, jump distance from your home system |
-| History        | Systems held and pilots per militia over time (48h–90 days), rendered from the mirrored snapshot archive |
+| Warzones       | Front bars, faction stats, systems table: frontline / command ops / rearguard roles, Advantage, contested status with VP progress and 24h trend, kills last hour, jump distance from your home system |
+| Map            | Interactive warzone maps: uniform system nodes with name codes, occupier colors, contested/vulnerable rings, activity glow, zoom/pan |
+| History        | Systems held and pilots per militia over time (48h–90 days) plus a system flip log, from the mirrored snapshot archive |
+| FAQ            | Explains data sources, mechanics (roles, Advantage), and how to read each tab (DE/EN) |
 | LP store       | ISK/LP ranking per militia corporation; optional Jita 4-4 order-book repricing with executable buy depth |
 | Freelance jobs | Public jobs board with details on click |
 | Leaderboards   | Top 10 characters and corporations by kills and victory points (yesterday) |
