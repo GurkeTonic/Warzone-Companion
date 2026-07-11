@@ -156,9 +156,14 @@ const WarzonesView = (() => {
     const minY = Math.min(...ys), maxY = Math.max(...ys);
     const spanX = maxX - minX || 1;
     const spanY = maxY - minY || 1;
-    const px = id => MAP_PAD + ((SDATA.fw[id].x - minX) / spanX) * (MAP_W - 2 * MAP_PAD);
-    /* SDE 2D y grows northward; SVG y grows downward — flip. */
-    const py = id => MAP_H - MAP_PAD - ((SDATA.fw[id].y - minY) / spanY) * (MAP_H - 2 * MAP_PAD);
+    /* Uniform scale + centering: independent axis scaling would distort the
+       geography (developers.eveonline.com/docs/guides/map-data). */
+    const scale = Math.min((MAP_W - 2 * MAP_PAD) / spanX, (MAP_H - 2 * MAP_PAD) / spanY);
+    const offX = (MAP_W - spanX * scale) / 2;
+    const offY = (MAP_H - spanY * scale) / 2;
+    const px = id => offX + (SDATA.fw[id].x - minX) * scale;
+    /* SDE 2D y grows northward; SVG y grows downward — flip (y_img = -y_eve). */
+    const py = id => MAP_H - offY - (SDATA.fw[id].y - minY) * scale;
 
     const inZone = new Set(ids);
     const edges = [];
