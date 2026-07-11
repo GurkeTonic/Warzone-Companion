@@ -67,6 +67,8 @@ from the APIs are HTML-escaped before rendering; ESI rate limits (HTTP
 
 ## Legal
 
-EVE Online and all related trademarks are the property of CCP hf. /
-Fenris Creations. This is an unofficial fan project and is not affiliated
-with or endorsed by the rights holder.
+© CCP hf. All rights reserved. "EVE", "EVE Online", "CCP", and all related
+logos and images are trademarks or registered trademarks of CCP hf.
+
+This material is used with limited permission of CCP Games. No official
+affiliation or endorsement by CCP Games is stated or implied.
