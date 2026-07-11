@@ -3,7 +3,7 @@
 
 const I18N = {
   de: {
-    subtitle: "Live-Frontverlauf, LP-Optimierung, Freelance Jobs und Military Campaigns",
+    subtitle: "Factional-Warfare-Begleiter für EVE Online — Live-Frontverlauf, LP-Optimierung, Freelance Jobs und Military Campaigns",
     refresh: "Aktualisieren",
     loading: "Lade Daten von ESI ...",
     err_prefix: "ESI-Abruf fehlgeschlagen: ",
@@ -118,7 +118,7 @@ const I18N = {
     ts_label: "Stand"
   },
   en: {
-    subtitle: "Live front lines, LP optimization, freelance jobs, and Military Campaigns",
+    subtitle: "Factional Warfare companion for EVE Online — live front lines, LP optimization, freelance jobs, and Military Campaigns",
     refresh: "Refresh",
     loading: "Loading data from ESI ...",
     err_prefix: "ESI request failed: ",

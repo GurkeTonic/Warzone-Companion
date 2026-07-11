@@ -1,4 +1,4 @@
-# Theatres of War — Warzone Companion
+# Warzone Companion
 
 Web companion for EVE Online Factional Warfare and Military Campaigns.
 Runs entirely client-side against public ESI endpoints. No build step, no

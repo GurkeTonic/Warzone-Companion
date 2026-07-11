@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Development server for the Theatres of War companion.
+"""Development server for the Warzone Companion.
 
 Serves the project directory at http://localhost:8080 with caching disabled,
 so edited files are always reloaded. Stop with Ctrl+C.
