@@ -36,8 +36,6 @@ requests except ESI.
   python tools/build_static_data.py path/to/eve-online-static-data-<build>-jsonl.zip
   ```
 
-- `CNAME` binds the custom domain for GitHub Pages — do not remove.
-
 ## Architecture
 
 Plain scripts in a fixed load order, no framework, no build step, no
