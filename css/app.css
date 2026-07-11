@@ -313,8 +313,7 @@ td.rank { color: var(--muted); width: 32px; }
 .status-pill.dim { opacity: 0.6; }
 
 /* ---------- Warzone maps ---------- */
-.wz-maps { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-@media (max-width: 860px) { .wz-maps { grid-template-columns: 1fr; } }
+.wz-maps { display: grid; grid-template-columns: 1fr; gap: 20px; }
 
 .map-card {
   background: var(--panel);
@@ -339,11 +338,27 @@ td.rank { color: var(--muted); width: 32px; }
 }
 .wz-map.panning { cursor: grabbing; }
 .map-edges line { stroke: var(--line); stroke-width: calc(1px * var(--fk, 1)); }
-.map-node { opacity: 0.92; cursor: default; }
-.map-node:hover { opacity: 1; }
+.map-node {
+  opacity: 0.95;
+  cursor: default;
+  stroke: var(--bg);
+  stroke-width: calc(1.5px * var(--fk, 1));
+}
+.map-sys:hover .map-node { opacity: 1; stroke: var(--text); }
+.map-node.contested { stroke: rgba(255, 255, 255, 0.85); stroke-width: calc(2px * var(--fk, 1)); }
+.map-node.vulnerable { stroke: var(--danger); stroke-width: calc(2.5px * var(--fk, 1)); }
+.map-halo { opacity: 0.18; pointer-events: none; }
+.map-code {
+  fill: var(--bg);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: calc(8.5px * var(--fk, 1));
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
 .map-label-minor { display: none; }
 .wz-map.zoomed .map-label-minor { display: block; }
-.map-ring { stroke-width: calc(1.5px * var(--fk, 1)); }
 
 .map-controls {
   position: absolute;
@@ -366,12 +381,6 @@ td.rank { color: var(--muted); width: 32px; }
   cursor: pointer;
 }
 .map-controls button:hover { border-color: var(--muted); }
-.map-ring {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.65);
-  stroke-width: 1.5;
-  stroke-dasharray: 3 2;
-}
 .map-label {
   fill: var(--muted);
   font-family: var(--font-mono);

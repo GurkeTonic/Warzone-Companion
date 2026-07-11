@@ -116,6 +116,39 @@ const HistoryView = (() => {
     });
   }
 
+  function renderFlips() {
+    const body = document.getElementById("flips-body");
+    const cutoff = Date.now() / 1000 - rangeDays * 86400;
+    const flips = (data?.flips || [])
+      .filter(f => f.t >= cutoff)
+      .sort((a, b) => b.t - a.t)
+      .slice(0, 100);
+
+    if (flips.length === 0) {
+      body.innerHTML = `<tr><td colspan="4" class="status-pill">${t("flips_none")}</td></tr>`;
+      return;
+    }
+
+    const loc = LANG === "de" ? "de-DE" : "en-US";
+    body.innerHTML = flips.map(f => {
+      const from = factionOf(f.from);
+      const to = factionOf(f.to);
+      const when = new Date(f.t * 1000).toLocaleString(loc, {
+        day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"
+      });
+      const name = SDATA.fw[f.id]?.n ?? SDATA.names[f.id] ?? String(f.id);
+      const region = SDATA.fw[f.id]?.r ?? "?";
+      return `
+        <tr>
+          <td class="mono">${when}</td>
+          <td>${esc(name)}<span class="sub">${esc(region)}</span></td>
+          <td><span class="fac-tag" style="color:${from.color};border-color:${from.color}">${from.name}</span></td>
+          <td><span class="fac-tag" style="color:${to.color};border-color:${to.color}">${to.name}</span></td>
+        </tr>
+      `;
+    }).join("");
+  }
+
   function bindControls() {
     if (controlsBound) return;
     controlsBound = true;
@@ -132,6 +165,8 @@ const HistoryView = (() => {
     document.querySelectorAll("#hist-range button").forEach(btn => {
       btn.classList.toggle("active-mode", Number(btn.dataset.days) === rangeDays);
     });
+
+    renderFlips();
 
     const container = document.getElementById("hist-charts");
     const entries = data ? inRange(data.factions) : [];

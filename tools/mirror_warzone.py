@@ -14,6 +14,9 @@ every 30 minutes; works locally too. Produces:
                        * systems: occupier and contested permille for
                          systems with victory points (kept for
                          SYSTEM_WINDOW_HOURS, feeds the 24h trend column)
+                       * occ: last known occupier of every system
+                       * flips: occupier changes between runs
+                         (kept for HISTORY_DAYS)
 
 Git history of these files doubles as a full, publicly auditable archive.
 """
@@ -94,10 +97,12 @@ def load_history():
         try:
             h = json.loads(HISTORY_PATH.read_text(encoding="utf-8"))
             if isinstance(h.get("factions"), list) and isinstance(h.get("systems"), list):
+                h.setdefault("occ", {})
+                h.setdefault("flips", [])
                 return h
         except (OSError, ValueError):
             pass
-    return {"factions": [], "systems": []}
+    return {"factions": [], "systems": [], "occ": {}, "flips": []}
 
 
 def append_history(now_epoch, fw_systems, fw_stats):
@@ -123,10 +128,25 @@ def append_history(now_epoch, fw_systems, fw_stats):
     history["factions"].append({"t": now_epoch, "f": fac_snapshot})
     history["systems"].append({"t": now_epoch, "s": sys_snapshot})
 
+    # Flip detection: occupier changed since the previous run.
+    prev_occ = history.get("occ", {})
+    new_occ = {
+        str(s["solar_system_id"]): s.get("occupier_faction_id")
+        for s in fw_systems
+        if s.get("occupier_faction_id") in EMPIRES
+    }
+    for sid, occ in new_occ.items():
+        old = prev_occ.get(sid)
+        if old is not None and old != occ:
+            history["flips"].append({"t": now_epoch, "id": int(sid), "from": old, "to": occ})
+            print(f"flip: {sid} {old} -> {occ}")
+    history["occ"] = new_occ
+
     fac_cutoff = now_epoch - HISTORY_DAYS * 86400
     sys_cutoff = now_epoch - SYSTEM_WINDOW_HOURS * 3600
     history["factions"] = [e for e in history["factions"] if e["t"] >= fac_cutoff]
     history["systems"] = [e for e in history["systems"] if e["t"] >= sys_cutoff]
+    history["flips"] = [e for e in history["flips"] if e["t"] >= fac_cutoff]
 
     HISTORY_PATH.write_text(
         json.dumps(history, separators=(",", ":")) + "\n",

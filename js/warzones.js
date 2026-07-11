@@ -186,9 +186,43 @@ const WarzonesView = (() => {
 
   /* ---------- SVG warzone maps ---------- */
 
-  const MAP_W = 640;
-  const MAP_H = 420;
-  const MAP_PAD = 30;
+  const MAP_W = 960;
+  const MAP_H = 540;
+  const MAP_PAD = 36;
+  const NODE_R = 10;
+  const NODE_GAP = 25;
+
+  /* Push overlapping nodes apart so every system stays readable at base
+     zoom. Small, symmetric displacements — geography stays recognizable. */
+  function relaxPositions(pos, ids, minDist) {
+    for (let iter = 0; iter < 60; iter++) {
+      let moved = false;
+      for (let i = 0; i < ids.length; i++) {
+        for (let j = i + 1; j < ids.length; j++) {
+          const a = pos.get(ids[i]);
+          const b = pos.get(ids[j]);
+          let dx = b.x - a.x;
+          let dy = b.y - a.y;
+          let d = Math.hypot(dx, dy);
+          if (d < 0.01) { dx = 1; dy = 0; d = 1; }
+          if (d < minDist) {
+            const push = (minDist - d) / 2;
+            a.x -= (dx / d) * push;
+            a.y -= (dy / d) * push;
+            b.x += (dx / d) * push;
+            b.y += (dy / d) * push;
+            moved = true;
+          }
+        }
+      }
+      if (!moved) break;
+    }
+    for (const id of ids) {
+      const p = pos.get(id);
+      p.x = Math.min(MAP_W - MAP_PAD, Math.max(MAP_PAD, p.x));
+      p.y = Math.min(MAP_H - MAP_PAD, Math.max(MAP_PAD, p.y));
+    }
+  }
 
   function renderMap(wz) {
     const ids = data.systems
@@ -208,9 +242,14 @@ const WarzonesView = (() => {
     const scale = Math.min((MAP_W - 2 * MAP_PAD) / spanX, (MAP_H - 2 * MAP_PAD) / spanY);
     const offX = (MAP_W - spanX * scale) / 2;
     const offY = (MAP_H - spanY * scale) / 2;
-    const px = id => offX + (SDATA.fw[id].x - minX) * scale;
     /* SDE 2D y grows northward; SVG y grows downward — flip (y_img = -y_eve). */
-    const py = id => MAP_H - offY - (SDATA.fw[id].y - minY) * scale;
+    const pos = new Map(ids.map(id => [id, {
+      x: offX + (SDATA.fw[id].x - minX) * scale,
+      y: MAP_H - offY - (SDATA.fw[id].y - minY) * scale
+    }]));
+    relaxPositions(pos, ids, NODE_GAP);
+    const px = id => pos.get(id).x;
+    const py = id => pos.get(id).y;
 
     const inZone = new Set(ids);
     const edges = [];
@@ -231,11 +270,14 @@ const WarzonesView = (() => {
       const s = byId.get(id);
       const fac = factionOf(s.occupier_faction_id);
       const k = kills.get(id) || 0;
-      const r = 4 + 8 * Math.sqrt(k / maxKills);
-      const contested = s.contested !== "uncontested";
-      const ring = contested
-        ? `<circle cx="${px(id).toFixed(1)}" cy="${py(id).toFixed(1)}" r="${(r + 3).toFixed(1)}" data-r="${(r + 3).toFixed(1)}" class="map-ring"/>`
+      const x = px(id).toFixed(1);
+      const y = py(id).toFixed(1);
+      /* Activity as a soft halo behind the node, not as node size. */
+      const halo = k > 0
+        ? `<circle cx="${x}" cy="${y}" r="${(NODE_R + 3 + 14 * Math.sqrt(k / maxKills)).toFixed(1)}" fill="${fac.color}" class="map-halo"/>`
         : "";
+      const state = s.contested === "vulnerable" ? " vulnerable"
+        : s.contested !== "uncontested" ? " contested" : "";
       const cls = classes.get(id) || "rearguard";
       const jmp = jumps?.get(id);
       const adv = advantage?.get(id);
@@ -243,19 +285,21 @@ const WarzonesView = (() => {
         sysName(id),
         sysRegion(id),
         t("class_" + cls),
-        t("status_" + s.contested) + (contested ? ` ${pct(s).toFixed(1)}%` : ""),
+        t("status_" + s.contested) + (state ? ` ${pct(s).toFixed(1)}%` : ""),
         `${t("th_kills1h")}: ${k}`,
         adv && adv.occ !== null ? `${t("th_adv")}: ${adv.occ}:${adv.enemy}` : null,
         jmp !== undefined && jmp !== null ? `${t("th_jumps")}: ${jmp}` : null
       ].filter(Boolean).join(" · ");
-      return `${ring}<circle cx="${px(id).toFixed(1)}" cy="${py(id).toFixed(1)}" r="${r.toFixed(1)}" data-r="${r.toFixed(1)}" fill="${fac.color}" class="map-node"><title>${esc(tip)}</title></circle>`;
+      const code = sysName(id).slice(0, 2);
+      return `${halo}<g class="map-sys">
+        <circle cx="${x}" cy="${y}" r="${NODE_R}" data-r="${NODE_R}" fill="${fac.color}" class="map-node${state}"><title>${esc(tip)}</title></circle>
+        <text x="${x}" y="${y}" class="map-code">${esc(code)}</text>
+      </g>`;
     }).join("");
 
+    /* Full names appear once zoomed in (map-label-minor is zoom-gated). */
     const labels = ids
-      .map(id => {
-        const major = (classes.get(id) === "frontline") || (kills.get(id) || 0) > maxKills * 0.5;
-        return `<text x="${px(id).toFixed(1)}" y="${(py(id) - 12).toFixed(1)}" class="map-label${major ? "" : " map-label-minor"}">${esc(sysName(id))}</text>`;
-      })
+      .map(id => `<text x="${px(id).toFixed(1)}" y="${(py(id) + NODE_R + 9).toFixed(1)}" class="map-label map-label-minor">${esc(sysName(id))}</text>`)
       .join("");
 
     const facA = factionOf(wz.a);
