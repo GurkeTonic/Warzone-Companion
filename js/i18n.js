@@ -178,6 +178,13 @@ function fmtIsk(n) {
   return v.toLocaleString(loc, { maximumFractionDigits: 0 });
 }
 
+/* Escape untrusted strings (player-authored names, descriptions) for innerHTML. */
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+  }[ch]));
+}
+
 function applyI18n() {
   document.querySelectorAll("[data-i18n]").forEach(el => {
     el.textContent = t(el.dataset.i18n);

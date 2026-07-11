@@ -61,14 +61,14 @@ const JobsView = (() => {
       : "—";
     tr.innerHTML = `
       <td colspan="4">
-        ${d.error ? `<span class="status-pill hot">${d.error}</span>` : `
+        ${d.error ? `<span class="status-pill hot">${esc(d.error)}</span>` : `
         <div class="detail-grid">
-          <div><span class="dlabel">${t("job_career")}</span> ${d.details?.career ?? "—"}</div>
+          <div><span class="dlabel">${t("job_career")}</span> ${esc(d.details?.career ?? "—")}</div>
           <div><span class="dlabel">${t("job_expires")}</span> ${expires}</div>
-          <div><span class="dlabel">${t("job_creator")}</span> ${creatorName ?? "—"}</div>
+          <div><span class="dlabel">${t("job_creator")}</span> ${esc(creatorName ?? "—")}</div>
           <div><span class="dlabel">${t("job_reward_contrib")}</span> ${fmtIsk(d.contribution?.reward_per_contribution)} ISK</div>
         </div>
-        <p class="job-desc">${d.details?.description || t("job_desc_missing")}</p>
+        <p class="job-desc">${esc(d.details?.description) || t("job_desc_missing")}</p>
         `}
       </td>
     `;
@@ -106,13 +106,13 @@ const JobsView = (() => {
       const tr = document.createElement("tr");
       tr.className = "job-row";
       tr.innerHTML = `
-        <td>${j.name || j.id}</td>
+        <td>${esc(j.name || j.id)}</td>
         <td>
           <div class="vp-bar"><div class="fill" style="width:${pct.toFixed(1)}%;background:var(--caldari)"></div></div>
           <span class="mono sub">${fmtNum(cur)} / ${fmtNum(des)}</span>
         </td>
         <td class="mono">${fmtIsk(j.reward?.remaining)} ISK</td>
-        <td><span class="status-pill${j.state === "Active" ? "" : " dim"}">${j.state}</span></td>
+        <td><span class="status-pill${j.state === "Active" ? "" : " dim"}">${esc(j.state)}</span></td>
       `;
       tr.addEventListener("click", () => toggleDetail(tr, j.id));
       body.appendChild(tr);

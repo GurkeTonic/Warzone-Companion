@@ -34,7 +34,7 @@ const WarzonesView = (() => {
       const segs = wzSystems.map(s => {
         const fac = factionOf(s.occupier_faction_id);
         const flag = s.contested !== "uncontested" ? " contested-flag" : "";
-        return `<div class="seg${flag}" style="background:${fac.color}" title="${ESI.name(s.solar_system_id)}"></div>`;
+        return `<div class="seg${flag}" style="background:${fac.color}" title="${esc(ESI.name(s.solar_system_id))}"></div>`;
       }).join("");
 
       const card = document.createElement("div");
@@ -110,7 +110,7 @@ const WarzonesView = (() => {
       const hot = s.contested === "vulnerable" ? " hot" : "";
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${ESI.name(s.solar_system_id)}</td>
+        <td>${esc(ESI.name(s.solar_system_id))}</td>
         <td class="mono">${wzLabel}</td>
         <td><span class="fac-tag" style="color:${fac.color};border-color:${fac.color}">${fac.name}</span></td>
         <td><span class="status-pill${hot}">${t("status_" + s.contested)}</span></td>

@@ -183,11 +183,11 @@ const LpStoreView = (() => {
 
     for (const r of rows) {
       const req = (r.required_items || [])
-        .map(x => `${fmtNum(x.quantity)}× ${ESI.name(x.type_id)}`)
+        .map(x => `${fmtNum(x.quantity)}× ${esc(ESI.name(x.type_id))}`)
         .join(", ") || t("req_none");
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${ESI.name(r.type_id)}</td>
+        <td>${esc(ESI.name(r.type_id))}</td>
         <td class="mono">${fmtNum(r.quantity)}</td>
         <td class="mono">${fmtNum(r.lp_cost)}</td>
         <td class="mono">${fmtIsk(r.isk_cost)}</td>

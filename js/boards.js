@@ -27,7 +27,7 @@ const BoardsView = (() => {
     const rows = (entries || []).slice(0, 10).map((e, i) => `
       <tr>
         <td class="mono rank">${i + 1}</td>
-        <td>${ESI.name(e[idKey])}</td>
+        <td>${esc(ESI.name(e[idKey]))}</td>
         <td class="mono">${fmtNum(e.amount)}</td>
       </tr>
     `).join("");
