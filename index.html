@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Theatres of War — Warzone Companion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <h1>Theatres of War <span>/ Warzone Companion</span></h1>
+      <p data-i18n="subtitle"></p>
+    </div>
+    <div class="controls">
+      <span class="timestamp" id="timestamp"></span>
+      <button class="btn" id="refresh" data-i18n="refresh"></button>
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button id="lang-de">DE</button>
+        <button id="lang-en">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <nav>
+    <button id="tab-warzones" data-i18n="tab_warzones"></button>
+    <button id="tab-lp" data-i18n="tab_lp"></button>
+    <button id="tab-jobs" data-i18n="tab_jobs"></button>
+    <button id="tab-boards" data-i18n="tab_boards"></button>
+    <button id="tab-campaigns" data-i18n="tab_campaigns"></button>
+  </nav>
+
+  <div class="loading hidden" id="loading" data-i18n="loading"></div>
+  <div class="error-box hidden" id="error"></div>
+
+  <!-- Warzones -->
+  <section id="panel-warzones" class="hidden">
+    <div class="section-title" data-i18n="sec_warzones"></div>
+    <div class="warzones" id="warzones"></div>
+    <div class="section-title" data-i18n="sec_contested"></div>
+    <table>
+      <thead>
+        <tr>
+          <th data-i18n="th_system"></th>
+          <th data-i18n="th_warzone"></th>
+          <th data-i18n="th_occupier"></th>
+          <th data-i18n="th_status"></th>
+          <th data-i18n="th_vp"></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="contested-body"></tbody>
+    </table>
+  </section>
+
+  <!-- LP store -->
+  <section id="panel-lp" class="hidden">
+    <div class="section-title" data-i18n="sec_lp"></div>
+    <div class="toolbar">
+      <label for="lp-corp" data-i18n="lp_militia"></label>
+      <select id="lp-corp"></select>
+      <button class="btn" id="lp-jita"></button>
+      <span class="mode-badge" id="lp-mode"></span>
+    </div>
+    <div class="notice pre-table" data-i18n="lp_note"></div>
+    <table>
+      <thead>
+        <tr>
+          <th data-i18n="th_item"></th>
+          <th data-i18n="th_qty"></th>
+          <th data-i18n="th_lp"></th>
+          <th data-i18n="th_isk_cost"></th>
+          <th data-i18n="th_req"></th>
+          <th data-i18n="th_value"></th>
+          <th data-i18n="th_isk_per_lp"></th>
+        </tr>
+      </thead>
+      <tbody id="lp-body"></tbody>
+    </table>
+  </section>
+
+  <!-- Freelance jobs -->
+  <section id="panel-jobs" class="hidden">
+    <div class="section-title" data-i18n="sec_jobs"></div>
+    <div class="toolbar">
+      <label for="jobs-state" data-i18n="jobs_filter_state"></label>
+      <select id="jobs-state"></select>
+    </div>
+    <div class="notice pre-table" data-i18n="jobs_note"></div>
+    <table>
+      <thead>
+        <tr>
+          <th data-i18n="th_job"></th>
+          <th data-i18n="th_progress"></th>
+          <th data-i18n="th_reward_rem"></th>
+          <th data-i18n="th_state"></th>
+        </tr>
+      </thead>
+      <tbody id="jobs-body"></tbody>
+    </table>
+    <div class="load-more-row">
+      <button class="btn hidden" id="jobs-more" data-i18n="jobs_more"></button>
+    </div>
+  </section>
+
+  <!-- Leaderboards -->
+  <section id="panel-boards" class="hidden">
+    <div class="section-title" data-i18n="sec_boards"></div>
+    <div class="boards" id="boards"></div>
+  </section>
+
+  <!-- Campaigns -->
+  <section id="panel-campaigns" class="hidden">
+    <div class="section-title" data-i18n="sec_campaigns"></div>
+    <div class="campaigns" id="campaigns"></div>
+    <div class="notice" data-i18n="campaign_notice"></div>
+  </section>
+
+  <footer>
+    <div data-i18n="footer_source"></div>
+    <div>EVE Online and all related trademarks are the property of CCP hf. / Fenris Creations. This is an unofficial fan project and is not affiliated with or endorsed by the rights holder.</div>
+    <div class="mono">v0.3 — local development build</div>
+  </footer>
+
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/esi.js"></script>
+<script src="js/warzones.js"></script>
+<script src="js/lpstore.js"></script>
+<script src="js/jobs.js"></script>
+<script src="js/boards.js"></script>
+<script src="js/campaigns.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

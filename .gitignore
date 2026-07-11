@@ -1,0 +1,11 @@
+# Python tooling
+__pycache__/
+*.pyc
+
+# Local data (front-line history poller)
+history.db
+history.db-journal
+
+# OS noise
+.DS_Store
+Thumbs.db
