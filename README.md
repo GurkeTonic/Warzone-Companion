@@ -1,21 +1,24 @@
 # Theatres of War — Warzone Companion
 
-Local web application for EVE Online Factional Warfare and Military Campaigns.
+Web companion for EVE Online Factional Warfare and Military Campaigns.
 Runs entirely client-side against public ESI endpoints. No build step, no
 backend, no dependencies.
 
-## Run
+Live: https://gurketonic.github.io/Warzone-Companion/ (GitHub Pages, served
+straight from `main`).
+
+## Run locally
 
 ```
-python3 serve.py
+python serve.py
 ```
 
-Opens http://localhost:8080 automatically (caching disabled, edits are
-picked up on reload). Stop with Ctrl+C.
+(`py serve.py` also works; on Linux/macOS use `python3`.) Opens
+http://localhost:8080 automatically, caching disabled, stop with Ctrl+C.
 
-Alternatives: `python3 -m http.server 8080` in the project directory, or
-opening `index.html` directly via `file://` — both work, `serve.py` is just
-the most convenient for development.
+Alternatives: `python -m http.server 8080` in the project directory, or
+opening `index.html` directly via `file://` — ESI allows any origin
+(`Access-Control-Allow-Origin: *`), so both work.
 
 ## Features
 
@@ -40,7 +43,7 @@ index.html          shell, tab navigation, panels
 serve.py            local dev server (http://localhost:8080)
 css/app.css         design system (ops-console theme, empire colors)
 js/config.js        constants, factions, militia corps, static campaigns
-js/i18n.js          DE/EN strings, formatting helpers
+js/i18n.js          DE/EN strings, formatting helpers, HTML escaping
 js/esi.js           fetch helpers, /universe/names cache
 js/warzones.js      warzones view
 js/lpstore.js       LP store view (avg + Jita pricing)
@@ -52,7 +55,9 @@ js/app.js           tab router, loading/error states, bootstrap
 
 Each view exposes `load()` (async data fetch) and `render()`. The router in
 `app.js` lazy-loads a tab on first open and caches it; Refresh re-fetches the
-active tab.
+active tab. HTTP 420/429 (ESI rate limit) is reported in the UI with a
+dedicated hint. Player-authored strings (job names, descriptions, character
+and corporation names) are HTML-escaped before rendering.
 
 ## Known limitations
 
@@ -64,12 +69,15 @@ active tab.
   2026-06-09 OpenAPI spec, 203 paths). The Campaigns tab is static data,
   maintained in `js/config.js`.
 - The Amarr campaign name is unconfirmed and rendered as such.
-- No persistence. Historical tracking requires a polling backend (planned).
+- No persistence. Front-line history needs polling over time (see roadmap).
 
 ## Roadmap
 
-1. Polling backend + database for front-line history over time.
-2. EVE SSO login for personal stats: achievements, LP wallet, standings
+1. Front-line history: local poller (`poller.py`, stdlib + SQLite) writing
+   snapshots of `/fw/systems` and `/fw/stats`, visualized in a History tab.
+   Local-first; a GitHub Actions poller with static JSON snapshots may later
+   make the history available on the hosted site.
+2. EVE SSO login (PKCE) for personal stats
    (`/characters/{id}/fw/stats`, `/characters/{id}/loyalty/points`).
 3. Campaign progress, as soon as ESI exposes a route. Until then: manual
    updates in `js/config.js`, or a feature request via esi-issues.
