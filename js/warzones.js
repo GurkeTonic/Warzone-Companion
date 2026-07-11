@@ -10,6 +10,7 @@ const WarzonesView = (() => {
   let traffic = new Map(); // system_id -> ship jumps last hour
   let jumps = null;        // system_id -> gate jumps from home (or null)
   let advantage = null;    // system_id -> { occ, enemy } or null when unavailable
+  let histSystems = null;  // per-system snapshots from data/history.json
   let filterMode = "contested";
   let sortMode = "vp";
   let controlsBound = false;
@@ -50,6 +51,37 @@ const WarzonesView = (() => {
     } catch { /* no advantage source available */ }
   }
 
+  /* Per-system history window (49 h) for the 24 h contested trend. */
+  async function loadHistory() {
+    histSystems = null;
+    try {
+      const res = await fetch("data/history.json", { cache: "no-cache" });
+      if (!res.ok) return;
+      const history = await res.json();
+      if (Array.isArray(history.systems)) histSystems = history.systems;
+    } catch { /* trend column stays empty */ }
+  }
+
+  /*
+   * Contested-% change vs ~24 h ago. Snapshots only include systems with
+   * victory points, so a missing entry means 0%. Returns null without a
+   * usable snapshot, or "flip" when the occupier changed in between.
+   */
+  function delta24h(id, currentPct, currentOcc) {
+    if (!histSystems || histSystems.length === 0) return null;
+    const target = Date.now() / 1000 - 24 * 3600;
+    let best = null;
+    for (const e of histSystems) {
+      if (best === null || Math.abs(e.t - target) < Math.abs(best.t - target)) best = e;
+    }
+    if (Math.abs(best.t - target) > 3 * 3600) return null;
+    const entry = best.s?.[String(id)];
+    const oldPct = entry ? entry[1] / 10 : 0;
+    const oldOcc = entry ? entry[0] : currentOcc;
+    if (oldOcc !== currentOcc) return "flip";
+    return currentPct - oldPct;
+  }
+
   function homeId() {
     const stored = Number(localStorage.getItem("tow_home_id"));
     return Number.isFinite(stored) && stored > 0 ? stored : null;
@@ -61,7 +93,8 @@ const WarzonesView = (() => {
       ESI.get("/fw/stats"),
       ESI.get("/universe/system_kills"),
       ESI.get("/universe/system_jumps"),
-      loadAdvantage()
+      loadAdvantage(),
+      loadHistory()
     ]);
     data = { systems, stats };
     occupier = new Map(systems.map(s => [s.solar_system_id, s.occupier_faction_id]));
@@ -375,15 +408,21 @@ const WarzonesView = (() => {
     if (filterMode === "contested") rows = rows.filter(s => s.contested !== "uncontested");
     if (filterMode === "frontline") rows = rows.filter(s => classes.get(s.solar_system_id) === "frontline");
 
-    const withMeta = rows.map(s => ({
-      s,
-      pct: pct(s),
-      kills: kills.get(s.solar_system_id) || 0,
-      jmp: jumps?.get(s.solar_system_id) ?? null
-    }));
+    const withMeta = rows.map(s => {
+      const p = pct(s);
+      return {
+        s,
+        pct: p,
+        kills: kills.get(s.solar_system_id) || 0,
+        jmp: jumps?.get(s.solar_system_id) ?? null,
+        delta: delta24h(s.solar_system_id, p, s.occupier_faction_id)
+      };
+    });
 
+    const deltaRank = d => d === "flip" ? 1e9 : (typeof d === "number" ? Math.abs(d) : -1);
     if (sortMode === "kills") withMeta.sort((a, b) => b.kills - a.kills || b.pct - a.pct);
     else if (sortMode === "jumps") withMeta.sort((a, b) => (a.jmp ?? 9e9) - (b.jmp ?? 9e9) || b.pct - a.pct);
+    else if (sortMode === "delta") withMeta.sort((a, b) => deltaRank(b.delta) - deltaRank(a.delta) || b.pct - a.pct);
     else withMeta.sort((a, b) => b.pct - a.pct || b.kills - a.kills);
 
     return withMeta.slice(0, filterMode === "all" ? 160 : CONFIG.CONTESTED_ROWS);
@@ -397,6 +436,7 @@ const WarzonesView = (() => {
     ], filterMode);
     fillSelect("wz-sort", [
       ["vp", t("wz_sort_vp")],
+      ["delta", t("wz_sort_delta")],
       ["kills", t("wz_sort_kills")],
       ["jumps", t("wz_sort_jumps")]
     ], sortMode);
@@ -407,11 +447,11 @@ const WarzonesView = (() => {
 
     const rows = visibleRows();
     if (rows.length === 0) {
-      body.innerHTML = `<tr><td colspan="9" class="status-pill">${t("contested_none")}</td></tr>`;
+      body.innerHTML = `<tr><td colspan="10" class="status-pill">${t("contested_none")}</td></tr>`;
       return;
     }
 
-    for (const { s, pct: p, kills: k, jmp } of rows) {
+    for (const { s, pct: p, kills: k, jmp, delta } of rows) {
       const id = s.solar_system_id;
       const fac = factionOf(s.occupier_faction_id);
       const cls = classes.get(id) || "rearguard";
@@ -421,6 +461,15 @@ const WarzonesView = (() => {
       const advCell = adv && adv.occ !== null
         ? `<span title="${t("adv_tip")}">${adv.occ}&thinsp;:&thinsp;${adv.enemy}</span>`
         : "—";
+      let deltaCell = "—";
+      if (delta === "flip") {
+        deltaCell = `<span class="delta-flip">${t("delta_flip")}</span>`;
+      } else if (typeof delta === "number" && Math.abs(delta) >= 0.05) {
+        const cls = delta > 0 ? "delta-up" : "delta-down";
+        deltaCell = `<span class="${cls}">${delta > 0 ? "+" : "−"}${Math.abs(delta).toFixed(1)}%</span>`;
+      } else if (typeof delta === "number") {
+        deltaCell = "±0";
+      }
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${esc(sysName(id))}</td>
@@ -434,6 +483,7 @@ const WarzonesView = (() => {
           </div>
           <span class="mono sub">${p.toFixed(1)}%</span>
         </td>
+        <td class="mono">${deltaCell}</td>
         <td class="mono">${advCell}</td>
         <td class="mono${k > 0 ? " strong" : ""}">${fmtNum(k)}</td>
         <td class="mono">${jmp === null || jmp === undefined ? "—" : jmp}</td>

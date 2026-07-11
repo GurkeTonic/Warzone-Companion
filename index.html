@@ -28,6 +28,7 @@
 
   <nav>
     <button id="tab-warzones" data-i18n="tab_warzones"></button>
+    <button id="tab-history" data-i18n="tab_history"></button>
     <button id="tab-lp" data-i18n="tab_lp"></button>
     <button id="tab-jobs" data-i18n="tab_jobs"></button>
     <button id="tab-boards" data-i18n="tab_boards"></button>
@@ -64,6 +65,7 @@
           <th data-i18n="th_class"></th>
           <th data-i18n="th_status"></th>
           <th data-i18n="th_vp"></th>
+          <th data-i18n="th_delta"></th>
           <th data-i18n="th_adv"></th>
           <th data-i18n="th_kills1h"></th>
           <th data-i18n="th_jumps"></th>
@@ -71,6 +73,19 @@
       </thead>
       <tbody id="contested-body"></tbody>
     </table>
+  </section>
+
+  <!-- History -->
+  <section id="panel-history" class="hidden">
+    <div class="section-title" data-i18n="sec_history"></div>
+    <div class="toolbar" id="hist-range">
+      <button class="btn" data-days="2" data-i18n="hist_range_2"></button>
+      <button class="btn" data-days="7" data-i18n="hist_range_7"></button>
+      <button class="btn" data-days="30" data-i18n="hist_range_30"></button>
+      <button class="btn" data-days="90" data-i18n="hist_range_90"></button>
+    </div>
+    <div class="notice pre-table" data-i18n="hist_note"></div>
+    <div class="hist-charts" id="hist-charts"></div>
   </section>
 
   <!-- LP store -->
@@ -153,6 +168,7 @@
 <script src="js/esi.js"></script>
 <script src="js/fwlogic.js"></script>
 <script src="js/warzones.js"></script>
+<script src="js/history.js"></script>
 <script src="js/lpstore.js"></script>
 <script src="js/jobs.js"></script>
 <script src="js/boards.js"></script>

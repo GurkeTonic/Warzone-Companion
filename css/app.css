@@ -395,6 +395,56 @@ td.rank { color: var(--muted); width: 32px; }
 
 .depth-thin { color: var(--danger); }
 
+/* ---------- Contested trend column ---------- */
+.delta-up { color: var(--danger); }
+.delta-down { color: var(--gallente); }
+.delta-flip {
+  color: var(--amarr);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+/* ---------- History charts ---------- */
+.hist-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 860px) { .hist-charts { grid-template-columns: 1fr; } }
+
+.chart-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 14px 16px;
+}
+.chart { width: 100%; height: auto; display: block; }
+.chart .grid { stroke: var(--line); stroke-width: 0.5; }
+.chart .line { fill: none; stroke-width: 1.8; }
+.chart .ytick {
+  fill: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-anchor: end;
+  dominant-baseline: middle;
+}
+.chart .xtick {
+  fill: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-anchor: middle;
+}
+.chart-legend {
+  display: flex;
+  gap: 18px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.chart-legend .dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  margin-right: 6px;
+}
+
 /* ---------- Campaign objectives ---------- */
 .cmp-objectives { margin-top: 10px; }
 .cmp-objectives summary {

@@ -4,6 +4,7 @@
 const App = (() => {
   const TABS = {
     warzones:  { view: WarzonesView,  panel: "panel-warzones" },
+    history:   { view: HistoryView,   panel: "panel-history" },
     lp:        { view: LpStoreView,   panel: "panel-lp" },
     jobs:      { view: JobsView,      panel: "panel-jobs" },
     boards:    { view: BoardsView,    panel: "panel-boards" },

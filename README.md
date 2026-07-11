@@ -12,7 +12,8 @@ requests except ESI.
 
 | Tab            | What it does |
 |----------------|--------------|
-| Warzones       | Interactive warzone maps (zoom/pan), frontline / command ops / rearguard roles, Advantage per system, contested status with VP progress, kills last hour, jump distance from your home system |
+| Warzones       | Interactive warzone maps (zoom/pan), frontline / command ops / rearguard roles, Advantage per system, contested status with VP progress and 24h trend, kills last hour, jump distance from your home system |
+| History        | Systems held and pilots per militia over time (48h–90 days), rendered from the mirrored snapshot archive |
 | LP store       | ISK/LP ranking per militia corporation; optional Jita 4-4 order-book repricing with executable buy depth |
 | Freelance jobs | Public jobs board with details on click |
 | Leaderboards   | Top 10 characters and corporations by kills and victory points (yesterday) |
@@ -28,6 +29,10 @@ requests except ESI.
   into `data/warzone.json` by a scheduled GitHub Action
   (`.github/workflows/warzone-data.yml`, every 30 minutes). Data older than
   24 hours is discarded by the frontend.
+- **History** (`data/history.json`) is appended by the same workflow:
+  systems held and pilots per militia (90 days) plus per-system contested
+  values (49 hours, feeds the 24h trend column). The git history of the
+  data files is a full, publicly auditable archive of every snapshot.
 - **Static universe data** (map positions, stargate graph, system names,
   campaign content) is generated from the official Static Data Export into
   `js/data/staticdata.js`. Regenerate after an SDE release:
@@ -51,6 +56,7 @@ js/i18n.js               DE/EN strings, formatting, HTML escaping
 js/esi.js                ESI client, /universe/names cache
 js/fwlogic.js            frontline classification, BFS jumps, system search
 js/warzones.js           warzones view (cards, maps, systems table)
+js/history.js            history view (SVG time-series charts)
 js/lpstore.js            LP store view
 js/jobs.js               freelance jobs view
 js/boards.js             leaderboards view
