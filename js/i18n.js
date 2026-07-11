@@ -60,7 +60,7 @@ const I18N = {
     map_zoom_in: "Reinzoomen",
     map_zoom_out: "Rauszoomen",
     map_zoom_reset: "Ansicht zurücksetzen",
-    advantage_note: "Frontline/Command/Rearguard wird aus Besatzung + Stargate-Nachbarschaft berechnet (Regeln aus Patch 20.10). Advantage kommt vom offiziellen War-Report-API via lokalem serve.py-Proxy — ohne Proxy (statisches Hosting) bleibt die Spalte leer.",
+    advantage_note: "Frontline/Command/Rearguard wird aus Besatzung + Stargate-Nachbarschaft berechnet (Regeln aus Patch 20.10). Advantage kommt vom offiziellen War Report: lokal live via serve.py-Proxy, auf der gehosteten Seite über einen ~30-minütlich aktualisierten Spiegel.",
     auto_refresh: "Auto-Refresh",
     auto_refresh_title: "Aktiven Tab alle 5 Minuten neu laden",
 
@@ -175,7 +175,7 @@ const I18N = {
     map_zoom_in: "Zoom in",
     map_zoom_out: "Zoom out",
     map_zoom_reset: "Reset view",
-    advantage_note: "Frontline/Command/Rearguard is computed from occupancy + stargate adjacency (rules from patch 20.10). Advantage comes from the official war report API via the local serve.py proxy — without the proxy (static hosting) the column stays empty.",
+    advantage_note: "Frontline/Command/Rearguard is computed from occupancy + stargate adjacency (rules from patch 20.10). Advantage comes from the official war report: live via the serve.py proxy locally, via a mirror refreshed every ~30 minutes on the hosted site.",
     auto_refresh: "Auto refresh",
     auto_refresh_title: "Reload the active tab every 5 minutes",
 

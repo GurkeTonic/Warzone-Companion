@@ -16,24 +16,38 @@ const WarzonesView = (() => {
 
   /*
    * Advantage comes from the war report API on www.eveonline.com, which has
-   * no CORS headers; serve.py proxies it at /api/warzone. Optional: without
-   * the proxy (static hosting) the column simply stays empty.
+   * no CORS headers. Two optional sources, in order:
+   *   1. /api/warzone — live proxy in serve.py (local development)
+   *   2. data/warzone.json — static mirror committed by the scheduled
+   *      GitHub Action (hosted site), discarded when older than 24 h
+   * Without either, the column simply stays empty.
    */
+  const MIRROR_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
   async function loadAdvantage() {
+    advantage = null;
     try {
       const res = await fetch("api/warzone");
-      if (!res.ok) throw new Error(String(res.status));
-      const rows = await res.json();
-      advantage = new Map(rows.map(r => {
-        const entries = (r.advantage || []).filter(a => FACTIONS[a.factionID]);
-        const occ = entries.find(a => a.factionID === r.occupierFaction)?.totalAmount ?? null;
-        const enemy = Math.max(0,
-          ...entries.filter(a => a.factionID !== r.occupierFaction).map(a => a.totalAmount));
-        return [r.solarsystemID, { occ, enemy }];
-      }));
-    } catch {
-      advantage = null;
-    }
+      if (res.ok) {
+        const rows = await res.json();
+        advantage = new Map(rows.map(r => {
+          const entries = (r.advantage || []).filter(a => FACTIONS[a.factionID]);
+          const occ = entries.find(a => a.factionID === r.occupierFaction)?.totalAmount ?? null;
+          const enemy = Math.max(0,
+            ...entries.filter(a => a.factionID !== r.occupierFaction).map(a => a.totalAmount));
+          return [r.solarsystemID, { occ, enemy }];
+        }));
+        return;
+      }
+    } catch { /* proxy unavailable — try the static mirror */ }
+    try {
+      const res = await fetch("data/warzone.json", { cache: "no-cache" });
+      if (!res.ok) return;
+      const mirror = await res.json();
+      if (Date.now() - Date.parse(mirror.fetched) > MIRROR_MAX_AGE_MS) return;
+      advantage = new Map(Object.entries(mirror.systems || {})
+        .map(([id, v]) => [Number(id), v]));
+    } catch { /* no advantage source available */ }
   }
 
   function homeId() {
