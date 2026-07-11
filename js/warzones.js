@@ -9,9 +9,32 @@ const WarzonesView = (() => {
   let kills = new Map();   // system_id -> ship+pod kills last hour
   let traffic = new Map(); // system_id -> ship jumps last hour
   let jumps = null;        // system_id -> gate jumps from home (or null)
+  let advantage = null;    // system_id -> { occ, enemy } or null when unavailable
   let filterMode = "contested";
   let sortMode = "vp";
   let controlsBound = false;
+
+  /*
+   * Advantage comes from the war report API on www.eveonline.com, which has
+   * no CORS headers; serve.py proxies it at /api/warzone. Optional: without
+   * the proxy (static hosting) the column simply stays empty.
+   */
+  async function loadAdvantage() {
+    try {
+      const res = await fetch("api/warzone");
+      if (!res.ok) throw new Error(String(res.status));
+      const rows = await res.json();
+      advantage = new Map(rows.map(r => {
+        const entries = (r.advantage || []).filter(a => FACTIONS[a.factionID]);
+        const occ = entries.find(a => a.factionID === r.occupierFaction)?.totalAmount ?? null;
+        const enemy = Math.max(0,
+          ...entries.filter(a => a.factionID !== r.occupierFaction).map(a => a.totalAmount));
+        return [r.solarsystemID, { occ, enemy }];
+      }));
+    } catch {
+      advantage = null;
+    }
+  }
 
   function homeId() {
     const stored = Number(localStorage.getItem("tow_home_id"));
@@ -23,7 +46,8 @@ const WarzonesView = (() => {
       ESI.get("/fw/systems"),
       ESI.get("/fw/stats"),
       ESI.get("/universe/system_kills"),
-      ESI.get("/universe/system_jumps")
+      ESI.get("/universe/system_jumps"),
+      loadAdvantage()
     ]);
     data = { systems, stats };
     occupier = new Map(systems.map(s => [s.solar_system_id, s.occupier_faction_id]));
@@ -162,12 +186,14 @@ const WarzonesView = (() => {
         : "";
       const cls = classes.get(id) || "rearguard";
       const jmp = jumps?.get(id);
+      const adv = advantage?.get(id);
       const tip = [
         sysName(id),
         sysRegion(id),
         t("class_" + cls),
         t("status_" + s.contested) + (contested ? ` ${pct(s).toFixed(1)}%` : ""),
         `${t("th_kills1h")}: ${k}`,
+        adv && adv.occ !== null ? `${t("th_adv")}: ${adv.occ}:${adv.enemy}` : null,
         jmp !== undefined && jmp !== null ? `${t("th_jumps")}: ${jmp}` : null
       ].filter(Boolean).join(" · ");
       return `${ring}<circle cx="${px(id).toFixed(1)}" cy="${py(id).toFixed(1)}" r="${r.toFixed(1)}" fill="${fac.color}" class="map-node"><title>${esc(tip)}</title></circle>`;
@@ -277,7 +303,7 @@ const WarzonesView = (() => {
 
     const rows = visibleRows();
     if (rows.length === 0) {
-      body.innerHTML = `<tr><td colspan="8" class="status-pill">${t("contested_none")}</td></tr>`;
+      body.innerHTML = `<tr><td colspan="9" class="status-pill">${t("contested_none")}</td></tr>`;
       return;
     }
 
@@ -287,12 +313,16 @@ const WarzonesView = (() => {
       const cls = classes.get(id) || "rearguard";
       const hot = s.contested === "vulnerable" ? " hot" : "";
       const dim = s.contested === "uncontested" ? " dim" : "";
+      const adv = advantage?.get(id);
+      const advCell = adv && adv.occ !== null
+        ? `<span title="${t("adv_tip")}">${adv.occ}&thinsp;:&thinsp;${adv.enemy}</span>`
+        : "—";
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${esc(sysName(id))}</td>
         <td class="mono sub">${esc(sysRegion(id))}</td>
         <td><span class="fac-tag" style="color:${fac.color};border-color:${fac.color}">${fac.name}</span></td>
-        <td><span class="class-tag class-${cls}">${t("class_" + cls)}</span></td>
+        <td><span class="class-tag class-${cls}" title="${t("class_" + cls + "_tip")}">${t("class_" + cls)}</span></td>
         <td><span class="status-pill${hot}${dim}">${t("status_" + s.contested)}</span></td>
         <td>
           <div class="vp-bar">
@@ -300,6 +330,7 @@ const WarzonesView = (() => {
           </div>
           <span class="mono sub">${p.toFixed(1)}%</span>
         </td>
+        <td class="mono">${advCell}</td>
         <td class="mono${k > 0 ? " strong" : ""}">${fmtNum(k)}</td>
         <td class="mono">${jmp === null || jmp === undefined ? "—" : jmp}</td>
       `;
