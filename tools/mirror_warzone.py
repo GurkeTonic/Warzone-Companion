@@ -30,6 +30,7 @@ Git history of these files doubles as a full, publicly auditable archive.
 import json
 import statistics
 import sys
+import time
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -48,7 +49,14 @@ FEED_FLIPS_PATH = DATA_DIR / "feed-flips.json"
 
 HISTORY_DAYS = 90
 SYSTEM_WINDOW_HOURS = 49
+
+# LP valuation: shortlist per militia via the cheap New-Eden average ranking,
+# then reprice with The Forge (Jita region) daily market history — regionally
+# honest prices at one call per item type, refreshed once per day.
+FORGE_REGION = 10000002
+LP_SHORTLIST = 40
 LP_TOP_OFFERS = 20
+LP_MIN_INTERVAL = 20 * 3600  # one snapshot per day, tolerant of cron jitter
 
 # Empire militia factions; pirate factions (Guristas/Angels) are ignored
 # for occupancy, but reported for insurgencies.
@@ -153,31 +161,73 @@ def write_insurgency(now_iso):
 
 # ---------- LP snapshot (appended into data/history.json) ----------
 
+_forge_cache = {}
+
+
+def forge_daily_price(type_id):
+    """Most recent daily average in The Forge; 0 when the item never trades
+    there (which deliberately drops it from the ranking)."""
+    if type_id in _forge_cache:
+        return _forge_cache[type_id]
+    price = 0
+    try:
+        rows = get_json(
+            f"{ESI_BASE}/markets/{FORGE_REGION}/history"
+            f"?compatibility_date={COMPAT_DATE}&type_id={type_id}"
+        )
+        if rows:
+            price = rows[-1].get("average") or 0
+    except Exception:
+        price = 0
+    _forge_cache[type_id] = price
+    time.sleep(0.15)  # this endpoint has its own strict rate bucket
+    return price
+
+
+def offer_ratio(offer, price_of):
+    lp = offer.get("lp_cost", 0)
+    value = price_of(offer.get("type_id")) * offer.get("quantity", 0)
+    if lp <= 0 or value <= 0:
+        return None
+    req = sum(
+        price_of(r.get("type_id")) * r.get("quantity", 0)
+        for r in offer.get("required_items", [])
+    )
+    return (value - offer.get("isk_cost", 0) - req) / lp
+
+
 def lp_snapshot():
-    """Best and median ISK/LP of the top offers per militia, average-priced."""
-    prices = {
+    """Best and median ISK/LP of the top offers per militia.
+
+    Stage 1 shortlists candidates with the one-call New-Eden averages;
+    stage 2 reprices the shortlist with The Forge daily history so the
+    stored values reflect the market FW pilots actually sell into.
+    """
+    averages = {
         p["type_id"]: p.get("average_price") or p.get("adjusted_price") or 0
         for p in esi("/markets/prices")
     }
+    avg_of = lambda tid: averages.get(tid, 0)
     result = {}
     for faction, corp in MILITIA_CORPS.items():
         offers = get_json(
             f"{ESI_BASE}/loyalty/stores/{corp}/offers?compatibility_date={COMPAT_DATE}"
         )
+        ranked = sorted(
+            (o for o in offers if offer_ratio(o, avg_of) is not None),
+            key=lambda o: offer_ratio(o, avg_of),
+            reverse=True,
+        )[:LP_SHORTLIST]
         ratios = []
-        for o in offers:
-            lp = o.get("lp_cost", 0)
-            value = prices.get(o.get("type_id"), 0) * o.get("quantity", 0)
-            if lp <= 0 or value <= 0:
-                continue
-            req = sum(
-                prices.get(r.get("type_id"), 0) * r.get("quantity", 0)
-                for r in o.get("required_items", [])
-            )
-            ratios.append((value - o.get("isk_cost", 0) - req) / lp)
+        for o in ranked:
+            r = offer_ratio(o, forge_daily_price)
+            if r is not None and r > 0:
+                ratios.append(r)
         top = sorted(ratios, reverse=True)[:LP_TOP_OFFERS]
         if top:
             result[str(faction)] = [round(top[0]), round(statistics.median(top))]
+        print(f"lp {faction}: {len(top)} priced offers, "
+              f"median {round(statistics.median(top)) if top else '-'}")
     return result
 
 
@@ -278,10 +328,19 @@ def append_history(now_epoch, fw_systems, fw_stats):
             print(f"flip: {sid} {old} -> {occ}")
     history["occ"] = new_occ
 
-    try:
-        history["lp"].append({"t": now_epoch, "m": lp_snapshot()})
-    except Exception as err:
-        print(f"lp snapshot failed, skipping: {err}")
+    # Daily LP snapshot on Forge prices; the old average-price series is not
+    # comparable and gets reset once.
+    if any("v" not in e for e in history["lp"]):
+        print("lp: resetting old average-price series")
+        history["lp"] = []
+    last_lp = history["lp"][-1]["t"] if history["lp"] else 0
+    if now_epoch - last_lp >= LP_MIN_INTERVAL:
+        try:
+            history["lp"].append({"t": now_epoch, "v": 2, "m": lp_snapshot()})
+        except Exception as err:
+            print(f"lp snapshot failed, skipping: {err}")
+    else:
+        print("lp: snapshot is fresh, skipping until tomorrow")
 
     fac_cutoff = now_epoch - HISTORY_DAYS * 86400
     sys_cutoff = now_epoch - SYSTEM_WINDOW_HOURS * 3600
