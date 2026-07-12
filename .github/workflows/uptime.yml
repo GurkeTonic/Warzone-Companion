@@ -1,0 +1,55 @@
+name: Uptime check
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check site and DNS
+        id: check
+        run: |
+          ok=1
+          if ! curl -sSf -o /dev/null --max-time 20 https://warzone.tonicbeacon.com/; then
+            echo "first check failed, retrying in 30s"
+            sleep 30
+            if ! curl -sSf -o /dev/null --max-time 20 https://warzone.tonicbeacon.com/; then
+              ok=0
+            fi
+          fi
+          echo "dns_a=$(dig +short warzone.tonicbeacon.com A | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+          echo "dns_cname=$(dig +short warzone.tonicbeacon.com CNAME | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+          if [ "$ok" = "0" ]; then
+            echo "site unreachable from GitHub runner"
+            exit 1
+          fi
+
+      - name: Open or update outage issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DNS_A: ${{ steps.check.outputs.dns_a }}
+          DNS_CNAME: ${{ steps.check.outputs.dns_cname }}
+        run: |
+          body="Site check from GitHub failed at $(date -u +%Y-%m-%dT%H:%M:%SZ).
+          DNS A: ${DNS_A:-none}
+          DNS CNAME: ${DNS_CNAME:-none}
+          Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          existing=$(gh issue list --repo "${{ github.repository }}" --label uptime --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "${{ github.repository }}" --body "$body"
+          else
+            gh issue create --repo "${{ github.repository }}" \
+              --title "Uptime: warzone.tonicbeacon.com unreachable" \
+              --label uptime --body "$body"
+          fi
