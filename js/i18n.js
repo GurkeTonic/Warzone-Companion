@@ -73,7 +73,7 @@ const I18N = {
     det_neighbors: "Nachbarsysteme:",
     det_close: "Schließen",
     det_hint: "System in Karte oder Tabelle anklicken für Details.",
-    det_more: "Mehr Details ↓",
+    det_more: "Mehr Details",
 
     sec_warzones: "Warzones",
     sec_contested: "Umkämpfte Systeme",
@@ -241,7 +241,7 @@ const I18N = {
     det_neighbors: "Neighboring systems:",
     det_close: "Close",
     det_hint: "Click a system on the map or in the table for details.",
-    det_more: "More details ↓",
+    det_more: "More details",
 
     sec_warzones: "Warzones",
     sec_contested: "Contested systems",
