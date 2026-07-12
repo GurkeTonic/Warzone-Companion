@@ -45,6 +45,7 @@ jobs:
           DNS A: ${DNS_A:-none}
           DNS CNAME: ${DNS_CNAME:-none}
           Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          gh label create uptime --repo "${{ github.repository }}" --color D93F0B 2>/dev/null || true
           existing=$(gh issue list --repo "${{ github.repository }}" --label uptime --state open --json number --jq '.[0].number')
           if [ -n "$existing" ]; then
             gh issue comment "$existing" --repo "${{ github.repository }}" --body "$body"
