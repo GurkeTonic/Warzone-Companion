@@ -647,7 +647,36 @@ td.rank { color: var(--muted); width: 32px; }
 
 section { position: relative; }
 
-#lp-trend .chart-card { max-width: 680px; margin-bottom: 16px; }
+/* LP store: controls column on the left, trend chart on the right */
+.lp-top {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.lp-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  min-width: 240px;
+  max-width: 300px;
+  flex: 0 0 auto;
+}
+.lp-controls label { font-size: 13px; color: var(--muted); }
+.lp-controls select {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 6px 10px;
+}
+.lp-controls .mode-badge { font-size: 12px; line-height: 1.5; }
+#lp-trend { flex: 1 1 380px; min-width: 0; }
+#lp-trend .chart-card { max-width: 640px; }
 
 /* ---------- Map popover ---------- */
 .map-pop {
