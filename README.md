@@ -73,6 +73,10 @@ plus stargate adjacency (rules from patch 20.10). All player-authored strings
 from the APIs are HTML-escaped before rendering; ESI rate limits (HTTP
 420/429) are reported in the UI.
 
+## Roadmap
+
+See [ROADMAP.md](ROADMAP.md).
+
 ## Legal
 
 © CCP hf. All rights reserved. "EVE", "EVE Online", "CCP", and all related
