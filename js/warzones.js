@@ -441,21 +441,34 @@ const [WarzonesView, MapView] = (() => {
     });
     svg.addEventListener("pointermove", e => {
       if (!drag) return;
-      if (Math.hypot(e.clientX - drag.px, e.clientY - drag.py) > 5) dragged = true;
+      if (Math.hypot(e.clientX - drag.px, e.clientY - drag.py) > 5) {
+        if (!dragged) hidePopover(svg);
+        dragged = true;
+      }
       const r = svg.getBoundingClientRect();
       vb.x = drag.vx - ((e.clientX - drag.px) / r.width) * vb.w;
       vb.y = drag.vy - ((e.clientY - drag.py) / r.height) * vb.h;
       apply();
     });
     const endDrag = () => { drag = null; svg.classList.remove("panning"); };
-    svg.addEventListener("pointerup", endDrag);
     svg.addEventListener("pointercancel", endDrag);
 
-    /* Click on a system opens the detail panel (unless the map was panned). */
-    svg.addEventListener("click", e => {
-      if (dragged) return;
-      const sys = e.target.closest(".map-sys");
-      if (sys) selectSystem(Number(sys.dataset.id));
+    /*
+     * System selection happens on pointerup with an explicit hit test:
+     * setPointerCapture retargets the synthesized click event to the svg,
+     * so a plain click listener never sees the node.
+     */
+    svg.addEventListener("pointerup", e => {
+      const wasDragged = dragged;
+      endDrag();
+      if (wasDragged) return;
+      const sys = document.elementFromPoint(e.clientX, e.clientY)?.closest(".map-sys");
+      if (sys) {
+        selectSystem(Number(sys.dataset.id), { quiet: true });
+        showPopover(svg, Number(sys.dataset.id), e);
+      } else {
+        hidePopover(svg);
+      }
     });
 
     svg.addEventListener("dblclick", () => { vb = { ...base }; apply(); });
@@ -526,11 +539,81 @@ const [WarzonesView, MapView] = (() => {
     `;
   }
 
-  function selectSystem(id) {
+  function selectSystem(id, opts = {}) {
     selectedId = id;
     renderDetail();
-    document.querySelector("section:not(.hidden) .sys-detail")
-      ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    if (!opts.quiet) {
+      document.querySelector("section:not(.hidden) .sys-detail")
+        ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }
+
+  /* ---------- map popover (compact detail at the clicked system) ---------- */
+
+  function popHtml(id) {
+    const s = data.systems.find(x => x.solar_system_id === id);
+    if (!s) return "";
+    const fac = factionOf(s.occupier_faction_id);
+    const cls = classes.get(id) || "rearguard";
+    const p = pct(s);
+    const adv = advantage?.get(id);
+    const ins = insurgency?.bySystem.get(id);
+    const jmp = jumps?.get(id);
+    const delta = delta24h(id, p, s.occupier_faction_id);
+    let deltaTxt = "—";
+    if (delta === "flip") deltaTxt = t("delta_flip");
+    else if (typeof delta === "number") deltaTxt = `${delta > 0 ? "+" : ""}${delta.toFixed(1)}%`;
+
+    const row = (label, value) => `
+      <div class="det-stat"><span class="dlabel">${label}</span><span class="mono">${value}</span></div>`;
+
+    return `
+      <div class="pop-head">
+        <a href="${zkillUrl(id)}" target="_blank" rel="noopener" class="sys-link" title="zKillboard">${esc(sysName(id))}</a>
+        <a href="${dotlanUrl(sysName(id))}" target="_blank" rel="noopener" class="ext-link" title="Dotlan">D</a>
+        <button type="button" class="det-close" title="${t("det_close")}">×</button>
+      </div>
+      <div class="pop-tags">
+        <span class="fac-tag" style="color:${fac.color};border-color:${fac.color}">${fac.name}</span>
+        <span class="class-tag class-${cls}">${t("class_" + cls)}</span>
+        <span class="status-pill${s.contested === "vulnerable" ? " hot" : ""}">${t("status_" + s.contested)} ${p > 0 ? p.toFixed(1) + "%" : ""}</span>
+      </div>
+      ${row("Δ 24h", deltaTxt)}
+      ${row(t("th_adv"), adv && adv.occ !== null ? `${adv.occ} : ${adv.enemy}` : "—")}
+      ${row(t("th_kills1h"), fmtNum(kills.get(id) || 0))}
+      ${row(t("det_traffic"), fmtNum(traffic.get(id) || 0))}
+      ${row(t("th_jumps"), jmp ?? "—")}
+      ${ins ? row(esc(pirateOf(ins.pirate).name), `${t("ins_corruption")} ${ins.corrState}/5 · ${t("ins_suppression")} ${ins.suppState}/5`) : ""}
+      <button type="button" class="btn pop-more">${t("det_more")}</button>
+    `;
+  }
+
+  function showPopover(svg, id, evt) {
+    document.querySelectorAll(".map-pop").forEach(p => p.classList.add("hidden"));
+    const frame = svg.closest(".map-frame");
+    let pop = frame.querySelector(".map-pop");
+    if (!pop) {
+      pop = document.createElement("div");
+      pop.className = "map-pop";
+      frame.appendChild(pop);
+    }
+    pop.innerHTML = popHtml(id);
+    pop.classList.remove("hidden");
+    const fr = frame.getBoundingClientRect();
+    const x = evt.clientX - fr.left;
+    const y = evt.clientY - fr.top;
+    pop.style.left = `${Math.max(8, Math.min(x + 16, fr.width - pop.offsetWidth - 8))}px`;
+    pop.style.top = `${Math.max(8, Math.min(y - 24, fr.height - pop.offsetHeight - 8))}px`;
+    pop.querySelector(".det-close").addEventListener("click", () => pop.classList.add("hidden"));
+    pop.querySelector(".pop-more").addEventListener("click", () => {
+      pop.classList.add("hidden");
+      document.querySelector("section:not(.hidden) .sys-detail")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  function hidePopover(svg) {
+    svg.closest(".map-frame")?.querySelector(".map-pop")?.classList.add("hidden");
   }
 
   function detailHtml(id) {

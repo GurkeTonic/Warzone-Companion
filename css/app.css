@@ -642,6 +642,37 @@ td.rank { color: var(--muted); width: 32px; }
 }
 .ins-body { font-size: 13px; color: var(--muted); margin-top: 3px; }
 
+/* ---------- Map popover ---------- */
+.map-pop {
+  position: absolute;
+  z-index: 10;
+  width: 270px;
+  background: var(--panel-2);
+  border: 1px solid var(--muted);
+  border-radius: 6px;
+  padding: 12px 14px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+}
+.pop-head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+}
+.pop-head .det-close { margin-left: auto; }
+.pop-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 8px 0 10px;
+}
+.pop-more {
+  margin-top: 10px;
+  width: 100%;
+}
+
 /* ---------- System detail panel ---------- */
 .sys-detail { margin-top: 16px; }
 .det-card {
