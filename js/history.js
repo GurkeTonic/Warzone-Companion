@@ -141,7 +141,11 @@ const HistoryView = (() => {
       return `
         <tr>
           <td class="mono">${when}</td>
-          <td>${esc(name)}<span class="sub">${esc(region)}</span></td>
+          <td>
+            <a href="${zkillUrl(f.id)}" target="_blank" rel="noopener" class="sys-link" title="zKillboard">${esc(name)}</a>
+            <a href="${dotlanUrl(name)}" target="_blank" rel="noopener" class="ext-link" title="Dotlan">D</a>
+            <span class="sub">${esc(region)}</span>
+          </td>
           <td><span class="fac-tag" style="color:${from.color};border-color:${from.color}">${from.name}</span></td>
           <td><span class="fac-tag" style="color:${to.color};border-color:${to.color}">${to.name}</span></td>
         </tr>

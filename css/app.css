@@ -259,6 +259,9 @@ nav button.active { color: var(--text); border-bottom-color: var(--caldari); }
 }
 
 /* ---------- Tables ---------- */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-scroll table { min-width: 720px; }
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -288,6 +291,26 @@ td .sub { display: block; font-size: 11px; color: var(--muted); margin-top: 3px;
 td.strong, .strong { color: #fff; font-weight: 500; }
 td.req { font-size: 13px; color: var(--muted); max-width: 280px; }
 td.rank { color: var(--muted); width: 32px; }
+
+/* System links to external references */
+.sys-link {
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--muted);
+}
+.sys-link:hover { color: #fff; border-bottom-color: var(--text); }
+.ext-link {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0 4px;
+  margin-left: 5px;
+  vertical-align: 1px;
+}
+.ext-link:hover { color: var(--text); border-color: var(--muted); }
 
 .fac-tag {
   display: inline-block;
@@ -633,4 +656,18 @@ footer .mono { font-family: var(--font-mono); }
 @media (prefers-reduced-motion: reduce) {
   .front-bar .seg { transition: none; }
   .front-bar .seg:hover { transform: none; }
+}
+
+/* ---------- Small screens ---------- */
+@media (max-width: 700px) {
+  .wrap { padding: 0 12px 48px; }
+  header { padding: 18px 0 12px; }
+  .brand h1 { font-size: 20px; }
+  nav button { padding: 8px 10px; font-size: 12px; }
+  thead th { padding: 8px 8px; font-size: 11px; }
+  tbody td { padding: 7px 8px; font-size: 12.5px; }
+  td.mono { font-size: 11.5px; }
+  .vp-bar { min-width: 70px; }
+  td.req { max-width: 180px; }
+  .wz-stats { grid-template-columns: 1fr; gap: 6px; }
 }

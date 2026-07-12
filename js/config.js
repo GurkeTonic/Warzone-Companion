@@ -35,6 +35,15 @@ function warzoneOf(factionId) {
   return WARZONES.find(w => w.a === factionId || w.b === factionId);
 }
 
+/* External references for a solar system. */
+function zkillUrl(systemId) {
+  return `https://zkillboard.com/system/${systemId}/`;
+}
+
+function dotlanUrl(systemName) {
+  return `https://evemaps.dotlan.net/system/${encodeURIComponent(systemName.replace(/ /g, "_"))}`;
+}
+
 /*
  * Campaign content comes from the SDE via js/data/staticdata.js
  * (see tools/build_static_data.py). ESI exposes no route for live

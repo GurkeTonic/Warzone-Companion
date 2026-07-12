@@ -523,7 +523,10 @@ const [WarzonesView, MapView] = (() => {
       }
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${esc(sysName(id))}</td>
+        <td>
+          <a href="${zkillUrl(id)}" target="_blank" rel="noopener" class="sys-link" title="zKillboard">${esc(sysName(id))}</a>
+          <a href="${dotlanUrl(sysName(id))}" target="_blank" rel="noopener" class="ext-link" title="Dotlan">D</a>
+        </td>
         <td class="mono sub">${esc(sysRegion(id))}</td>
         <td><span class="fac-tag" style="color:${fac.color};border-color:${fac.color}">${fac.name}</span></td>
         <td><span class="class-tag class-${cls}" title="${t("class_" + cls + "_tip")}">${t("class_" + cls)}</span></td>
