@@ -301,10 +301,16 @@ def main():
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-    advantage = build_advantage(get_json(WARZONE_API))
-    if not advantage:
-        sys.exit("war report API returned no usable systems")
-    write_advantage(now_iso, advantage)
+    # The war report API is unofficial and unsupported by CCP; its failure
+    # must never stop the ESI-based collection below.
+    try:
+        advantage = build_advantage(get_json(WARZONE_API))
+        if advantage:
+            write_advantage(now_iso, advantage)
+        else:
+            print("war report returned no usable systems, skipping advantage")
+    except Exception as err:
+        print(f"war report unavailable, skipping advantage: {err}")
     write_insurgency(now_iso)
 
     fw_systems = esi("/fw/systems")
