@@ -88,6 +88,10 @@ See [ROADMAP.md](ROADMAP.md).
 
 ## Legal
 
+The code is MIT-licensed (see [LICENSE](LICENSE)). EVE Online game data
+displayed by this application (via ESI, the SDE, and the war report) is the
+property of CCP hf. and is not covered by that license.
+
 © CCP hf. All rights reserved. "EVE", "EVE Online", "CCP", and all related
 logos and images are trademarks or registered trademarks of CCP hf.
 
