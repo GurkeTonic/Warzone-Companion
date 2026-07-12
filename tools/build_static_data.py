@@ -22,6 +22,7 @@ import zipfile
 from pathlib import Path
 
 ESI_FW_SYSTEMS = "https://esi.evetech.net/fw/systems?compatibility_date=2026-06-09"
+USER_AGENT = "WarzoneCompanion/0.4 (webmaster@tonicbeacon.com; +https://github.com/GurkeTonic/Warzone-Companion)"
 OUT_PATH = Path(__file__).resolve().parent.parent / "js" / "data" / "staticdata.js"
 
 # Wormhole/abyssal/void regions start at 11000000; k-space regions are below.
@@ -50,7 +51,10 @@ def loc(obj, keys=("de", "en")):
 
 
 def fetch_fw_system_ids():
-    req = urllib.request.Request(ESI_FW_SYSTEMS, headers={"Accept": "application/json"})
+    req = urllib.request.Request(
+        ESI_FW_SYSTEMS,
+        headers={"Accept": "application/json", "User-Agent": USER_AGENT},
+    )
     with urllib.request.urlopen(req, timeout=30) as res:
         return {row["solar_system_id"] for row in json.load(res)}
 

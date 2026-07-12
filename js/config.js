@@ -4,6 +4,9 @@
 const CONFIG = {
   ESI_BASE: "https://esi.evetech.net",
   COMPAT_DATE: "2026-06-09",
+  /* Sent as X-User-Agent on every ESI request (browsers drop User-Agent
+     on fetch) — see developers.eveonline.com/docs/services/esi/best-practices */
+  USER_AGENT: "WarzoneCompanion/0.4 (webmaster@tonicbeacon.com; +https://github.com/GurkeTonic/Warzone-Companion)",
   CONTESTED_ROWS: 40,
   LP_ROWS: 50,
   LP_JITA_ROWS: 25,

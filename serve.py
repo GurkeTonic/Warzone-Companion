@@ -26,6 +26,7 @@ PROXIES = {
     "/api/insurgency": "https://www.eveonline.com/api/warzone/insurgency",
 }
 PROXY_CACHE_SECONDS = 300
+USER_AGENT = "WarzoneCompanion/0.4 (webmaster@tonicbeacon.com; +https://github.com/GurkeTonic/Warzone-Companion)"
 
 _cache_lock = threading.Lock()
 _cache = {}  # path -> {"ts": float, "body": bytes}
@@ -36,7 +37,10 @@ def fetch_proxied(path):
         entry = _cache.get(path)
         if entry and time.time() - entry["ts"] < PROXY_CACHE_SECONDS:
             return entry["body"]
-    req = urllib.request.Request(PROXIES[path], headers={"Accept": "application/json"})
+    req = urllib.request.Request(
+        PROXIES[path],
+        headers={"Accept": "application/json", "User-Agent": USER_AGENT},
+    )
     with urllib.request.urlopen(req, timeout=20) as res:
         body = res.read()
     json.loads(body)  # validate before caching

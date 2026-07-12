@@ -38,6 +38,7 @@ WARZONE_API = "https://www.eveonline.com/api/warzone/status"
 INSURGENCY_API = "https://www.eveonline.com/api/warzone/insurgency"
 ESI_BASE = "https://esi.evetech.net"
 COMPAT_DATE = "2026-06-09"
+USER_AGENT = "WarzoneCompanion/0.4 (webmaster@tonicbeacon.com; +https://github.com/GurkeTonic/Warzone-Companion)"
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 WARZONE_PATH = DATA_DIR / "warzone.json"
@@ -62,7 +63,10 @@ MILITIA_CORPS = {500001: 1000180, 500002: 1000182, 500003: 1000179, 500004: 1000
 
 
 def get_json(url):
-    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    req = urllib.request.Request(
+        url,
+        headers={"Accept": "application/json", "User-Agent": USER_AGENT},
+    )
     with urllib.request.urlopen(req, timeout=30) as res:
         return json.load(res)
 
@@ -186,7 +190,11 @@ def resolve_names(ids):
     req = urllib.request.Request(
         f"{ESI_BASE}/universe/names?compatibility_date={COMPAT_DATE}",
         data=body,
-        headers={"Content-Type": "application/json", "Accept": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": USER_AGENT,
+        },
     )
     with urllib.request.urlopen(req, timeout=30) as res:
         return {row["id"]: row["name"] for row in json.load(res)}

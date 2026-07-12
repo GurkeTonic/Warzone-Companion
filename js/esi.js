@@ -23,7 +23,7 @@ const ESI = (() => {
 
   async function get(path, params) {
     const res = await fetch(url(path, params), {
-      headers: { "Accept": "application/json" }
+      headers: { "Accept": "application/json", "X-User-Agent": CONFIG.USER_AGENT }
     });
     if (!res.ok) throw httpError(`GET ${path}`, res.status);
     return res.json();
@@ -37,7 +37,11 @@ const ESI = (() => {
       if (chunk.length === 0) continue;
       const res = await fetch(url("/universe/names"), {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "X-User-Agent": CONFIG.USER_AGENT
+        },
         body: JSON.stringify(chunk)
       });
       if (!res.ok) throw httpError("POST /universe/names", res.status);
