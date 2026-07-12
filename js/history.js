@@ -207,6 +207,30 @@ const HistoryView = (() => {
         </div>
       `);
     }
+
+    /* LP value over time: median ISK/LP of the top store offers per militia. */
+    const lpEntries = inRange(data.lp);
+    if (lpEntries.length > 0) {
+      const series = Object.keys(FACTIONS).map(facId => {
+        const fac = factionOf(Number(facId));
+        return {
+          label: fac.name,
+          color: fac.color,
+          points: lpEntries
+            .map(e => [e.t, e.m?.[facId]?.[1]])
+            .filter(p => Number.isFinite(p[1]))
+        };
+      }).filter(s => s.points.length > 0);
+      if (series.length > 0) {
+        cards.push(`
+          <div class="chart-card">
+            <div class="map-head">${t("hist_lp")}</div>
+            ${lineChart(series)}
+          </div>
+        `);
+      }
+    }
+
     container.innerHTML = cards.join("");
   }
 

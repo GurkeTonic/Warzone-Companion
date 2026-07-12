@@ -35,6 +35,16 @@ function warzoneOf(factionId) {
   return WARZONES.find(w => w.a === factionId || w.b === factionId);
 }
 
+/* Pirate factions running insurgencies in the warzones (Havoc). */
+const PIRATES = {
+  500010: { name: "Guristas Pirates", color: "var(--pirate)" },
+  500011: { name: "Angel Cartel", color: "var(--pirate)" }
+};
+
+function pirateOf(id) {
+  return PIRATES[id] || { name: `Faction ${id}`, color: "var(--pirate)" };
+}
+
 /* External references for a solar system. */
 function zkillUrl(systemId) {
   return `https://zkillboard.com/system/${systemId}/`;

@@ -13,8 +13,8 @@ requests except ESI.
 | Tab            | What it does |
 |----------------|--------------|
 | Warzones       | Front bars, faction stats, systems table: frontline / command ops / rearguard roles, Advantage, contested status with VP progress and 24h trend, kills last hour, jump distance from your home system |
-| Map            | Interactive warzone maps: uniform system nodes with name codes, occupier colors, contested/vulnerable rings, activity glow, zoom/pan |
-| History        | Systems held and pilots per militia over time (48h–90 days) plus a system flip log, from the mirrored snapshot archive |
+| Map            | Interactive warzone maps: uniform system nodes with name codes, occupier colors, contested/vulnerable rings, insurgency markers, activity glow, zoom/pan; click a system for a detail panel (trend sparkline, Advantage, flips, neighbors) |
+| History        | Systems held, pilots, and LP value per militia over time (48h–90 days) plus a system flip log, from the mirrored snapshot archive |
 | FAQ            | Explains data sources, mechanics (roles, Advantage), and how to read each tab (DE/EN) |
 | LP store       | ISK/LP ranking per militia corporation; optional Jita 4-4 order-book repricing with executable buy depth |
 | Freelance jobs | Public jobs board with details on click |
@@ -31,10 +31,16 @@ requests except ESI.
   into `data/warzone.json` by a scheduled GitHub Action
   (`.github/workflows/warzone-data.yml`, every 30 minutes). Data older than
   24 hours is discarded by the frontend.
+- **Insurgency** state (pirate FOBs, corruption/suppression) comes from the
+  same war report source, mirrored into `data/insurgency.json`.
 - **History** (`data/history.json`) is appended by the same workflow:
-  systems held and pilots per militia (90 days) plus per-system contested
-  values (49 hours, feeds the 24h trend column). The git history of the
-  data files is a full, publicly auditable archive of every snapshot.
+  systems held, pilots, and LP value per militia (90 days) plus per-system
+  contested values (49 hours, feeds the 24h trend column). The git history
+  of the data files is a full, publicly auditable archive of every snapshot.
+- **Flip feed**: system flips are published as stable JSON at
+  [`data/feed-flips.json`](https://warzone.tonicbeacon.com/data/feed-flips.json)
+  (time, system, factions; 90 days, refreshed every 30 minutes). Third-party
+  tools and Discord bots are welcome to poll it — attribution appreciated.
 - **Static universe data** (map positions, stargate graph, system names,
   campaign content) is generated from the official Static Data Export into
   `js/data/staticdata.js`. Regenerate after an SDE release:

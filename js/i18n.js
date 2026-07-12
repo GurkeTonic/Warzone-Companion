@@ -38,6 +38,10 @@ const I18N = {
     faq_a_jobs: "Das öffentliche Jobs-Board aus ESI: von Spielern und Corps ausgeschriebene Aufträge mit ISK-Belohnung. Klick auf eine Zeile zeigt Details (Karriere, Ablauf, Ersteller, Reward pro Contribution). Laut CCP-Roadmap wird dieses System Richtung Military Contracts ausgebaut.",
     faq_q_campaigns: "Warum zeigen die Campaigns keinen Fortschritt?",
     faq_a_campaigns: "Titel, Beschreibungen und Objectives stammen aus dem offiziellen Static Data Export. Für den Live-Fortschritt bietet ESI schlicht keine Route — der ist nur im In-Game-Dashboard „Theaters of War“ sichtbar. Sobald CCP eine Route liefert, wird sie eingebaut.",
+    faq_q_insurgency: "Was bedeuten die lila Ringe (Insurgency)?",
+    faq_a_insurgency: "Piraten-Insurgencies (Havoc): Guristas oder Angel Cartel eröffnen eine FOB in einem Warzone-System und breiten Corruption aus; Milizen kontern mit Suppression. Beides läuft pro System in Stufen 0–5 — Corruption 5 ändert die Systemregeln spürbar (z. B. keine Gate-Gun-Unterstützung). Lila Ring auf der Karte = System mit aktiver Insurgency, Details im Tooltip und im System-Detailpanel. Quelle ist der offizielle War Report; ESI bietet diese Daten nicht.",
+    faq_q_feed: "Gibt es einen Feed für Bots und andere Tools?",
+    faq_a_feed: "Ja: Systemwechsel stehen als stabiles JSON unter data/feed-flips.json bereit (Zeitpunkt, System, verlierende und erobernde Fraktion, IDs und Namen), aktualisiert alle 30 Minuten, 90 Tage Tiefe. Discord-Bots und andere Tools dürfen den Feed direkt abfragen — Quellenangabe genügt.",
 
     sec_history: "Frontverlauf über Zeit",
     hist_systems: "Systeme",
@@ -55,6 +59,20 @@ const I18N = {
     th_from: "Verloren von",
     th_to: "Erobert von",
     flips_none: "Keine Systemwechsel im gewählten Zeitraum.",
+    hist_lp: "LP-Kurs je Miliz (Median der Top-20-Angebote, ISK/LP)",
+
+    ins_origin: "FOB",
+    ins_affected: "Systeme betroffen",
+    ins_corruption: "Corruption",
+    ins_suppression: "Suppression",
+
+    det_trend: "Contested-Verlauf (48 h)",
+    det_no_trend: "Noch keine Verlaufsdaten.",
+    det_traffic: "Traffic (1h)",
+    det_flips: "Letzte Flips",
+    det_neighbors: "Nachbarsysteme:",
+    det_close: "Schließen",
+    det_hint: "System in Karte oder Tabelle anklicken für Details.",
 
     sec_warzones: "Warzones",
     sec_contested: "Umkämpfte Systeme",
@@ -187,6 +205,10 @@ const I18N = {
     faq_a_jobs: "The public jobs board from ESI: tasks posted by players and corps with ISK rewards. Click a row for details (career, expiry, creator, reward per contribution). Per CCP's roadmap this system is being extended toward Military Contracts.",
     faq_q_campaigns: "Why don't the campaigns show progress?",
     faq_a_campaigns: "Titles, descriptions, and objectives come from the official Static Data Export. ESI simply exposes no route for live progress — that is only visible in the in-game “Theaters of War” dashboard. As soon as CCP ships a route, it will be added.",
+    faq_q_insurgency: "What do the purple rings (insurgency) mean?",
+    faq_a_insurgency: "Pirate insurgencies (Havoc): Guristas or Angel Cartel open a FOB in a warzone system and spread corruption; militias counter with suppression. Both run per system in stages 0–5 — corruption 5 noticeably changes system rules (e.g. no gate gun support). Purple ring on the map = system with an active insurgency; details in the tooltip and the system detail panel. Source is the official war report; ESI does not expose this data.",
+    faq_q_feed: "Is there a feed for bots and other tools?",
+    faq_a_feed: "Yes: system flips are published as stable JSON at data/feed-flips.json (time, system, losing and capturing faction, IDs and names), refreshed every 30 minutes with 90 days of depth. Discord bots and other tools are welcome to poll the feed directly — attribution is appreciated.",
 
     sec_history: "Front lines over time",
     hist_systems: "Systems",
@@ -204,6 +226,20 @@ const I18N = {
     th_from: "Lost by",
     th_to: "Captured by",
     flips_none: "No system flips in the selected range.",
+    hist_lp: "LP value per militia (median of top 20 offers, ISK/LP)",
+
+    ins_origin: "FOB",
+    ins_affected: "systems affected",
+    ins_corruption: "Corruption",
+    ins_suppression: "Suppression",
+
+    det_trend: "Contested trend (48 h)",
+    det_no_trend: "No trend data yet.",
+    det_traffic: "Traffic (1h)",
+    det_flips: "Recent flips",
+    det_neighbors: "Neighboring systems:",
+    det_close: "Close",
+    det_hint: "Click a system on the map or in the table for details.",
 
     sec_warzones: "Warzones",
     sec_contested: "Contested systems",

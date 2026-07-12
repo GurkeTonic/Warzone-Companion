@@ -12,9 +12,53 @@ const [WarzonesView, MapView] = (() => {
   let jumps = null;        // system_id -> gate jumps from home (or null)
   let advantage = null;    // system_id -> { occ, enemy } or null when unavailable
   let histSystems = null;  // per-system snapshots from data/history.json
+  let histFlips = [];      // flip events from data/history.json
+  let insurgency = null;   // system_id -> { pirate, corrState, corrPct, suppState, suppPct, origin }
+  let selectedId = null;   // system shown in the detail panel
   let filterMode = "contested";
   let sortMode = "vp";
   let controlsBound = false;
+
+  /* Insurgency state (Havoc): same proxy/mirror pattern as Advantage. */
+  async function loadInsurgency() {
+    insurgency = null;
+    let campaigns = null;
+    try {
+      const res = await fetch("api/insurgency");
+      if (res.ok) {
+        campaigns = (await res.json())
+          .filter(c => c.state === "ACTIVE")
+          .map(c => ({
+            pirate: c.pirateFactionId,
+            origin: { id: c.originSolarSystem?.id, name: c.originSolarSystem?.name },
+            systems: Object.fromEntries((c.insurgencies || []).map(e => [
+              e.solarSystem?.id,
+              [e.corruptionState || 0, e.corruptionPercentage || 0,
+               e.suppressionState || 0, e.suppressionPercentage || 0]
+            ]))
+          }));
+      }
+    } catch { /* proxy unavailable — try the static mirror */ }
+    if (!campaigns) {
+      try {
+        const res = await fetch("data/insurgency.json", { cache: "no-cache" });
+        if (!res.ok) return;
+        const mirror = await res.json();
+        if (Date.now() - Date.parse(mirror.fetched) > MIRROR_MAX_AGE_MS) return;
+        campaigns = mirror.campaigns || [];
+      } catch { return; }
+    }
+    insurgency = { campaigns, bySystem: new Map() };
+    for (const c of campaigns) {
+      for (const [id, v] of Object.entries(c.systems || {})) {
+        insurgency.bySystem.set(Number(id), {
+          pirate: c.pirate,
+          origin: c.origin,
+          corrState: v[0], corrPct: v[1], suppState: v[2], suppPct: v[3]
+        });
+      }
+    }
+  }
 
   /*
    * Advantage comes from the war report API on www.eveonline.com, which has
@@ -60,6 +104,7 @@ const [WarzonesView, MapView] = (() => {
       if (!res.ok) return;
       const history = await res.json();
       if (Array.isArray(history.systems)) histSystems = history.systems;
+      if (Array.isArray(history.flips)) histFlips = history.flips;
     } catch { /* trend column stays empty */ }
   }
 
@@ -100,7 +145,8 @@ const [WarzonesView, MapView] = (() => {
       ESI.get("/universe/system_kills"),
       ESI.get("/universe/system_jumps"),
       loadAdvantage(),
-      loadHistory()
+      loadHistory(),
+      loadInsurgency()
     ]);
     data = { systems, stats };
     loadedAt = Date.now();
@@ -288,6 +334,7 @@ const [WarzonesView, MapView] = (() => {
       const cls = classes.get(id) || "rearguard";
       const jmp = jumps?.get(id);
       const adv = advantage?.get(id);
+      const ins = insurgency?.bySystem.get(id);
       const tip = [
         sysName(id),
         sysRegion(id),
@@ -295,10 +342,15 @@ const [WarzonesView, MapView] = (() => {
         t("status_" + s.contested) + (state ? ` ${pct(s).toFixed(1)}%` : ""),
         `${t("th_kills1h")}: ${k}`,
         adv && adv.occ !== null ? `${t("th_adv")}: ${adv.occ}:${adv.enemy}` : null,
+        ins ? `${pirateOf(ins.pirate).name} — ${t("ins_corruption")} ${ins.corrPct.toFixed(0)}% / ${t("ins_suppression")} ${ins.suppPct.toFixed(0)}%` : null,
         jmp !== undefined && jmp !== null ? `${t("th_jumps")}: ${jmp}` : null
       ].filter(Boolean).join(" · ");
+      const insRing = ins
+        ? `<circle cx="${x}" cy="${y}" r="${NODE_R + 4}" data-r="${NODE_R + 4}" class="map-ins${ins.origin?.id === id ? " fob" : ""}"/>`
+        : "";
       const code = sysName(id).slice(0, 2);
-      return `${halo}<g class="map-sys">
+      return `${halo}<g class="map-sys" data-id="${id}">
+        ${insRing}
         <circle cx="${x}" cy="${y}" r="${NODE_R}" data-r="${NODE_R}" fill="${fac.color}" class="map-node${state}"><title>${esc(tip)}</title></circle>
         <text x="${x}" y="${y}" class="map-code">${esc(code)}</text>
       </g>`;
@@ -380,13 +432,16 @@ const [WarzonesView, MapView] = (() => {
     }, { passive: false });
 
     let drag = null;
+    let dragged = false;
     svg.addEventListener("pointerdown", e => {
       drag = { px: e.clientX, py: e.clientY, vx: vb.x, vy: vb.y };
+      dragged = false;
       svg.setPointerCapture(e.pointerId);
       svg.classList.add("panning");
     });
     svg.addEventListener("pointermove", e => {
       if (!drag) return;
+      if (Math.hypot(e.clientX - drag.px, e.clientY - drag.py) > 5) dragged = true;
       const r = svg.getBoundingClientRect();
       vb.x = drag.vx - ((e.clientX - drag.px) / r.width) * vb.w;
       vb.y = drag.vy - ((e.clientY - drag.py) / r.height) * vb.h;
@@ -395,6 +450,13 @@ const [WarzonesView, MapView] = (() => {
     const endDrag = () => { drag = null; svg.classList.remove("panning"); };
     svg.addEventListener("pointerup", endDrag);
     svg.addEventListener("pointercancel", endDrag);
+
+    /* Click on a system opens the detail panel (unless the map was panned). */
+    svg.addEventListener("click", e => {
+      if (dragged) return;
+      const sys = e.target.closest(".map-sys");
+      if (sys) selectSystem(Number(sys.dataset.id));
+    });
 
     svg.addEventListener("dblclick", () => { vb = { ...base }; apply(); });
 
@@ -411,6 +473,158 @@ const [WarzonesView, MapView] = (() => {
     const container = document.getElementById("wz-maps");
     container.innerHTML = WARZONES.map(renderMap).join("");
     container.querySelectorAll(".wz-map").forEach(bindMapInteractions);
+  }
+
+  /* ---------- insurgency summary ---------- */
+
+  function renderInsurgencies() {
+    const container = document.getElementById("insurgencies");
+    if (!insurgency || insurgency.campaigns.length === 0) {
+      container.innerHTML = "";
+      container.classList.add("hidden");
+      return;
+    }
+    container.classList.remove("hidden");
+    container.innerHTML = insurgency.campaigns.map(c => {
+      const pirate = pirateOf(c.pirate);
+      const entries = Object.entries(c.systems || {});
+      const corrupted = entries.filter(([, v]) => v[0] >= 5).length;
+      const suppressed = entries.filter(([, v]) => v[2] >= 5).length;
+      return `
+        <div class="ins-card">
+          <div class="ins-head">${esc(pirate.name)}</div>
+          <div class="ins-body">
+            ${t("ins_origin")}: <span class="strong">${esc(c.origin?.name ?? "?")}</span>
+            · ${entries.length} ${t("ins_affected")}
+            · ${t("ins_corruption")} 5/5: ${corrupted}
+            · ${t("ins_suppression")} 5/5: ${suppressed}
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  /* ---------- system detail panel ---------- */
+
+  function sparkline(id) {
+    if (!histSystems || histSystems.length < 2) return "";
+    const points = histSystems
+      .map(e => [e.t, (e.s?.[String(id)]?.[1] ?? 0) / 10])
+      .sort((a, b) => a[0] - b[0]);
+    const W = 260, H = 56, P = 4;
+    const tMin = points[0][0];
+    const span = Math.max(1, points[points.length - 1][0] - tMin);
+    const vMax = Math.max(5, ...points.map(p => p[1]));
+    const x = tv => P + ((tv - tMin) / span) * (W - 2 * P);
+    const y = v => H - P - (v / vMax) * (H - 2 * P);
+    const d = points.map((p, i) => `${i === 0 ? "M" : "L"}${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join("");
+    return `
+      <svg viewBox="0 0 ${W} ${H}" class="spark" role="img">
+        <path d="${d}"/>
+      </svg>
+      <div class="spark-scale mono">0–${vMax.toFixed(0)}%</div>
+    `;
+  }
+
+  function selectSystem(id) {
+    selectedId = id;
+    renderDetail();
+    document.querySelector("section:not(.hidden) .sys-detail")
+      ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function detailHtml(id) {
+    const s = data.systems.find(x => x.solar_system_id === id);
+    if (!s) return "";
+    const fac = factionOf(s.occupier_faction_id);
+    const cls = classes.get(id) || "rearguard";
+    const p = pct(s);
+    const k = kills.get(id) || 0;
+    const tr = traffic.get(id) || 0;
+    const jmp = jumps?.get(id);
+    const adv = advantage?.get(id);
+    const ins = insurgency?.bySystem.get(id);
+    const delta = delta24h(id, p, s.occupier_faction_id);
+
+    const flipRows = histFlips
+      .filter(f => f.id === id)
+      .sort((a, b) => b.t - a.t)
+      .slice(0, 3)
+      .map(f => {
+        const when = new Date(f.t * 1000).toLocaleDateString(LANG === "de" ? "de-DE" : "en-US", { day: "2-digit", month: "2-digit" });
+        return `${when}: ${factionOf(f.from).name} → ${factionOf(f.to).name}`;
+      });
+
+    const neighbors = (FwLogic.fwNeighbors.get(id) || [])
+      .filter(n => occupier.has(n))
+      .map(n => {
+        const nf = factionOf(occupier.get(n));
+        return `<button type="button" class="chip" data-id="${n}" style="color:${nf.color};border-color:${nf.color}">${esc(sysName(n))}</button>`;
+      }).join("");
+
+    const stat = (label, value) => `
+      <div class="det-stat"><span class="dlabel">${label}</span><span class="mono">${value}</span></div>`;
+
+    let deltaTxt = "—";
+    if (delta === "flip") deltaTxt = t("delta_flip");
+    else if (typeof delta === "number") deltaTxt = `${delta > 0 ? "+" : ""}${delta.toFixed(1)}%`;
+
+    return `
+      <div class="det-card">
+        <div class="det-head">
+          <h3>
+            <a href="${zkillUrl(id)}" target="_blank" rel="noopener" class="sys-link" title="zKillboard">${esc(sysName(id))}</a>
+            <a href="${dotlanUrl(sysName(id))}" target="_blank" rel="noopener" class="ext-link" title="Dotlan">D</a>
+          </h3>
+          <span class="mono sub">${esc(sysRegion(id))}</span>
+          <span class="fac-tag" style="color:${fac.color};border-color:${fac.color}">${fac.name}</span>
+          <span class="class-tag class-${cls}" title="${t("class_" + cls + "_tip")}">${t("class_" + cls)}</span>
+          <span class="status-pill${s.contested === "vulnerable" ? " hot" : ""}">${t("status_" + s.contested)} ${p > 0 ? p.toFixed(1) + "%" : ""}</span>
+          <button type="button" class="det-close" title="${t("det_close")}">×</button>
+        </div>
+        <div class="det-grid">
+          <div>
+            <div class="dlabel">${t("det_trend")} · Δ24h ${deltaTxt}</div>
+            ${sparkline(id) || `<div class="sub">${t("det_no_trend")}</div>`}
+          </div>
+          <div>
+            ${stat(t("th_adv"), adv && adv.occ !== null ? `${adv.occ} : ${adv.enemy}` : "—")}
+            ${stat(t("th_kills1h"), fmtNum(k))}
+            ${stat(t("det_traffic"), fmtNum(tr))}
+            ${stat(t("th_jumps"), jmp ?? "—")}
+          </div>
+          <div>
+            ${ins ? `
+              <div class="dlabel">${esc(pirateOf(ins.pirate).name)} · ${t("ins_origin")} ${esc(ins.origin?.name ?? "?")}</div>
+              ${stat(t("ins_corruption"), `${ins.corrState}/5 (${ins.corrPct.toFixed(0)}%)`)}
+              ${stat(t("ins_suppression"), `${ins.suppState}/5 (${ins.suppPct.toFixed(0)}%)`)}
+            ` : ""}
+            ${flipRows.length ? `
+              <div class="dlabel">${t("det_flips")}</div>
+              <div class="sub">${flipRows.map(esc).join("<br>")}</div>
+            ` : ""}
+          </div>
+        </div>
+        ${neighbors ? `<div class="det-neighbors"><span class="dlabel">${t("det_neighbors")}</span> ${neighbors}</div>` : ""}
+      </div>
+    `;
+  }
+
+  function renderDetail() {
+    document.querySelectorAll(".sys-detail").forEach(el => {
+      if (!data || selectedId === null) {
+        el.innerHTML = `<div class="notice">${t("det_hint")}</div>`;
+        return;
+      }
+      el.innerHTML = detailHtml(selectedId);
+      el.querySelector(".det-close")?.addEventListener("click", () => {
+        selectedId = null;
+        renderDetail();
+      });
+      el.querySelectorAll(".chip").forEach(chip => {
+        chip.addEventListener("click", () => selectSystem(Number(chip.dataset.id)));
+      });
+    });
   }
 
   /* ---------- systems table ---------- */
@@ -542,6 +756,11 @@ const [WarzonesView, MapView] = (() => {
         <td class="mono${k > 0 ? " strong" : ""}">${fmtNum(k)}</td>
         <td class="mono">${jmp === null || jmp === undefined ? "—" : jmp}</td>
       `;
+      row.classList.add("sys-row");
+      row.addEventListener("click", e => {
+        if (e.target.closest("a")) return;
+        selectSystem(id);
+      });
       body.appendChild(row);
     }
   }
@@ -549,12 +768,15 @@ const [WarzonesView, MapView] = (() => {
   function render() {
     if (!data) return;
     renderCards();
+    renderInsurgencies();
     renderTable();
+    renderDetail();
   }
 
   function renderMapTab() {
     if (!data) return;
     renderMaps();
+    renderDetail();
   }
 
   return [

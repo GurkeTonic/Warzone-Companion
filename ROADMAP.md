@@ -20,16 +20,16 @@ themselves via pull request — no forms, no backend, fully auditable.
 
 ## Planned
 
-- **System detail panel** — click a system on the map or in the table to get
-  a side panel: contested trend sparkline, advantage history, kills, flips
-  of that system, links. Data already collected; this is presentation.
-- **Insurgency mirror** — the war report API also exposes pirate insurgency
-  status (`/api/warzone/insurgency`, not in ESI). Mirror it like Advantage
-  and show FOB systems + corruption/suppression on the map.
-- **LP price history** — snapshot the top ISK/LP conversions per militia in
-  the mirror workflow; chart payout trends and warn about price crashes.
-- **Flip feed** — publish system flips as a static JSON/RSS feed so Discord
-  bots and third parties can consume them without scraping.
+- **Per-item LP crash warnings** — the militia-level LP history shipped;
+  per-item price trend tracking is the next step.
+
+## Shipped
+
+- System detail panel (trend sparkline, Advantage, insurgency, flips,
+  neighbors) — click any system on the map or in the table
+- Insurgency mirror: FOB origin + corruption/suppression on map and details
+- LP value history per militia (History tab)
+- Flip feed: `data/feed-flips.json`, documented in README and FAQ
 
 ## Later
 

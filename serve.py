@@ -4,11 +4,11 @@
 Serves the project directory at http://localhost:8080 with caching disabled,
 so edited files are always reloaded. Stop with Ctrl+C.
 
-Also exposes GET /api/warzone: a small proxy for the war report API on
-www.eveonline.com (per-system Advantage values), which sends no CORS headers
-and is therefore unreachable from browser JavaScript directly. The response
-is cached in memory for a short time to keep request volume low. The
-frontend treats this endpoint as optional and degrades gracefully without it.
+Also exposes small proxies for the war report APIs on www.eveonline.com
+(per-system Advantage and pirate insurgency state), which send no CORS
+headers and are therefore unreachable from browser JavaScript directly.
+Responses are cached in memory for a short time to keep request volume low.
+The frontend treats these endpoints as optional and degrades gracefully.
 """
 import http.server
 import json
@@ -21,24 +21,27 @@ import webbrowser
 PORT = 8080
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
-WARZONE_API = "https://www.eveonline.com/api/warzone/status"
-WARZONE_CACHE_SECONDS = 300
+PROXIES = {
+    "/api/warzone": "https://www.eveonline.com/api/warzone/status",
+    "/api/insurgency": "https://www.eveonline.com/api/warzone/insurgency",
+}
+PROXY_CACHE_SECONDS = 300
 
 _cache_lock = threading.Lock()
-_cache = {"ts": 0.0, "body": None}
+_cache = {}  # path -> {"ts": float, "body": bytes}
 
 
-def fetch_warzone_status():
+def fetch_proxied(path):
     with _cache_lock:
-        if _cache["body"] is not None and time.time() - _cache["ts"] < WARZONE_CACHE_SECONDS:
-            return _cache["body"]
-    req = urllib.request.Request(WARZONE_API, headers={"Accept": "application/json"})
+        entry = _cache.get(path)
+        if entry and time.time() - entry["ts"] < PROXY_CACHE_SECONDS:
+            return entry["body"]
+    req = urllib.request.Request(PROXIES[path], headers={"Accept": "application/json"})
     with urllib.request.urlopen(req, timeout=20) as res:
         body = res.read()
     json.loads(body)  # validate before caching
     with _cache_lock:
-        _cache["ts"] = time.time()
-        _cache["body"] = body
+        _cache[path] = {"ts": time.time(), "body": body}
     return body
 
 
@@ -51,14 +54,15 @@ class DevHandler(http.server.SimpleHTTPRequestHandler):
         super().end_headers()
 
     def do_GET(self):
-        if self.path.split("?")[0] == "/api/warzone":
-            self.handle_warzone()
+        path = self.path.split("?")[0]
+        if path in PROXIES:
+            self.handle_proxy(path)
             return
         super().do_GET()
 
-    def handle_warzone(self):
+    def handle_proxy(self, path):
         try:
-            body = fetch_warzone_status()
+            body = fetch_proxied(path)
             self.send_response(200)
         except Exception as err:
             body = json.dumps({"error": str(err)}).encode()
