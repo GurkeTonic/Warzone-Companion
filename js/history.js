@@ -16,7 +16,7 @@ const HistoryView = (() => {
   const PAD_B = 26;
 
   async function load() {
-    const res = await fetch("data/history.json", { cache: "no-cache" });
+    const res = await fetch("/data/history.json", { cache: "no-cache" });
     if (!res.ok) {
       data = null;
       return;

@@ -138,7 +138,8 @@ nav {
   margin-bottom: 26px;
   flex-wrap: wrap;
 }
-nav button {
+nav a {
+  display: inline-block;
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
@@ -148,11 +149,12 @@ nav button {
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  text-decoration: none;
   padding: 10px 16px;
   cursor: pointer;
 }
-nav button:hover { color: var(--text); }
-nav button.active { color: var(--text); border-bottom-color: var(--caldari); }
+nav a:hover { color: var(--text); }
+nav a.active { color: var(--text); border-bottom-color: var(--caldari); }
 
 /* ---------- Section titles ---------- */
 .section-title {
@@ -784,6 +786,8 @@ footer {
   line-height: 1.7;
 }
 footer .mono { font-family: var(--font-mono); }
+footer a { color: var(--muted); }
+footer a:hover { color: var(--text); }
 
 @media (prefers-reduced-motion: reduce) {
   .front-bar .seg { transition: none; }

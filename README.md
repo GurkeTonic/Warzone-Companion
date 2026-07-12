@@ -51,12 +51,15 @@ requests except ESI.
 
 ## Architecture
 
-Plain scripts in a fixed load order, no framework, no build step, no
-dependencies. Each view exposes `load()` and `render()`; the router in
-`app.js` lazy-loads tabs and caches them.
+Plain scripts in a fixed load order, no framework, no dependencies. Each
+view exposes `load()` and `render()`. Every tab is a real subpage
+(`/map/`, `/lp/`, ...) with its own URL, title, and description — generated
+from `index.html` by `tools/build_pages.py` (run it after editing the
+shell; it also regenerates `sitemap.xml`).
 
 ```
-index.html               shell, tab navigation, panels
+index.html               shell + Warzones page (template for the subpages)
+map/ history/ lp/ ...    generated subpages, one per tab
 css/app.css              design system, self-hosted fonts (fonts/)
 js/data/staticdata.js    generated: gate graph, names, FW systems, campaigns
 js/config.js             constants, factions, militia corps

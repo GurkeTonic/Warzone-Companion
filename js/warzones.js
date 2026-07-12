@@ -24,7 +24,7 @@ const [WarzonesView, MapView] = (() => {
     insurgency = null;
     let campaigns = null;
     try {
-      const res = await fetch("api/insurgency");
+      const res = await fetch("/api/insurgency");
       if (res.ok) {
         campaigns = (await res.json())
           .filter(c => c.state === "ACTIVE")
@@ -41,7 +41,7 @@ const [WarzonesView, MapView] = (() => {
     } catch { /* proxy unavailable — try the static mirror */ }
     if (!campaigns) {
       try {
-        const res = await fetch("data/insurgency.json", { cache: "no-cache" });
+        const res = await fetch("/data/insurgency.json", { cache: "no-cache" });
         if (!res.ok) return;
         const mirror = await res.json();
         if (Date.now() - Date.parse(mirror.fetched) > MIRROR_MAX_AGE_MS) return;
@@ -73,7 +73,7 @@ const [WarzonesView, MapView] = (() => {
   async function loadAdvantage() {
     advantage = null;
     try {
-      const res = await fetch("api/warzone");
+      const res = await fetch("/api/warzone");
       if (res.ok) {
         const rows = await res.json();
         advantage = new Map(rows.map(r => {
@@ -87,7 +87,7 @@ const [WarzonesView, MapView] = (() => {
       }
     } catch { /* proxy unavailable — try the static mirror */ }
     try {
-      const res = await fetch("data/warzone.json", { cache: "no-cache" });
+      const res = await fetch("/data/warzone.json", { cache: "no-cache" });
       if (!res.ok) return;
       const mirror = await res.json();
       if (Date.now() - Date.parse(mirror.fetched) > MIRROR_MAX_AGE_MS) return;
@@ -100,7 +100,7 @@ const [WarzonesView, MapView] = (() => {
   async function loadHistory() {
     histSystems = null;
     try {
-      const res = await fetch("data/history.json", { cache: "no-cache" });
+      const res = await fetch("/data/history.json", { cache: "no-cache" });
       if (!res.ok) return;
       const history = await res.json();
       if (Array.isArray(history.systems)) histSystems = history.systems;
