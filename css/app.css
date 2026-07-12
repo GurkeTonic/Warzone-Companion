@@ -676,7 +676,6 @@ section { position: relative; }
 }
 .lp-controls .mode-badge { font-size: 12px; line-height: 1.5; }
 #lp-trend { flex: 1 1 380px; min-width: 0; }
-#lp-trend .chart-card { max-width: 640px; }
 
 /* ---------- Map popover ---------- */
 .map-pop {
