@@ -465,7 +465,7 @@ const [WarzonesView, MapView] = (() => {
       const sys = document.elementFromPoint(e.clientX, e.clientY)?.closest(".map-sys");
       if (sys) {
         selectSystem(Number(sys.dataset.id), { quiet: true });
-        showPopover(svg, Number(sys.dataset.id), e);
+        showPopover(svg.closest(".map-frame"), Number(sys.dataset.id), e);
       } else {
         hidePopover(svg);
       }
@@ -588,33 +588,44 @@ const [WarzonesView, MapView] = (() => {
     `;
   }
 
-  function showPopover(svg, id, evt) {
+  /* anchor: any positioned container (.map-frame or the panel itself). */
+  function showPopover(anchor, id, evt) {
     document.querySelectorAll(".map-pop").forEach(p => p.classList.add("hidden"));
-    const frame = svg.closest(".map-frame");
-    let pop = frame.querySelector(".map-pop");
+    let pop = anchor.querySelector(":scope > .map-pop");
     if (!pop) {
       pop = document.createElement("div");
       pop.className = "map-pop";
-      frame.appendChild(pop);
+      anchor.appendChild(pop);
     }
     pop.innerHTML = popHtml(id);
     pop.classList.remove("hidden");
-    const fr = frame.getBoundingClientRect();
+    const fr = anchor.getBoundingClientRect();
     const x = evt.clientX - fr.left;
     const y = evt.clientY - fr.top;
     pop.style.left = `${Math.max(8, Math.min(x + 16, fr.width - pop.offsetWidth - 8))}px`;
     pop.style.top = `${Math.max(8, Math.min(y - 24, fr.height - pop.offsetHeight - 8))}px`;
     pop.querySelector(".det-close").addEventListener("click", () => pop.classList.add("hidden"));
-    pop.querySelector(".pop-more").addEventListener("click", () => {
-      pop.classList.add("hidden");
-      document.querySelector("section:not(.hidden) .sys-detail")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    const more = pop.querySelector(".pop-more");
+    const detail = document.querySelector("section:not(.hidden) .sys-detail");
+    if (detail) {
+      more.addEventListener("click", () => {
+        pop.classList.add("hidden");
+        detail.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    } else {
+      more.classList.add("hidden");
+    }
   }
 
-  function hidePopover(svg) {
-    svg.closest(".map-frame")?.querySelector(".map-pop")?.classList.add("hidden");
+  function hidePopover(el) {
+    el.closest(".map-frame")?.querySelector(".map-pop")?.classList.add("hidden");
   }
+
+  /* Click anywhere outside a popover or a system closes open popovers. */
+  document.addEventListener("click", e => {
+    if (e.target.closest(".map-pop") || e.target.closest(".sys-row") || e.target.closest(".map-sys")) return;
+    document.querySelectorAll(".map-pop").forEach(p => p.classList.add("hidden"));
+  });
 
   function detailHtml(id) {
     const s = data.systems.find(x => x.solar_system_id === id);
@@ -842,7 +853,8 @@ const [WarzonesView, MapView] = (() => {
       row.classList.add("sys-row");
       row.addEventListener("click", e => {
         if (e.target.closest("a")) return;
-        selectSystem(id);
+        selectSystem(id, { quiet: true });
+        showPopover(document.getElementById("panel-warzones"), id, e);
       });
       body.appendChild(row);
     }

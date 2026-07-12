@@ -1,4 +1,4 @@
-/* LP store view. Depends on config.js, i18n.js, esi.js. */
+/* LP store view. Depends on config.js, i18n.js, esi.js, charts.js. */
 "use strict";
 
 const LpStoreView = (() => {
@@ -8,6 +8,50 @@ const LpStoreView = (() => {
   let currentCorp = null;
   let jitaMode = false;
   let jitaLoading = false;
+  let lpHistory = null;         // [{t, m: {factionId: [best, median]}}]
+
+  const TREND_DAYS = 30;
+
+  /* Optional trend data from the snapshot archive; chart stays empty
+     when the file is missing (e.g. fresh local checkout). */
+  async function loadTrend() {
+    try {
+      const res = await fetch("/data/history.json", { cache: "no-cache" });
+      if (!res.ok) return;
+      const history = await res.json();
+      if (Array.isArray(history.lp)) lpHistory = history.lp;
+    } catch { /* chart stays empty */ }
+  }
+
+  function renderTrend() {
+    const container = document.getElementById("lp-trend");
+    if (!lpHistory) {
+      container.innerHTML = "";
+      return;
+    }
+    const cutoff = Date.now() / 1000 - TREND_DAYS * 86400;
+    const entries = lpHistory.filter(e => e.t >= cutoff);
+    const series = Object.keys(FACTIONS).map(facId => {
+      const fac = factionOf(Number(facId));
+      return {
+        label: fac.name,
+        color: fac.color,
+        points: entries
+          .map(e => [e.t, e.m?.[facId]?.[1]])
+          .filter(p => Number.isFinite(p[1]))
+      };
+    }).filter(s => s.points.length > 0);
+    if (series.length === 0) {
+      container.innerHTML = "";
+      return;
+    }
+    container.innerHTML = `
+      <div class="chart-card">
+        <div class="map-head">${t("hist_lp")}</div>
+        ${Charts.lineChart(series)}
+      </div>
+    `;
+  }
 
   async function loadPrices() {
     if (priceMap) return;
@@ -107,7 +151,7 @@ const LpStoreView = (() => {
   }
 
   async function load() {
-    await loadPrices();
+    await Promise.all([loadPrices(), loadTrend()]);
     if (!currentCorp) currentCorp = FACTIONS[500001].militiaCorp;
     if (!offerCache.has(currentCorp)) {
       const offers = await ESI.get(`/loyalty/stores/${currentCorp}/offers`);
@@ -181,6 +225,7 @@ const LpStoreView = (() => {
 
   function render() {
     renderToolbar();
+    renderTrend();
     const body = document.getElementById("lp-body");
     body.innerHTML = "";
 

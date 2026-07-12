@@ -645,6 +645,10 @@ td.rank { color: var(--muted); width: 32px; }
 }
 .ins-body { font-size: 13px; color: var(--muted); margin-top: 3px; }
 
+section { position: relative; }
+
+#lp-trend .chart-card { max-width: 680px; margin-bottom: 16px; }
+
 /* ---------- Map popover ---------- */
 .map-pop {
   position: absolute;
