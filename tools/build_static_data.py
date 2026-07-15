@@ -21,8 +21,9 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-ESI_FW_SYSTEMS = "https://esi.evetech.net/fw/systems?compatibility_date=2026-06-09"
-USER_AGENT = "WarzoneCompanion/0.4 (webmaster@tonicbeacon.com; +https://github.com/GurkeTonic/Warzone-Companion)"
+from esi_shared import ESI_BASE, COMPAT_DATE, USER_AGENT
+
+ESI_FW_SYSTEMS = f"{ESI_BASE}/fw/systems?compatibility_date={COMPAT_DATE}"
 OUT_PATH = Path(__file__).resolve().parent.parent / "js" / "data" / "staticdata.js"
 
 # Wormhole/abyssal/void regions start at 11000000; k-space regions are below.

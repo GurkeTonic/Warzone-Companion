@@ -10,13 +10,25 @@ description. Run after every change to index.html:
 
 Stdlib only, no network.
 """
+import json
 import re
 import sys
 from pathlib import Path
 
+from esi_shared import ESI_BASE, COMPAT_DATE, USER_AGENT
+
 ROOT = Path(__file__).resolve().parent.parent
 TEMPLATE = ROOT / "index.html"
-BASE_URL = "https://warzone.tonicbeacon.com"
+CONFIG_JS = ROOT / "js" / "config.js"
+BASE_URL = "https://evewarzone.com"
+
+ROOT_PAGE = {
+    "tab": "warzones",
+    "dir": "",
+    "title": "Warzone Companion — EVE Online Factional Warfare",
+    "description": "Factional Warfare companion for EVE Online: live warzone maps, frontline status, "
+                   "LP store optimizer, leaderboards, and Military Campaigns.",
+}
 
 PAGES = [
     {
@@ -39,12 +51,6 @@ PAGES = [
         "title": "LP Store Optimizer — Warzone Companion",
         "description": "ISK per LP ranking for all EVE Online militia LP stores, "
                        "with live Jita order-book pricing and market depth.",
-    },
-    {
-        "tab": "jobs",
-        "dir": "jobs",
-        "title": "Freelance Jobs — Warzone Companion",
-        "description": "Public EVE Online freelance jobs board: open tasks, rewards, and progress.",
     },
     {
         "tab": "boards",
@@ -92,7 +98,49 @@ def build_page(template, page):
     return html
 
 
+def build_routes_js():
+    """Route table for js/router.js: soft (pushState) navigation needs the
+    same per-tab title/description/canonical that build_page() bakes into
+    each static subpage, so both stay driven by this one PAGES list."""
+    entries = []
+    for page in [ROOT_PAGE] + PAGES:
+        path = f"/{page['dir']}/" if page["dir"] else "/"
+        entries.append(
+            "  %s: {tab: %s, title: %s, description: %s, canonical: %s}"
+            % (
+                json.dumps(path),
+                json.dumps(page["tab"]),
+                json.dumps(page["title"]),
+                json.dumps(page["description"]),
+                json.dumps(f"{BASE_URL}{path}"),
+            )
+        )
+    return (
+        "/* Generated from tools/build_pages.py's PAGES list — do not edit by hand.\n"
+        "   Route table for js/router.js (soft navigation between tabs). */\n"
+        '"use strict";\n\n'
+        "const ROUTES = {\n" + ",\n".join(entries) + "\n};\n"
+    )
+
+
+def sync_config_js():
+    """Keep CONFIG.ESI_BASE / COMPAT_DATE / USER_AGENT in js/config.js in
+    sync with tools/esi_shared.py — the single source both the Python tools
+    and the browser client draw from. Everything else in config.js (rows,
+    market settings, ...) is hand-maintained and left untouched."""
+    js = CONFIG_JS.read_text(encoding="utf-8")
+    js, n1 = re.subn(r'ESI_BASE: "[^"]*",', f'ESI_BASE: "{ESI_BASE}",', js, count=1)
+    js, n2 = re.subn(r'COMPAT_DATE: "[^"]*",', f'COMPAT_DATE: "{COMPAT_DATE}",', js, count=1)
+    js, n3 = re.subn(r'USER_AGENT: "[^"]*",', f'USER_AGENT: "{USER_AGENT}",', js, count=1)
+    if (n1, n2, n3) != (1, 1, 1):
+        sys.exit(f"js/config.js: expected 1 match each for ESI_BASE/COMPAT_DATE/USER_AGENT, got {(n1, n2, n3)}")
+    CONFIG_JS.write_text(js, encoding="utf-8", newline="\n")
+    print("synced js/config.js (ESI_BASE, COMPAT_DATE, USER_AGENT) from tools/esi_shared.py")
+
+
 def main():
+    sync_config_js()
+
     template = TEMPLATE.read_text(encoding="utf-8")
     for marker in ('<body data-tab="warzones">', "<title>", 'rel="canonical"'):
         if marker not in template:
@@ -103,6 +151,9 @@ def main():
         out_dir.mkdir(exist_ok=True)
         (out_dir / "index.html").write_text(build_page(template, page), encoding="utf-8", newline="\n")
         print(f"wrote {page['dir']}/index.html")
+
+    (ROOT / "js" / "routes.js").write_text(build_routes_js(), encoding="utf-8", newline="\n")
+    print("wrote js/routes.js")
 
     urls = [f"{BASE_URL}/"] + [f"{BASE_URL}/{p['dir']}/" for p in PAGES]
     sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n' \

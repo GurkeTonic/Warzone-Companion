@@ -3,9 +3,8 @@
 
 const I18N = {
   de: {
-    subtitle: "Factional-Warfare-Begleiter für EVE Online — Live-Frontverlauf, LP-Optimierung, Freelance Jobs und Military Campaigns",
+    subtitle: "Factional-Warfare-Begleiter für EVE Online — Live-Frontverlauf, LP-Optimierung und Military Campaigns",
     refresh: "Aktualisieren",
-    loading: "Lade Daten von ESI ...",
     err_prefix: "ESI-Abruf fehlgeschlagen: ",
     err_hint: "Prüfe die Internetverbindung oder den ESI-Status unter esi.evetech.net.",
     err_rate_limit: "ESI-Rate-Limit erreicht. Kurz warten, dann erneut versuchen.",
@@ -14,12 +13,10 @@ const I18N = {
     tab_map: "Karte",
     tab_history: "History",
     tab_lp: "LP-Store",
-    tab_jobs: "Freelance Jobs",
     tab_boards: "Leaderboards",
     tab_campaigns: "Campaigns",
     tab_faq: "FAQ",
 
-    sec_faq: "FAQ — Daten, Mechanik, Bedienung",
     faq_q_data: "Woher kommen die Daten?",
     faq_a_data: "Live-Daten kommen direkt von ESI (öffentliche Endpoints, client-seitig bei Tab-Aufruf abgerufen — kein Login, kein Tracking). Advantage stammt vom offiziellen War Report auf eveonline.com und wird alle 30 Minuten per GitHub Action gespiegelt. Statische Inhalte (Kartenpositionen, Systemnamen, Kampagnen) kommen aus CCPs offiziellem Static Data Export. Alles ist im GitHub-Repo öffentlich nachprüfbar — jeder Daten-Snapshot ist ein Commit.",
     faq_q_map: "Wie lese ich die Karte?",
@@ -34,8 +31,6 @@ const I18N = {
     faq_a_lp: "Standardansicht: Bewertung über ESI-Durchschnittspreise — schnelle Näherung, reale Margen können abweichen. Der Jita-Knopf bepreist die Top-Angebote mit dem echten Jita-4-4-Orderbuch: höchste Buy-Order für den Produkterlös, niedrigste Sell-Order für Materialkosten; gerankt werden dann nur neu bepreiste Angebote. Buy-Tiefe = Stückzahl, die sofort in Buy-Orders (bis 5 % unter Bestpreis) verkäuflich ist — rot heißt: weniger als eine Kaufmenge, dünner Markt. ISK/LP ist der Nettoerlös (Wert minus ISK-Kosten minus Materialien) pro Loyalty Point. Der Trend-Chart darüber nutzt den täglichen Jita-Durchschnittskurs (The-Forge-Markthistorie) — er zeigt die Richtung, die Tabelle den ausführbaren Ist-Erlös.",
     faq_q_home: "Was macht das Heimatsystem-Feld?",
     faq_a_home: "Trage ein System ein (z. B. dein Staging), und die Tabelle zeigt die Entfernung in Gate-Jumps zu jedem Warzone-System — kürzeste Route, Security wird ignoriert. Die Angabe wird nur lokal im Browser gespeichert und nie übertragen.",
-    faq_q_jobs: "Was sind Freelance Jobs?",
-    faq_a_jobs: "Das öffentliche Jobs-Board aus ESI: von Spielern und Corps ausgeschriebene Aufträge mit ISK-Belohnung. Klick auf eine Zeile zeigt Details (Karriere, Ablauf, Ersteller, Reward pro Contribution). Laut CCP-Roadmap wird dieses System Richtung Military Contracts ausgebaut.",
     faq_q_campaigns: "Warum zeigen die Campaigns keinen Fortschritt?",
     faq_a_campaigns: "Titel, Beschreibungen und Objectives stammen aus dem offiziellen Static Data Export. Für den Live-Fortschritt bietet ESI schlicht keine Route — der ist nur im In-Game-Dashboard „Theaters of War“ sichtbar. Sobald CCP eine Route liefert, wird sie eingebaut.",
     faq_q_insurgency: "Was bedeuten die lila Ringe (Insurgency)?",
@@ -43,7 +38,6 @@ const I18N = {
     faq_q_feed: "Gibt es einen Feed für Bots und andere Tools?",
     faq_a_feed: "Ja: Systemwechsel stehen als stabiles JSON unter data/feed-flips.json bereit (Zeitpunkt, System, verlierende und erobernde Fraktion, IDs und Namen), aktualisiert alle 30 Minuten, 90 Tage Tiefe. Discord-Bots und andere Tools dürfen den Feed direkt abfragen — Quellenangabe genügt.",
 
-    sec_history: "Frontverlauf über Zeit",
     hist_systems: "Systeme",
     hist_pilots: "Piloten",
     hist_range_2: "48 h",
@@ -75,7 +69,6 @@ const I18N = {
     det_hint: "System in Karte oder Tabelle anklicken für Details.",
     det_more: "Mehr Details",
 
-    sec_warzones: "Warzones",
     sec_contested: "Umkämpfte Systeme",
     systems_held: "Systeme",
     pilots: "Piloten",
@@ -114,14 +107,12 @@ const I18N = {
     wz_sort_jumps: "Entfernung",
     home_label: "Heimatsystem",
     home_placeholder: "z. B. Jita",
-    sec_map: "Warzone-Karten",
     map_zoom_in: "Reinzoomen",
     map_zoom_out: "Rauszoomen",
     map_zoom_reset: "Ansicht zurücksetzen",
     auto_refresh: "Auto-Refresh",
     auto_refresh_title: "Aktiven Tab alle 5 Minuten neu laden",
 
-    sec_lp: "LP-Store — ISK pro LP",
     lp_militia: "Militia-Corporation",
     lp_jita_btn: "Jita-Preise laden",
     lp_jita_loading: "Lade Jita-Orderbuch ...",
@@ -139,29 +130,12 @@ const I18N = {
     lp_none: "Keine bewertbaren Angebote gefunden.",
     req_none: "—",
 
-    sec_jobs: "Freelance Jobs (öffentlich)",
-    jobs_filter_state: "Status",
-    jobs_state_all: "Alle",
-    th_job: "Job",
-    th_progress: "Fortschritt",
-    th_reward_rem: "Reward (verbleibend)",
-    th_state: "Status",
-    jobs_none: "Keine Jobs gefunden.",
-    jobs_more: "Weitere laden",
-    job_career: "Karriere",
-    job_expires: "Läuft ab",
-    job_creator: "Ersteller",
-    job_reward_contrib: "Reward pro Contribution",
-    job_desc_missing: "Keine Beschreibung.",
-
-    sec_boards: "FW-Leaderboards (gestern)",
     boards_kills: "Kills",
     boards_vp: "Victory Points",
     boards_chars: "Charaktere",
     boards_corps: "Corporations",
     boards_none: "Keine Leaderboard-Daten.",
 
-    sec_campaigns: "Military Campaigns",
     cmp_target: "Kampagnenziel",
     cmp_stages: "Stufen",
     cmp_objectives: "Objectives",
@@ -171,9 +145,8 @@ const I18N = {
     ts_label: "Stand"
   },
   en: {
-    subtitle: "Factional Warfare companion for EVE Online — live front lines, LP optimization, freelance jobs, and Military Campaigns",
+    subtitle: "Factional Warfare companion for EVE Online — live front lines, LP optimization, and Military Campaigns",
     refresh: "Refresh",
-    loading: "Loading data from ESI ...",
     err_prefix: "ESI request failed: ",
     err_hint: "Check your internet connection or the ESI status at esi.evetech.net.",
     err_rate_limit: "ESI rate limit reached. Wait a moment, then try again.",
@@ -182,12 +155,10 @@ const I18N = {
     tab_map: "Map",
     tab_history: "History",
     tab_lp: "LP store",
-    tab_jobs: "Freelance jobs",
     tab_boards: "Leaderboards",
     tab_campaigns: "Campaigns",
     tab_faq: "FAQ",
 
-    sec_faq: "FAQ — data, mechanics, usage",
     faq_q_data: "Where does the data come from?",
     faq_a_data: "Live data comes straight from ESI (public endpoints, fetched client-side when a tab is opened — no login, no tracking). Advantage comes from the official war report on eveonline.com, mirrored every 30 minutes by a GitHub Action. Static content (map positions, system names, campaigns) comes from CCP's official Static Data Export. Everything is publicly auditable in the GitHub repo — every data snapshot is a commit.",
     faq_q_map: "How do I read the map?",
@@ -202,8 +173,6 @@ const I18N = {
     faq_a_lp: "Default view: valuation via ESI average prices — a quick approximation; real margins may differ. The Jita button reprices the top offers with the live Jita 4-4 order book: highest buy order for product revenue, lowest sell order for material cost; only repriced offers are then ranked. Buy depth = units sellable instantly into buy orders (within 5% of best price) — red means less than one purchase quantity, thin market. ISK/LP is the net return (value minus ISK cost minus materials) per loyalty point. The trend chart above it uses the daily Jita average (The Forge market history) — it shows direction, the table shows the executable payout.",
     faq_q_home: "What does the home system field do?",
     faq_a_home: "Enter a system (e.g. your staging) and the table shows the distance in gate jumps to every warzone system — shortest route, security ignored. The value is stored locally in your browser only and never transmitted.",
-    faq_q_jobs: "What are freelance jobs?",
-    faq_a_jobs: "The public jobs board from ESI: tasks posted by players and corps with ISK rewards. Click a row for details (career, expiry, creator, reward per contribution). Per CCP's roadmap this system is being extended toward Military Contracts.",
     faq_q_campaigns: "Why don't the campaigns show progress?",
     faq_a_campaigns: "Titles, descriptions, and objectives come from the official Static Data Export. ESI simply exposes no route for live progress — that is only visible in the in-game “Theaters of War” dashboard. As soon as CCP ships a route, it will be added.",
     faq_q_insurgency: "What do the purple rings (insurgency) mean?",
@@ -211,7 +180,6 @@ const I18N = {
     faq_q_feed: "Is there a feed for bots and other tools?",
     faq_a_feed: "Yes: system flips are published as stable JSON at data/feed-flips.json (time, system, losing and capturing faction, IDs and names), refreshed every 30 minutes with 90 days of depth. Discord bots and other tools are welcome to poll the feed directly — attribution is appreciated.",
 
-    sec_history: "Front lines over time",
     hist_systems: "Systems",
     hist_pilots: "Pilots",
     hist_range_2: "48 h",
@@ -243,7 +211,6 @@ const I18N = {
     det_hint: "Click a system on the map or in the table for details.",
     det_more: "More details",
 
-    sec_warzones: "Warzones",
     sec_contested: "Contested systems",
     systems_held: "systems",
     pilots: "Pilots",
@@ -282,14 +249,12 @@ const I18N = {
     wz_sort_jumps: "Distance",
     home_label: "Home system",
     home_placeholder: "e.g. Jita",
-    sec_map: "Warzone maps",
     map_zoom_in: "Zoom in",
     map_zoom_out: "Zoom out",
     map_zoom_reset: "Reset view",
     auto_refresh: "Auto refresh",
     auto_refresh_title: "Reload the active tab every 5 minutes",
 
-    sec_lp: "LP store — ISK per LP",
     lp_militia: "Militia corporation",
     lp_jita_btn: "Load Jita prices",
     lp_jita_loading: "Loading Jita order book ...",
@@ -307,29 +272,12 @@ const I18N = {
     lp_none: "No valuable offers found.",
     req_none: "—",
 
-    sec_jobs: "Freelance jobs (public)",
-    jobs_filter_state: "State",
-    jobs_state_all: "All",
-    th_job: "Job",
-    th_progress: "Progress",
-    th_reward_rem: "Reward (remaining)",
-    th_state: "State",
-    jobs_none: "No jobs found.",
-    jobs_more: "Load more",
-    job_career: "Career",
-    job_expires: "Expires",
-    job_creator: "Creator",
-    job_reward_contrib: "Reward per contribution",
-    job_desc_missing: "No description.",
-
-    sec_boards: "FW leaderboards (yesterday)",
     boards_kills: "Kills",
     boards_vp: "Victory points",
     boards_chars: "Characters",
     boards_corps: "Corporations",
     boards_none: "No leaderboard data.",
 
-    sec_campaigns: "Military Campaigns",
     cmp_target: "Campaign target",
     cmp_stages: "stages",
     cmp_objectives: "Objectives",
@@ -358,6 +306,29 @@ function fmtIsk(n) {
   if (abs >= 1e6) return (v / 1e6).toLocaleString(loc, { maximumFractionDigits: 2 }) + " M";
   if (abs >= 1e3) return (v / 1e3).toLocaleString(loc, { maximumFractionDigits: 1 }) + " k";
   return v.toLocaleString(loc, { maximumFractionDigits: 0 });
+}
+
+/* EN always shows EVE time (UTC) — avoids ambiguity for an international
+   audience in different real-world timezones; DE shows the visitor's local
+   clock. suffix=true appends "UTC" (skipped for compact chart ticks etc.). */
+function fmtTime(date, opts = {}, suffix = false) {
+  const loc = LANG === "de" ? "de-DE" : "en-US";
+  const o = LANG === "en" ? { ...opts, timeZone: "UTC" } : opts;
+  const s = date.toLocaleTimeString(loc, o);
+  return suffix && LANG === "en" ? s + " UTC" : s;
+}
+
+function fmtDate(date, opts = {}) {
+  const loc = LANG === "de" ? "de-DE" : "en-US";
+  const o = LANG === "en" ? { ...opts, timeZone: "UTC" } : opts;
+  return date.toLocaleDateString(loc, o);
+}
+
+function fmtDateTime(date, opts = {}, suffix = false) {
+  const loc = LANG === "de" ? "de-DE" : "en-US";
+  const o = LANG === "en" ? { ...opts, timeZone: "UTC" } : opts;
+  const s = date.toLocaleString(loc, o);
+  return suffix && LANG === "en" ? s + " UTC" : s;
 }
 
 /* Escape untrusted strings (player-authored names, descriptions) for innerHTML. */

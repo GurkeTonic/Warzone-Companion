@@ -48,13 +48,11 @@ const HistoryView = (() => {
       return;
     }
 
-    const loc = LANG === "de" ? "de-DE" : "en-US";
     body.innerHTML = flips.map(f => {
       const from = factionOf(f.from);
       const to = factionOf(f.to);
-      const when = new Date(f.t * 1000).toLocaleString(loc, {
-        day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"
-      });
+      const when = fmtDateTime(new Date(f.t * 1000),
+        { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }, true);
       const name = SDATA.fw[f.id]?.n ?? SDATA.names[f.id] ?? String(f.id);
       const region = SDATA.fw[f.id]?.r ?? "?";
       return `

@@ -2,10 +2,13 @@
 "use strict";
 
 const CONFIG = {
+  /* ESI_BASE, COMPAT_DATE, USER_AGENT are synced from tools/esi_shared.py by
+     tools/build_pages.py — edit the values there, not here, they get
+     overwritten on the next build. Sent as X-User-Agent on every ESI request
+     (browsers drop User-Agent on fetch) — see
+     developers.eveonline.com/docs/services/esi/best-practices */
   ESI_BASE: "https://esi.evetech.net",
   COMPAT_DATE: "2026-06-09",
-  /* Sent as X-User-Agent on every ESI request (browsers drop User-Agent
-     on fetch) — see developers.eveonline.com/docs/services/esi/best-practices */
   USER_AGENT: "WarzoneCompanion/0.4 (webmaster@tonicbeacon.com; +https://github.com/GurkeTonic/Warzone-Companion)",
   CONTESTED_ROWS: 40,
   LP_ROWS: 50,
@@ -13,7 +16,6 @@ const CONFIG = {
   JITA_REGION: 10000002,
   JITA_STATION: 60003760,
   MARKET_CONCURRENCY: 4,
-  JOBS_PAGE_LIMIT: 50,
   AUTO_REFRESH_MS: 5 * 60 * 1000
 };
 

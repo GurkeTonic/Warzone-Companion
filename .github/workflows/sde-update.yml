@@ -1,0 +1,35 @@
+name: Update SDE static data
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sde-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check SDE build and regenerate static data if newer
+        run: python3 tools/update_sde.py
+
+      - name: Commit if changed
+        run: |
+          if [ -z "$(git status --porcelain js/data/staticdata.js)" ]; then
+            echo "no changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add js/data/staticdata.js
+          git commit -m "data: update SDE static data"
+          git pull --rebase origin main
+          git push

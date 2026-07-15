@@ -5,7 +5,7 @@
 const FaqView = (() => {
   const TOPICS = [
     "data", "map", "roles", "adv", "insurgency", "delta", "lp", "home",
-    "jobs", "campaigns", "feed"
+    "campaigns", "feed"
   ];
 
   async function load() {

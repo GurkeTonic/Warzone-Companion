@@ -645,7 +645,7 @@ const [WarzonesView, MapView] = (() => {
       .sort((a, b) => b.t - a.t)
       .slice(0, 3)
       .map(f => {
-        const when = new Date(f.t * 1000).toLocaleDateString(LANG === "de" ? "de-DE" : "en-US", { day: "2-digit", month: "2-digit" });
+        const when = fmtDate(new Date(f.t * 1000), { day: "2-digit", month: "2-digit" });
         return `${when}: ${factionOf(f.from).name} → ${factionOf(f.to).name}`;
       });
 
@@ -831,7 +831,7 @@ const [WarzonesView, MapView] = (() => {
       }
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>
+        <td class="sys-cell">
           <a href="${zkillUrl(id)}" target="_blank" rel="noopener" class="sys-link" title="zKillboard">${esc(sysName(id))}</a>
           <a href="${dotlanUrl(sysName(id))}" target="_blank" rel="noopener" class="ext-link" title="Dotlan">D</a>
         </td>

@@ -13,6 +13,7 @@ The frontend treats these endpoints as optional and degrades gracefully.
 import http.server
 import json
 import os
+import sys
 import threading
 import time
 import urllib.request
@@ -21,12 +22,14 @@ import webbrowser
 PORT = 8080
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
+sys.path.insert(0, os.path.join(ROOT, "tools"))
+from esi_shared import USER_AGENT  # noqa: E402
+
 PROXIES = {
     "/api/warzone": "https://www.eveonline.com/api/warzone/status",
     "/api/insurgency": "https://www.eveonline.com/api/warzone/insurgency",
 }
 PROXY_CACHE_SECONDS = 300
-USER_AGENT = "WarzoneCompanion/0.4 (webmaster@tonicbeacon.com; +https://github.com/GurkeTonic/Warzone-Companion)"
 
 _cache_lock = threading.Lock()
 _cache = {}  # path -> {"ts": float, "body": bytes}

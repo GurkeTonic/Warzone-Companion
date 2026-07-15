@@ -6,48 +6,51 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LP Store Optimizer — Warzone Companion</title>
 <meta name="description" content="ISK per LP ranking for all EVE Online militia LP stores, with live Jita order-book pricing and market depth.">
-<link rel="canonical" href="https://warzone.tonicbeacon.com/lp/">
+<link rel="canonical" href="https://evewarzone.com/lp/">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/fonts/chakra-petch-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/chakra-petch-600.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/ibm-plex-sans.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/ibm-plex-mono-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/app.css">
 </head>
 <body data-tab="lp">
 <div class="wrap">
 
   <header>
-    <div class="brand">
+    <div class="header-top">
       <h1>Warzone Companion <span>/ EVE Online Factional Warfare</span></h1>
-      <p data-i18n="subtitle"></p>
-    </div>
-    <div class="controls">
-      <span class="timestamp" id="timestamp"></span>
-      <button class="btn" id="auto-refresh" data-i18n="auto_refresh" data-i18n-title="auto_refresh_title"></button>
-      <button class="btn" id="refresh" data-i18n="refresh"></button>
       <div class="lang-toggle" role="group" aria-label="Language">
         <button id="lang-de">DE</button>
         <button id="lang-en">EN</button>
       </div>
     </div>
+    <div class="header-bottom">
+      <p class="subtitle" data-i18n="subtitle">Factional-Warfare-Begleiter für EVE Online — Live-Frontverlauf, LP-Optimierung und Military Campaigns</p>
+      <div class="controls">
+        <button class="btn" id="auto-refresh" data-i18n="auto_refresh" data-i18n-title="auto_refresh_title">Auto-Refresh</button>
+        <button class="btn" id="refresh" data-i18n="refresh">Aktualisieren</button>
+        <span class="timestamp" id="timestamp"></span>
+      </div>
+    </div>
   </header>
 
   <nav>
-    <a id="tab-warzones" href="/" data-i18n="tab_warzones"></a>
-    <a id="tab-map" href="/map/" data-i18n="tab_map"></a>
-    <a id="tab-history" href="/history/" data-i18n="tab_history"></a>
-    <a id="tab-lp" href="/lp/" data-i18n="tab_lp"></a>
-    <a id="tab-jobs" href="/jobs/" data-i18n="tab_jobs"></a>
-    <a id="tab-boards" href="/leaderboards/" data-i18n="tab_boards"></a>
-    <a id="tab-campaigns" href="/campaigns/" data-i18n="tab_campaigns"></a>
-    <a id="tab-faq" href="/faq/" data-i18n="tab_faq"></a>
+    <a id="tab-warzones" href="/" data-i18n="tab_warzones">Warzones</a>
+    <a id="tab-map" href="/map/" data-i18n="tab_map">Karte</a>
+    <a id="tab-history" href="/history/" data-i18n="tab_history">History</a>
+    <a id="tab-lp" href="/lp/" data-i18n="tab_lp">LP-Store</a>
+    <a id="tab-boards" href="/leaderboards/" data-i18n="tab_boards">Leaderboards</a>
+    <a id="tab-campaigns" href="/campaigns/" data-i18n="tab_campaigns">Campaigns</a>
+    <a id="tab-faq" href="/faq/" data-i18n="tab_faq">FAQ</a>
   </nav>
 
-  <div class="loading hidden" id="loading" data-i18n="loading"></div>
   <div class="error-box hidden" id="error"></div>
 
   <!-- Warzones -->
   <section id="panel-warzones" class="hidden">
-    <div class="section-title" data-i18n="sec_warzones"></div>
     <div class="warzones" id="warzones"></div>
     <div class="ins-cards hidden" id="insurgencies"></div>
     <div class="section-title" data-i18n="sec_contested"></div>
@@ -83,14 +86,12 @@
 
   <!-- Map -->
   <section id="panel-map" class="hidden">
-    <div class="section-title" data-i18n="sec_map"></div>
     <div class="sys-detail"></div>
     <div class="wz-maps" id="wz-maps"></div>
   </section>
 
   <!-- History -->
   <section id="panel-history" class="hidden">
-    <div class="section-title" data-i18n="sec_history"></div>
     <div class="toolbar" id="hist-range">
       <button class="btn" data-days="2" data-i18n="hist_range_2"></button>
       <button class="btn" data-days="7" data-i18n="hist_range_7"></button>
@@ -116,7 +117,6 @@
 
   <!-- LP store -->
   <section id="panel-lp" class="hidden">
-    <div class="section-title" data-i18n="sec_lp"></div>
     <div class="lp-top">
       <div class="lp-controls">
         <label for="lp-corp" data-i18n="lp_militia"></label>
@@ -145,46 +145,18 @@
     </div>
   </section>
 
-  <!-- Freelance jobs -->
-  <section id="panel-jobs" class="hidden">
-    <div class="section-title" data-i18n="sec_jobs"></div>
-    <div class="toolbar">
-      <label for="jobs-state" data-i18n="jobs_filter_state"></label>
-      <select id="jobs-state"></select>
-    </div>
-    <div class="table-scroll">
-    <table>
-      <thead>
-        <tr>
-          <th data-i18n="th_job"></th>
-          <th data-i18n="th_progress"></th>
-          <th data-i18n="th_reward_rem"></th>
-          <th data-i18n="th_state"></th>
-        </tr>
-      </thead>
-      <tbody id="jobs-body"></tbody>
-    </table>
-    </div>
-    <div class="load-more-row">
-      <button class="btn hidden" id="jobs-more" data-i18n="jobs_more"></button>
-    </div>
-  </section>
-
   <!-- Leaderboards -->
   <section id="panel-boards" class="hidden">
-    <div class="section-title" data-i18n="sec_boards"></div>
     <div class="boards" id="boards"></div>
   </section>
 
   <!-- Campaigns -->
   <section id="panel-campaigns" class="hidden">
-    <div class="section-title" data-i18n="sec_campaigns"></div>
     <div class="campaigns" id="campaigns"></div>
   </section>
 
   <!-- FAQ -->
   <section id="panel-faq" class="hidden">
-    <div class="section-title" data-i18n="sec_faq"></div>
     <div class="faq" id="faq"></div>
   </section>
 
@@ -198,6 +170,7 @@
 </div>
 
 <script src="/js/data/staticdata.js"></script>
+<script src="/js/routes.js"></script>
 <script src="/js/config.js"></script>
 <script src="/js/i18n.js"></script>
 <script src="/js/esi.js"></script>
@@ -206,10 +179,10 @@
 <script src="/js/warzones.js"></script>
 <script src="/js/history.js"></script>
 <script src="/js/lpstore.js"></script>
-<script src="/js/jobs.js"></script>
 <script src="/js/boards.js"></script>
 <script src="/js/campaigns.js"></script>
 <script src="/js/faq.js"></script>
 <script src="/js/app.js"></script>
+<script src="/js/router.js"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 /* Shared SVG line chart, used by the History and LP store views.
-   Depends on i18n.js (fmtNum, LANG). */
+   Depends on i18n.js (fmtNum, fmtTime, fmtDate, LANG). */
 "use strict";
 
 const Charts = (() => {
@@ -12,11 +12,10 @@ const Charts = (() => {
 
   function fmtTick(epoch, spanSeconds) {
     const d = new Date(epoch * 1000);
-    const loc = LANG === "de" ? "de-DE" : "en-US";
     if (spanSeconds <= 2 * 86400) {
-      return d.toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit" });
+      return fmtTime(d, { hour: "2-digit", minute: "2-digit" });
     }
-    return d.toLocaleDateString(loc, { day: "2-digit", month: "2-digit" });
+    return fmtDate(d, { day: "2-digit", month: "2-digit" });
   }
 
   /* series: [{ label, color, points: [[t, value], ...] }] */

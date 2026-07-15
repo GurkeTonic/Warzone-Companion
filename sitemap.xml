@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://warzone.tonicbeacon.com/</loc></url>
-  <url><loc>https://warzone.tonicbeacon.com/map/</loc></url>
-  <url><loc>https://warzone.tonicbeacon.com/history/</loc></url>
-  <url><loc>https://warzone.tonicbeacon.com/lp/</loc></url>
-  <url><loc>https://warzone.tonicbeacon.com/jobs/</loc></url>
-  <url><loc>https://warzone.tonicbeacon.com/leaderboards/</loc></url>
-  <url><loc>https://warzone.tonicbeacon.com/campaigns/</loc></url>
-  <url><loc>https://warzone.tonicbeacon.com/faq/</loc></url>
+  <url><loc>https://evewarzone.com/</loc></url>
+  <url><loc>https://evewarzone.com/map/</loc></url>
+  <url><loc>https://evewarzone.com/history/</loc></url>
+  <url><loc>https://evewarzone.com/lp/</loc></url>
+  <url><loc>https://evewarzone.com/leaderboards/</loc></url>
+  <url><loc>https://evewarzone.com/campaigns/</loc></url>
+  <url><loc>https://evewarzone.com/faq/</loc></url>
 </urlset>

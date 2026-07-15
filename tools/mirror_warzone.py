@@ -35,11 +35,10 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
+from esi_shared import ESI_BASE, COMPAT_DATE, USER_AGENT
+
 WARZONE_API = "https://www.eveonline.com/api/warzone/status"
 INSURGENCY_API = "https://www.eveonline.com/api/warzone/insurgency"
-ESI_BASE = "https://esi.evetech.net"
-COMPAT_DATE = "2026-06-09"
-USER_AGENT = "WarzoneCompanion/0.4 (webmaster@tonicbeacon.com; +https://github.com/GurkeTonic/Warzone-Companion)"
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 WARZONE_PATH = DATA_DIR / "warzone.json"
@@ -254,7 +253,7 @@ def write_flip_feed(flips):
     names = resolve_names([f["id"] for f in flips])
     payload = {
         "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "source": "https://warzone.tonicbeacon.com — snapshots every 30 minutes",
+        "source": "https://evewarzone.com — snapshots every 30 minutes",
         "flips": [
             {
                 "time": datetime.fromtimestamp(f["t"], timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
