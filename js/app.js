@@ -22,6 +22,10 @@ const App = (() => {
 
   let activeTab = "warzones";
   const loaded = new Set();
+  /* Separate from `loaded`, which the refresh button deliberately deletes
+     from to force a reload — everLoaded never shrinks, so a force refresh
+     never re-triggers the skeleton over an already-visible table. */
+  const everLoaded = new Set();
   let autoTimer = null;
   let lastRefresh = null;
   let currentTheme = "dark";
@@ -61,10 +65,12 @@ const App = (() => {
       return;
     }
 
+    if (!everLoaded.has(tabId)) tab.view.skeleton?.();
     setStatus("loading");
     try {
       await tab.view.load();
       loaded.add(tabId);
+      everLoaded.add(tabId);
       tab.view.render();
       lastRefresh = new Date();
       renderTimestamp();

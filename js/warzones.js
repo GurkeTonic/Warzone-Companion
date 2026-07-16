@@ -171,6 +171,41 @@ const [WarzonesView, MapView] = (() => {
       : 0;
   }
 
+  /* ---------- loading skeleton ---------- */
+
+  /* Shown the moment the tab opens, before the ESI fetch resolves — reserves
+     space for the cards and a batch of table rows so the page doesn't jump
+     from near-empty to full height once render() replaces this. */
+  function skeleton() {
+    const container = document.getElementById("warzones");
+    container.innerHTML = `
+      <div class="wz-card skeleton-card">
+        <div class="skel-fill"></div>
+        <div class="skel-fill"></div>
+        <div class="skel-fill"></div>
+        <div class="wz-stats">
+          <div class="skel-fill"></div>
+          <div class="skel-fill"></div>
+          <div class="skel-fill"></div>
+        </div>
+      </div>
+      <div class="wz-card skeleton-card">
+        <div class="skel-fill"></div>
+        <div class="skel-fill"></div>
+        <div class="skel-fill"></div>
+        <div class="wz-stats">
+          <div class="skel-fill"></div>
+          <div class="skel-fill"></div>
+          <div class="skel-fill"></div>
+        </div>
+      </div>
+    `;
+    const body = document.getElementById("contested-body");
+    body.innerHTML = Array.from({ length: 20 }, () =>
+      `<tr class="skeleton-row"><td colspan="10"><div class="skel-fill"></div></td></tr>`
+    ).join("");
+  }
+
   /* ---------- warzone summary cards ---------- */
 
   function renderCards() {
@@ -875,7 +910,7 @@ const [WarzonesView, MapView] = (() => {
   }
 
   return [
-    { load, render },
+    { load, render, skeleton },
     { load, render: renderMapTab }
   ];
 })();

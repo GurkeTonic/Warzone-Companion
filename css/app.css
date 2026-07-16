@@ -286,6 +286,22 @@ nav a.active { color: var(--text); border-bottom-color: var(--caldari); }
   gap: 2px;
 }
 
+/* Loading placeholders — reserve roughly the space the real content will
+   take once the ESI fetch resolves, so the page doesn't jump from near-empty
+   to full height in one frame (a severe layout shift otherwise). */
+@keyframes skeleton-pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.7; } }
+.skel-fill {
+  background: var(--panel-2);
+  border-radius: 3px;
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+.wz-card.skeleton-card .skel-fill:first-child { width: 55%; height: 17px; margin-bottom: 12px; }
+.wz-card.skeleton-card .skel-fill:nth-child(2) { width: 38%; height: 12px; margin-bottom: 16px; }
+.wz-card.skeleton-card .skel-fill:nth-child(3) { height: 26px; margin-bottom: 16px; }
+.wz-card.skeleton-card .wz-stats .skel-fill { height: 52px; }
+.skeleton-row td { padding: 15px 14px; }
+.skeleton-row .skel-fill { height: 18px; }
+
 /* ---------- Tables ---------- */
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .table-scroll table { min-width: 720px; }
