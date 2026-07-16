@@ -117,7 +117,7 @@ header { padding: 20px 0 16px; }
 .header-top h1 span { color: var(--muted); font-weight: 500; }
 .subtitle { color: var(--muted); font-size: 13px; }
 
-.controls { display: flex; align-items: center; gap: 12px; }
+.controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
 .lang-toggle {
   display: flex;
