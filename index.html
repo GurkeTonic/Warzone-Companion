@@ -55,30 +55,30 @@
   <section id="panel-warzones" class="hidden">
     <div class="warzones" id="warzones"></div>
     <div class="ins-cards hidden" id="insurgencies"></div>
-    <div class="section-title" data-i18n="sec_contested"></div>
+    <div class="section-title" data-i18n="sec_contested">Umkämpfte Systeme</div>
     <div class="toolbar">
-      <label for="wz-home" data-i18n="home_label"></label>
+      <label for="wz-home" data-i18n="home_label">Heimatsystem</label>
       <input id="wz-home" type="text" list="wz-home-list" data-i18n-placeholder="home_placeholder" autocomplete="off">
       <datalist id="wz-home-list"></datalist>
-      <label for="wz-filter" data-i18n="wz_filter_label"></label>
+      <label for="wz-filter" data-i18n="wz_filter_label">Anzeige</label>
       <select id="wz-filter"></select>
-      <label for="wz-sort" data-i18n="wz_sort_label"></label>
+      <label for="wz-sort" data-i18n="wz_sort_label">Sortierung</label>
       <select id="wz-sort"></select>
     </div>
     <div class="table-scroll">
     <table>
       <thead>
         <tr>
-          <th data-i18n="th_system"></th>
-          <th data-i18n="th_region"></th>
-          <th data-i18n="th_occupier"></th>
-          <th data-i18n="th_class"></th>
-          <th data-i18n="th_status"></th>
-          <th data-i18n="th_vp"></th>
-          <th data-i18n="th_delta"></th>
-          <th data-i18n="th_adv"></th>
-          <th data-i18n="th_kills1h"></th>
-          <th data-i18n="th_jumps"></th>
+          <th data-i18n="th_system">System</th>
+          <th data-i18n="th_region">Region</th>
+          <th data-i18n="th_occupier">Besatzer</th>
+          <th data-i18n="th_class">Rolle</th>
+          <th data-i18n="th_status">Status</th>
+          <th data-i18n="th_vp">Victory Points</th>
+          <th data-i18n="th_delta">Δ 24h</th>
+          <th data-i18n="th_adv">Advantage</th>
+          <th data-i18n="th_kills1h">Kills (1h)</th>
+          <th data-i18n="th_jumps">Jumps</th>
         </tr>
       </thead>
       <tbody id="contested-body"></tbody>
@@ -95,21 +95,21 @@
   <!-- History -->
   <section id="panel-history" class="hidden">
     <div class="toolbar" id="hist-range">
-      <button class="btn" data-days="2" data-i18n="hist_range_2"></button>
-      <button class="btn" data-days="7" data-i18n="hist_range_7"></button>
-      <button class="btn" data-days="30" data-i18n="hist_range_30"></button>
-      <button class="btn" data-days="90" data-i18n="hist_range_90"></button>
+      <button class="btn" data-days="2" data-i18n="hist_range_2">48 h</button>
+      <button class="btn" data-days="7" data-i18n="hist_range_7">7 Tage</button>
+      <button class="btn" data-days="30" data-i18n="hist_range_30">30 Tage</button>
+      <button class="btn" data-days="90" data-i18n="hist_range_90">90 Tage</button>
     </div>
     <div class="hist-charts" id="hist-charts"></div>
-    <div class="section-title" data-i18n="sec_flips"></div>
+    <div class="section-title" data-i18n="sec_flips">Systemwechsel</div>
     <div class="table-scroll">
     <table>
       <thead>
         <tr>
-          <th data-i18n="th_time"></th>
-          <th data-i18n="th_system"></th>
-          <th data-i18n="th_from"></th>
-          <th data-i18n="th_to"></th>
+          <th data-i18n="th_time">Zeit</th>
+          <th data-i18n="th_system">System</th>
+          <th data-i18n="th_from">Verloren von</th>
+          <th data-i18n="th_to">Erobert von</th>
         </tr>
       </thead>
       <tbody id="flips-body"></tbody>
@@ -121,9 +121,9 @@
   <section id="panel-lp" class="hidden">
     <div class="lp-top">
       <div class="lp-controls">
-        <label for="lp-corp" data-i18n="lp_militia"></label>
+        <label for="lp-corp" data-i18n="lp_militia">Militia-Corporation</label>
         <select id="lp-corp"></select>
-        <button class="btn" id="lp-jita"></button>
+        <button class="btn" id="lp-jita">Jita-Preise laden</button>
         <span class="mode-badge" id="lp-mode"></span>
       </div>
       <div id="lp-trend"></div>
@@ -132,14 +132,14 @@
     <table>
       <thead>
         <tr>
-          <th data-i18n="th_item"></th>
-          <th data-i18n="th_qty"></th>
-          <th data-i18n="th_lp"></th>
-          <th data-i18n="th_isk_cost"></th>
-          <th data-i18n="th_req"></th>
-          <th data-i18n="th_value"></th>
-          <th data-i18n="th_depth"></th>
-          <th data-i18n="th_isk_per_lp"></th>
+          <th data-i18n="th_item">Item</th>
+          <th data-i18n="th_qty">Menge</th>
+          <th data-i18n="th_lp">LP</th>
+          <th data-i18n="th_isk_cost">ISK-Kosten</th>
+          <th data-i18n="th_req">Benötigte Items</th>
+          <th data-i18n="th_value">Marktwert</th>
+          <th data-i18n="th_depth">Buy-Tiefe</th>
+          <th data-i18n="th_isk_per_lp">ISK/LP</th>
         </tr>
       </thead>
       <tbody id="lp-body"></tbody>
@@ -163,7 +163,7 @@
   </section>
 
   <footer>
-    <div data-i18n="footer_source"></div>
+    <div data-i18n="footer_source">Datenquelle: EVE Swagger Interface (ESI), ausschließlich öffentliche Endpoints. Abruf erfolgt client-seitig bei Tab-Aufruf.</div>
     <div>&copy; CCP hf. All rights reserved. "EVE", "EVE Online", "CCP", and all related logos and images are trademarks or registered trademarks of CCP hf.</div>
     <div>This material is used with limited permission of CCP Games. No official affiliation or endorsement by CCP Games is stated or implied.</div>
     <div class="mono">v0.4 · <a href="https://github.com/GurkeTonic/Warzone-Companion" target="_blank" rel="noopener">GitHub</a> · <a href="/legal/">Datenschutz &amp; Rechtliches</a></div>
