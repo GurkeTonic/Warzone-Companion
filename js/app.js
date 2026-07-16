@@ -24,6 +24,7 @@ const App = (() => {
   const loaded = new Set();
   let autoTimer = null;
   let lastRefresh = null;
+  let currentTheme = "dark";
 
   const $ = (id) => document.getElementById(id);
 
@@ -75,8 +76,18 @@ const App = (() => {
 
   function rerenderAll() {
     applyI18n();
+    $("theme-toggle").textContent = currentTheme === "dark" ? t("theme_light") : t("theme_dark");
     renderTimestamp();
     for (const tabId of loaded) TABS[tabId].view.render();
+  }
+
+  /* Button label names what clicking switches *to*, not the current state —
+     "Light mode" while dark is active, "Dark mode" once light is active. */
+  function setTheme(theme) {
+    currentTheme = theme;
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("tow_theme", theme);
+    $("theme-toggle").textContent = theme === "dark" ? t("theme_light") : t("theme_dark");
   }
 
   function setAutoRefresh(on) {
@@ -102,6 +113,11 @@ const App = (() => {
     setAutoRefresh(localStorage.getItem("tow_auto_refresh") === "1");
     $("lang-de").addEventListener("click", () => { LANG = "de"; rerenderAll(); });
     $("lang-en").addEventListener("click", () => { LANG = "en"; rerenderAll(); });
+
+    $("theme-toggle").addEventListener("click", () => {
+      setTheme(document.documentElement.dataset.theme === "light" ? "dark" : "light");
+    });
+    setTheme(localStorage.getItem("tow_theme") || "dark");
 
     applyI18n();
     const pageTab = document.body.dataset.tab;

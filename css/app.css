@@ -60,6 +60,22 @@
   --font-mono: "IBM Plex Mono", "Consolas", monospace;
 }
 
+/* Faction/status colors re-tuned darker for WCAG AA contrast on a white panel. */
+:root[data-theme="light"] {
+  --bg: #F2F4F6;
+  --panel: #FFFFFF;
+  --panel-2: #E8EBEE;
+  --line: #D3D8DD;
+  --text: #1A2027;
+  --muted: #5B6570;
+  --amarr: #93741A;
+  --caldari: #2E5E8C;
+  --gallente: #1D7A5C;
+  --minmatar: #954226;
+  --danger: #B23A2C;
+  --pirate: #7A4FA3;
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 /* Reserve the scrollbar's width on every page, whether or not that page's
@@ -300,7 +316,7 @@ tbody tr:hover { background: var(--panel-2); }
 
 td.mono { font-family: var(--font-mono); font-size: 13px; }
 td .sub { display: block; font-size: 11px; color: var(--muted); margin-top: 3px; }
-td.strong, .strong { color: #fff; font-weight: 500; }
+td.strong, .strong { color: var(--text); font-weight: 500; }
 td.req { font-size: 13px; color: var(--muted); max-width: 280px; }
 td.rank { color: var(--muted); width: 32px; }
 td.sys-cell { white-space: nowrap; }
@@ -311,7 +327,7 @@ td.sys-cell { white-space: nowrap; }
   text-decoration: none;
   border-bottom: 1px dotted var(--muted);
 }
-.sys-link:hover { color: #fff; border-bottom-color: var(--text); }
+.sys-link:hover { color: var(--caldari); border-bottom-color: var(--caldari); }
 .ext-link {
   color: var(--muted);
   font-family: var(--font-mono);
@@ -383,7 +399,7 @@ td.sys-cell { white-space: nowrap; }
   stroke-width: calc(1.5px * var(--fk, 1));
 }
 .map-sys:hover .map-node { opacity: 1; stroke: var(--text); }
-.map-node.contested { stroke: rgba(255, 255, 255, 0.85); stroke-width: calc(2px * var(--fk, 1)); }
+.map-node.contested { stroke: var(--text); stroke-width: calc(2px * var(--fk, 1)); }
 .map-node.vulnerable { stroke: var(--danger); stroke-width: calc(2.5px * var(--fk, 1)); }
 .map-halo { opacity: 0.18; pointer-events: none; }
 .map-code {
@@ -786,7 +802,7 @@ section { position: relative; }
   font-weight: 600;
   color: var(--text);
 }
-.faq-item summary:hover { color: #fff; }
+.faq-item summary:hover { color: var(--caldari); }
 .faq-item p {
   margin-top: 10px;
   font-size: 14px;

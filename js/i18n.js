@@ -112,6 +112,8 @@ const I18N = {
     map_zoom_reset: "Ansicht zurücksetzen",
     auto_refresh: "Auto-Refresh",
     auto_refresh_title: "Aktiven Tab alle 5 Minuten neu laden",
+    theme_light: "Heller Modus",
+    theme_dark: "Dunkler Modus",
 
     lp_militia: "Militia-Corporation",
     lp_jita_btn: "Jita-Preise laden",
@@ -254,6 +256,8 @@ const I18N = {
     map_zoom_reset: "Reset view",
     auto_refresh: "Auto refresh",
     auto_refresh_title: "Reload the active tab every 5 minutes",
+    theme_light: "Light mode",
+    theme_dark: "Dark mode",
 
     lp_militia: "Militia corporation",
     lp_jita_btn: "Load Jita prices",
