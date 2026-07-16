@@ -1,87 +1,57 @@
 /* Shared SVG line chart, used by the History and LP store views.
-   Depends on i18n.js (fmtNum, fmtTime, fmtDate, LANG). */
+   Depends on i18n.js (fmtNum, t, esc). */
 "use strict";
 
 const Charts = (() => {
-  const W = 560;
-  const H = 220;
-  const PAD_L = 44;
-  const PAD_R = 12;
-  const PAD_T = 12;
-  const PAD_B = 26;
+  /* Ops Room style: minimal — 3 fixed gridlines, no axis ticks, legend with
+     bold current value above the chart, min/max floating top/bottom right.
+     x by real time proportion (not point index) so gaps in irregular
+     real-world snapshots don't distort the line. Returns the *inner*
+     content only — wrap in a .ops-card for the border/background. */
+  function opsLineChart(title, series, rangeLabel) {
+    const legend = series.map(s => {
+      const last = s.points.length ? s.points[s.points.length - 1][1] : null;
+      return `<span style="color:${s.color}">■ ${esc(s.label)} <b>${last === null ? "—" : fmtNum(last)}</b></span>`;
+    }).join("");
+    const titleHtml = `<div class="ops-section-title" style="margin-bottom:10px">${esc(title)}</div>`;
 
-  function fmtTick(epoch, spanSeconds) {
-    const d = new Date(epoch * 1000);
-    if (spanSeconds <= 2 * 86400) {
-      return fmtTime(d, { hour: "2-digit", minute: "2-digit" });
+    const allPts = series.flatMap(s => s.points);
+    if (allPts.length === 0) {
+      return `${titleHtml}<div class="ops-hist-legend">${legend}</div><div class="ops-hist-empty">${t("hist_empty")}</div>`;
     }
-    return fmtDate(d, { day: "2-digit", month: "2-digit" });
-  }
 
-  /* series: [{ label, color, points: [[t, value], ...] }] */
-  function lineChart(series) {
-    const all = series.flatMap(s => s.points);
-    if (all.length === 0) return "";
-    const ts = all.map(p => p[0]);
-    const vs = all.map(p => p[1]);
-    const tMin = Math.min(...ts);
-    const tMax = Math.max(...ts);
+    const ts = allPts.map(p => p[0]);
+    const tMin = Math.min(...ts), tMax = Math.max(...ts);
     const span = Math.max(1, tMax - tMin);
-    let vMin = Math.min(...vs);
-    let vMax = Math.max(...vs);
-    if (vMin === vMax) { vMin -= 1; vMax += 1; }
-    const vPad = (vMax - vMin) * 0.1;
-    vMin = Math.max(0, vMin - vPad);
-    vMax = vMax + vPad;
-
-    const x = t => PAD_L + ((t - tMin) / span) * (W - PAD_L - PAD_R);
-    const y = v => H - PAD_B - ((v - vMin) / (vMax - vMin)) * (H - PAD_T - PAD_B);
-
-    const gridLines = [];
-    const yTicks = 4;
-    for (let i = 0; i <= yTicks; i++) {
-      const v = vMin + ((vMax - vMin) / yTicks) * i;
-      const yy = y(v).toFixed(1);
-      gridLines.push(
-        `<line x1="${PAD_L}" y1="${yy}" x2="${W - PAD_R}" y2="${yy}" class="grid"/>` +
-        `<text x="${PAD_L - 6}" y="${yy}" class="ytick">${fmtNum(Math.round(v))}</text>`
-      );
-    }
-    const xTicks = 4;
-    const xLabels = [];
-    for (let i = 0; i <= xTicks; i++) {
-      const t = tMin + (span / xTicks) * i;
-      xLabels.push(
-        `<text x="${x(t).toFixed(1)}" y="${H - 8}" class="xtick">${fmtTick(t, span)}</text>`
-      );
-    }
+    const vs = allPts.map(p => p[1]);
+    const vMin = Math.min(...vs), vMax = Math.max(...vs);
 
     const paths = series.map(s => {
       if (s.points.length === 0) return "";
-      const d = s.points
-        .map((p, i) => `${i === 0 ? "M" : "L"}${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`)
-        .join("");
-      const dots = s.points.length < 20
-        ? s.points.map(p =>
-            `<circle cx="${x(p[0]).toFixed(1)}" cy="${y(p[1]).toFixed(1)}" r="2.5" fill="${s.color}"/>`
-          ).join("")
-        : "";
-      return `<path d="${d}" stroke="${s.color}" class="line"/>${dots}`;
+      const d = s.points.map((p, i) => {
+        const xPct = ((p[0] - tMin) / span) * 100;
+        const yPct = 38 - ((p[1] - vMin) / (vMax - vMin || 1)) * 36;
+        return `${i === 0 ? "M" : "L"} ${xPct.toFixed(2)} ${yPct.toFixed(2)}`;
+      }).join(" ");
+      return `<path d="${d}" style="fill:none;stroke:${s.color};stroke-width:1.5px;vector-effect:non-scaling-stroke"></path>`;
     }).join("");
 
-    const legend = series.map(s =>
-      `<span><span class="dot" style="background:${s.color}"></span>${s.label}</span>`
-    ).join("");
-
     return `
-      <svg viewBox="0 0 ${W} ${H}" class="chart" role="img">
-        ${gridLines.join("")}
-        ${xLabels.join("")}
-        ${paths}
-      </svg>
-      <div class="chart-legend">${legend}</div>
+      ${titleHtml}
+      <div class="ops-hist-legend">${legend}</div>
+      <div class="ops-hist-chart-wrap">
+        <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+          <line x1="0" y1="10" x2="100" y2="10" style="stroke:var(--ops-line2);stroke-width:1px;vector-effect:non-scaling-stroke"></line>
+          <line x1="0" y1="20" x2="100" y2="20" style="stroke:var(--ops-line2);stroke-width:1px;vector-effect:non-scaling-stroke"></line>
+          <line x1="0" y1="30" x2="100" y2="30" style="stroke:var(--ops-line2);stroke-width:1px;vector-effect:non-scaling-stroke"></line>
+          ${paths}
+        </svg>
+        <span class="ops-hist-minmax max">${fmtNum(Math.round(vMax))}</span>
+        <span class="ops-hist-minmax min">${fmtNum(Math.round(vMin))}</span>
+      </div>
+      <div class="ops-hist-footer"><span>−${esc(rangeLabel)}</span><span>${t("hist_now")}</span></div>
     `;
   }
 
-  return { lineChart };
+  return { opsLineChart };
 })();

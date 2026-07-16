@@ -12,6 +12,7 @@ const CONFIG = {
   USER_AGENT: "WarzoneCompanion/0.4 (webmaster@tonicbeacon.com; +https://github.com/GurkeTonic/Warzone-Companion)",
   CONTESTED_ROWS: 40,
   LP_ROWS: 50,
+  LB_ROWS: 10,
   LP_JITA_ROWS: 25,
   JITA_REGION: 10000002,
   JITA_STATION: 60003760,
@@ -28,6 +29,28 @@ const FACTIONS = {
 
 function factionOf(id) {
   return FACTIONS[id] || { key: "unknown", name: `Faction ${id}`, color: "var(--muted)" };
+}
+
+/* Same faction lookup, colored with the Ops Room --ops-* tokens instead of
+   the old --caldari/--gallente/... tokens — used by tabs migrated to the new
+   design (see design_handoff_warzone_ops_room/README.md). Old, not-yet
+   migrated tabs keep using factionOf() so their colors don't change. */
+const OPS_FACTION_COLOR = {
+  500001: { color: "var(--ops-cal)", bar: "var(--ops-cal-bar)" },
+  500002: { color: "var(--ops-min)", bar: "var(--ops-min-bar)" },
+  500003: { color: "var(--ops-ama)", bar: "var(--ops-ama-bar)" },
+  500004: { color: "var(--ops-gal)", bar: "var(--ops-gal-bar)" }
+};
+
+function opsFactionOf(id) {
+  return { ...factionOf(id), ...(OPS_FACTION_COLOR[id] || { color: "var(--ops-dim)", bar: "var(--ops-dim)" }) };
+}
+
+/* The faction on the other side of id's warzone — used to color VP bars by
+   attacker (per the Ops Room spec), not occupier. */
+function enemyFactionOf(id) {
+  const wz = warzoneOf(id);
+  return wz ? (wz.a === id ? wz.b : wz.a) : null;
 }
 
 /* Warzone definitions: fixed empire pairings. */

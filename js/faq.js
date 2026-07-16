@@ -15,7 +15,7 @@ const FaqView = (() => {
   function render() {
     const container = document.getElementById("faq");
     container.innerHTML = TOPICS.map(key => `
-      <details class="faq-item">
+      <details class="ops-faq-item">
         <summary>${t("faq_q_" + key)}</summary>
         <p>${t("faq_a_" + key)}</p>
       </details>

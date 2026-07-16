@@ -29,6 +29,20 @@ const ESI = (() => {
     return res.json();
   }
 
+  async function post(path, body) {
+    const res = await fetch(url(path), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "X-User-Agent": CONFIG.USER_AGENT
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw httpError(`POST ${path}`, res.status);
+    return res.json();
+  }
+
   /* Resolve IDs (systems, types, characters, corporations, ...) to names. */
   async function names(ids) {
     const wanted = [...new Set(ids)].filter(id => Number.isFinite(id) && !nameCache.has(id));
@@ -55,5 +69,5 @@ const ESI = (() => {
     return nameCache.get(id) ?? String(id);
   }
 
-  return { get, names, name };
+  return { get, post, names, name };
 })();

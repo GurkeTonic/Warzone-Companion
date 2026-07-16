@@ -40,47 +40,5 @@ const FwLogic = (() => {
     return status;
   }
 
-  /* Breadth-first search over the full k-space gate graph. */
-  function jumpsFrom(originId) {
-    if (!originId || !SDATA.graph[originId]) return null;
-    const dist = new Map([[originId, 0]]);
-    let frontier = [originId];
-    while (frontier.length > 0) {
-      const next = [];
-      for (const cur of frontier) {
-        for (const n of SDATA.graph[cur] || []) {
-          if (!dist.has(n)) {
-            dist.set(n, dist.get(cur) + 1);
-            next.push(n);
-          }
-        }
-      }
-      frontier = next;
-    }
-    return dist;
-  }
-
-  const nameIndex = Object.entries(SDATA.names)
-    .map(([id, n]) => ({ id: Number(id), name: n, lower: n.toLowerCase() }));
-
-  function searchSystems(query, limit = 8) {
-    const q = query.trim().toLowerCase();
-    if (q.length < 2) return [];
-    const starts = [];
-    const contains = [];
-    for (const e of nameIndex) {
-      if (e.lower.startsWith(q)) starts.push(e);
-      else if (e.lower.includes(q)) contains.push(e);
-      if (starts.length >= limit) break;
-    }
-    return starts.concat(contains).slice(0, limit);
-  }
-
-  function systemIdByName(name) {
-    const q = name.trim().toLowerCase();
-    const hit = nameIndex.find(e => e.lower === q);
-    return hit ? hit.id : null;
-  }
-
-  return { fwIds, fwNeighbors, classify, jumpsFrom, searchSystems, systemIdByName };
+  return { fwIds, fwNeighbors, classify };
 })();

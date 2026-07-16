@@ -1,4 +1,7 @@
 /* Self-hosted fonts (latin subset) — no third-party requests. */
+/* Chakra Petch is dead weight for the 7 migrated tabs (Rajdhani replaced it
+   everywhere in the Ops Room design) but /legal/ — a standalone page outside
+   the tab redesign's scope — still uses it for its headings, so it stays. */
 @font-face {
   font-family: "Chakra Petch";
   font-style: normal;
@@ -41,11 +44,45 @@
   font-display: swap;
   src: url("../fonts/ibm-plex-mono-500.woff2") format("woff2");
 }
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../fonts/ibm-plex-mono-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Rajdhani";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../fonts/rajdhani-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Rajdhani";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../fonts/rajdhani-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Rajdhani";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fonts/rajdhani-700.woff2") format("woff2");
+}
 
+/* --panel/--panel-2 were dropped once the Ops Room migration reached the
+   last tab — nothing renders with the old panel background anymore. The
+   rest of this set stays: --bg/--text/--line/--muted/--danger/--font-mono
+   back the still-active .error-box and footer (never migrated — see the
+   Ops Room README) as well as /legal/ (a standalone page outside the tab
+   redesign's scope, --font-display included); --caldari backs the global
+   focus-visible outline; --caldari/--gallente/--amarr/--minmatar/--pirate
+   are the color values FACTIONS/PIRATES in config.js point at. */
 :root {
   --bg: #101419;
-  --panel: #161C23;
-  --panel-2: #1B222B;
   --line: #2A333D;
   --text: #D8DEE4;
   --muted: #7E8A96;
@@ -63,8 +100,6 @@
 /* Faction/status colors re-tuned darker for WCAG AA contrast on a white panel. */
 :root[data-theme="light"] {
   --bg: #F2F4F6;
-  --panel: #FFFFFF;
-  --panel-2: #E8EBEE;
   --line: #D3D8DD;
   --text: #1A2027;
   --muted: #5B6570;
@@ -74,6 +109,63 @@
   --minmatar: #954226;
   --danger: #B23A2C;
   --pirate: #7A4FA3;
+}
+
+/* "Ops Room" redesign tokens — prefixed --ops-* so they can't collide with
+   the tokens above while tabs are migrated one at a time (see design_handoff
+   README). Once every tab is on the new design, these replace the old set
+   and the --ops- prefix goes away. */
+:root {
+  --ops-bg: #0a0d12;
+  --ops-bg2: #0e1319;
+  --ops-bg3: #141c26;
+  --ops-head: #111823;
+  --ops-line: #1c2632;
+  --ops-line2: #161f2b;
+  --ops-text: #e8eef4;
+  --ops-body: #c9d6e2;
+  --ops-dim: #5a7085;
+  --ops-dim2: #8aa0b5;
+  --ops-hi: #6db3e8;
+  --ops-accent: #8ab4d4;
+  --ops-head-active: #8ab4d4;
+  --ops-cal: #6db3e8;
+  --ops-gal: #57d98f;
+  --ops-ama: #e0b954;
+  --ops-min: #e07a62;
+  --ops-cal-bar: #5495c7;
+  --ops-gal-bar: #57b581;
+  --ops-ama-bar: #cfa94e;
+  --ops-min-bar: #c05a45;
+  --ops-scan: rgba(255, 255, 255, .015);
+  --ops-chipline: rgba(255, 255, 255, .18);
+  --ops-font-display: "Rajdhani", "Segoe UI", sans-serif;
+}
+
+:root[data-theme="light"] {
+  --ops-bg: #eef1f4;
+  --ops-bg2: #ffffff;
+  --ops-bg3: #e8edf2;
+  --ops-head: #1f2a38;
+  --ops-line: #dde4ea;
+  --ops-line2: #edf1f5;
+  --ops-text: #1f2a38;
+  --ops-body: #2a3644;
+  --ops-dim: #7a8a9a;
+  --ops-dim2: #5a6b7c;
+  --ops-hi: #2a78d6;
+  --ops-accent: #2f5a7e;
+  --ops-head-active: #bfe0f5;
+  --ops-cal: #2f6d9e;
+  --ops-gal: #2f8a58;
+  --ops-ama: #a8842e;
+  --ops-min: #a8452e;
+  --ops-cal-bar: #2f6d9e;
+  --ops-gal-bar: #2f8a58;
+  --ops-ama-bar: #a8842e;
+  --ops-min-bar: #a8452e;
+  --ops-scan: transparent;
+  --ops-chipline: rgba(0, 0, 0, .12);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -92,198 +184,16 @@ body {
   min-height: 100vh;
 }
 
-.wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px 64px; }
+/* 1280px matches the Ops Room redesign's page grid token — widened from the
+   old design's 1180px so migrated tabs get the width they were built for. */
+.wrap { max-width: 1280px; margin: 0 auto; padding: 0 24px 64px; }
 
-/* ---------- Header ---------- */
-header { padding: 20px 0 16px; }
-
-.header-top,
-.header-bottom {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.header-bottom { margin-top: 6px; }
-
-.header-top h1 {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 26px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.header-top h1 span { color: var(--muted); font-weight: 500; }
-.subtitle { color: var(--muted); font-size: 13px; }
-
-.controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-
-.lang-toggle {
-  display: flex;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  overflow: hidden;
-}
-.lang-toggle button {
-  background: transparent;
-  border: none;
-  color: var(--muted);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  padding: 6px 12px;
-  cursor: pointer;
-}
-.lang-toggle button.active { background: var(--panel-2); color: var(--text); }
-
-.btn {
-  background: var(--panel-2);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  padding: 6px 14px;
-  cursor: pointer;
-}
-.btn:hover { border-color: var(--muted); }
-
+/* Global focus outline — still applies to every button/select on the page,
+   including the Ops Room ones below, since it's never been scoped to the
+   old (now-removed) header/nav markup. */
 button:focus-visible, select:focus-visible {
   outline: 2px solid var(--caldari);
   outline-offset: 2px;
-}
-
-.timestamp { font-family: var(--font-mono); font-size: 12px; color: var(--muted); min-width: 104px; display: inline-block; }
-
-/* ---------- Tab navigation ---------- */
-nav {
-  display: flex;
-  gap: 4px;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 26px;
-  flex-wrap: wrap;
-}
-nav a {
-  display: inline-block;
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--muted);
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  text-decoration: none;
-  padding: 10px 16px;
-  cursor: pointer;
-}
-nav a:hover { color: var(--text); }
-nav a.active { color: var(--text); border-bottom-color: var(--caldari); }
-
-/* ---------- Section titles ---------- */
-.section-title {
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin: 32px 0 14px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.section-title:first-child { margin-top: 0; }
-.section-title::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-
-/* ---------- Warzone cards ---------- */
-.warzones { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-@media (max-width: 860px) { .warzones { grid-template-columns: 1fr; } }
-
-.wz-card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 20px;
-}
-.wz-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 17px;
-  margin-bottom: 4px;
-}
-.wz-counts {
-  display: flex;
-  justify-content: space-between;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 12px;
-}
-
-/* Front bar: one segment per system, colored by occupier */
-.front-bar {
-  display: flex;
-  gap: 1px;
-  height: 26px;
-  border-radius: 3px;
-  overflow: hidden;
-  background: var(--bg);
-}
-.front-bar .seg {
-  flex: 1;
-  min-width: 2px;
-  opacity: 0.92;
-  transition: opacity 0.15s ease, transform 0.15s ease;
-  cursor: default;
-}
-.front-bar .seg.contested-flag { box-shadow: inset 0 -3px 0 rgba(255, 255, 255, 0.55); }
-.front-bar .seg:hover { opacity: 1; transform: scaleY(1.15); }
-
-.front-legend {
-  display: flex;
-  gap: 18px;
-  margin-top: 10px;
-  font-size: 12px;
-  color: var(--muted);
-}
-.front-legend .dot {
-  display: inline-block;
-  width: 9px;
-  height: 9px;
-  border-radius: 2px;
-  margin-right: 6px;
-}
-
-.wz-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 16px;
-}
-.stat {
-  background: var(--panel-2);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 10px 12px;
-}
-.stat .label {
-  font-size: 11px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-.stat .vals {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  margin-top: 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
 }
 
 /* Loading placeholders — reserve roughly the space the real content will
@@ -291,539 +201,9 @@ nav a.active { color: var(--text); border-bottom-color: var(--caldari); }
    to full height in one frame (a severe layout shift otherwise). */
 @keyframes skeleton-pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.7; } }
 .skel-fill {
-  background: var(--panel-2);
+  background: var(--ops-bg3);
   border-radius: 3px;
   animation: skeleton-pulse 1.4s ease-in-out infinite;
-}
-.wz-card.skeleton-card .skel-fill:first-child { width: 55%; height: 17px; margin-bottom: 12px; }
-.wz-card.skeleton-card .skel-fill:nth-child(2) { width: 38%; height: 12px; margin-bottom: 16px; }
-.wz-card.skeleton-card .skel-fill:nth-child(3) { height: 26px; margin-bottom: 16px; }
-.wz-card.skeleton-card .wz-stats .skel-fill { height: 52px; }
-.skeleton-row td { padding: 15px 14px; }
-.skeleton-row .skel-fill { height: 18px; }
-
-/* ---------- Tables ---------- */
-.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.table-scroll table { min-width: 720px; }
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  overflow: hidden;
-}
-thead th {
-  font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted);
-  text-align: left;
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel-2);
-}
-tbody td { padding: 9px 14px; border-bottom: 1px solid var(--line); font-size: 14px; }
-tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover { background: var(--panel-2); }
-
-td.mono { font-family: var(--font-mono); font-size: 13px; }
-td .sub { display: block; font-size: 11px; color: var(--muted); margin-top: 3px; }
-td.strong, .strong { color: var(--text); font-weight: 500; }
-td.req { font-size: 13px; color: var(--muted); max-width: 280px; }
-td.rank { color: var(--muted); width: 32px; }
-td.sys-cell { white-space: nowrap; }
-
-/* System links to external references */
-.sys-link {
-  color: var(--text);
-  text-decoration: none;
-  border-bottom: 1px dotted var(--muted);
-}
-.sys-link:hover { color: var(--caldari); border-bottom-color: var(--caldari); }
-.ext-link {
-  color: var(--muted);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  text-decoration: none;
-  border: 1px solid var(--line);
-  border-radius: 3px;
-  padding: 0 4px;
-  margin-left: 5px;
-  vertical-align: 1px;
-}
-.ext-link:hover { color: var(--text); border-color: var(--muted); }
-
-.fac-tag {
-  display: inline-block;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  padding: 1px 8px;
-  border-radius: 3px;
-  border: 1px solid;
-  white-space: nowrap;
-}
-
-.vp-bar {
-  position: relative;
-  height: 10px;
-  background: var(--bg);
-  border-radius: 2px;
-  overflow: hidden;
-  min-width: 120px;
-}
-.vp-bar .fill { position: absolute; inset: 0 auto 0 0; border-radius: 2px; }
-
-.status-pill { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
-.status-pill.hot { color: var(--danger); }
-.status-pill.dim { opacity: 0.6; }
-
-/* ---------- Warzone maps ---------- */
-.wz-maps { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-@media (max-width: 1000px) { .wz-maps { grid-template-columns: 1fr; } }
-
-.map-card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 14px 16px 8px;
-}
-.map-head {
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-  margin-bottom: 6px;
-}
-.map-frame { position: relative; }
-.wz-map {
-  width: 100%;
-  height: auto;
-  display: block;
-  cursor: grab;
-  touch-action: none;
-}
-.wz-map.panning { cursor: grabbing; }
-.map-edges line { stroke: var(--line); stroke-width: calc(1px * var(--fk, 1)); }
-.map-node {
-  opacity: 0.95;
-  cursor: default;
-  stroke: var(--bg);
-  stroke-width: calc(1.5px * var(--fk, 1));
-}
-.map-sys:hover .map-node { opacity: 1; stroke: var(--text); }
-.map-node.contested { stroke: var(--text); stroke-width: calc(2px * var(--fk, 1)); }
-.map-node.vulnerable { stroke: var(--danger); stroke-width: calc(2.5px * var(--fk, 1)); }
-.map-halo { opacity: 0.18; pointer-events: none; }
-.map-code {
-  fill: var(--bg);
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: calc(8.5px * var(--fk, 1));
-  text-anchor: middle;
-  dominant-baseline: central;
-  pointer-events: none;
-}
-.map-label-minor { display: none; }
-.wz-map.zoomed .map-label-minor { display: block; }
-.map-ins {
-  fill: none;
-  stroke: var(--pirate);
-  stroke-width: calc(1.5px * var(--fk, 1));
-  opacity: 0.85;
-}
-.map-ins.fob { stroke-width: calc(3px * var(--fk, 1)); }
-.map-sys { cursor: pointer; }
-
-.map-controls {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.map-controls button {
-  width: 26px;
-  height: 26px;
-  background: var(--panel-2);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  line-height: 1;
-  cursor: pointer;
-}
-.map-controls button:hover { border-color: var(--muted); }
-.map-label {
-  fill: var(--muted);
-  font-family: var(--font-mono);
-  font-size: calc(10px * var(--fk, 1));
-  text-anchor: middle;
-  pointer-events: none;
-}
-
-/* ---------- System role tags ---------- */
-.class-tag {
-  display: inline-block;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  padding: 1px 7px;
-  border-radius: 3px;
-  border: 1px solid var(--line);
-  color: var(--muted);
-  white-space: nowrap;
-}
-.class-tag.class-frontline { border-color: var(--danger); color: var(--danger); }
-.class-tag.class-command { border-color: var(--caldari); color: var(--caldari); }
-
-.depth-thin { color: var(--danger); }
-
-/* ---------- Contested trend column ---------- */
-.delta-up { color: var(--danger); }
-.delta-down { color: var(--gallente); }
-.delta-flip {
-  color: var(--amarr);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-}
-
-/* ---------- History charts ---------- */
-.hist-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-@media (max-width: 860px) { .hist-charts { grid-template-columns: 1fr; } }
-
-.chart-card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 14px 16px;
-}
-.chart { width: 100%; height: auto; display: block; }
-.chart .grid { stroke: var(--line); stroke-width: 0.5; }
-.chart .line { fill: none; stroke-width: 1.8; }
-.chart .ytick {
-  fill: var(--muted);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  text-anchor: end;
-  dominant-baseline: middle;
-}
-.chart .xtick {
-  fill: var(--muted);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  text-anchor: middle;
-}
-.chart-legend {
-  display: flex;
-  gap: 18px;
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--muted);
-}
-.chart-legend .dot {
-  display: inline-block;
-  width: 9px;
-  height: 9px;
-  border-radius: 2px;
-  margin-right: 6px;
-}
-
-/* ---------- Campaign objectives ---------- */
-.cmp-objectives { margin-top: 10px; }
-.cmp-objectives summary {
-  cursor: pointer;
-  font-size: 13px;
-  color: var(--muted);
-  font-family: var(--font-mono);
-}
-.cmp-objectives ul { margin: 8px 0 0 18px; font-size: 13px; }
-.cmp-objectives li { margin-bottom: 6px; }
-.obj-career {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-right: 6px;
-}
-.obj-reward { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; }
-
-/* ---------- Toolbar rows ---------- */
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-}
-.toolbar label { font-size: 13px; color: var(--muted); }
-.mode-badge {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--muted);
-}
-.btn.active-mode { border-color: var(--caldari); color: var(--caldari); }
-.btn:disabled { opacity: 0.5; cursor: wait; }
-
-.toolbar select,
-.toolbar input[type="text"] {
-  background: var(--panel-2);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  padding: 6px 10px;
-}
-.toolbar input[type="text"] { width: 150px; }
-.toolbar input[type="text"]:focus-visible {
-  outline: 2px solid var(--caldari);
-  outline-offset: 2px;
-}
-
-.dlabel { color: var(--muted); margin-right: 6px; }
-
-/* ---------- Leaderboards ---------- */
-.boards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-}
-.board {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  overflow: hidden;
-}
-.board-title {
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-  padding: 10px 14px;
-  background: var(--panel-2);
-  border-bottom: 1px solid var(--line);
-}
-.board-table { border: none; border-radius: 0; }
-
-/* ---------- Campaign cards ---------- */
-.campaigns { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-@media (max-width: 860px) { .campaigns { grid-template-columns: 1fr; } }
-
-.cmp-card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--muted);
-  border-radius: 6px;
-  padding: 18px 20px;
-}
-.cmp-card .empire {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.cmp-card h3 {
-  font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 600;
-  margin: 4px 0 8px;
-}
-.cmp-card p { font-size: 14px; }
-.cmp-card .goal { color: var(--muted); font-size: 13px; margin-top: 8px; }
-
-.notice {
-  margin-top: 16px;
-  border: 1px dashed var(--line);
-  border-radius: 6px;
-  padding: 12px 16px;
-  font-size: 13px;
-  color: var(--muted);
-}
-.notice.pre-table { margin: 0 0 14px; }
-
-/* ---------- Insurgency cards ---------- */
-.ins-cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 16px;
-}
-@media (max-width: 860px) { .ins-cards { grid-template-columns: 1fr; } }
-.ins-card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--pirate);
-  border-radius: 6px;
-  padding: 10px 14px;
-}
-.ins-head {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--pirate);
-}
-.ins-body { font-size: 13px; color: var(--muted); margin-top: 3px; }
-
-section { position: relative; }
-
-/* LP store: controls column on the left, trend chart on the right */
-.lp-top {
-  display: flex;
-  gap: 24px;
-  align-items: flex-start;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-.lp-controls {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 10px;
-  min-width: 240px;
-  max-width: 300px;
-  flex: 0 0 auto;
-}
-.lp-controls label { font-size: 13px; color: var(--muted); }
-.lp-controls select {
-  background: var(--panel-2);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  padding: 6px 10px;
-}
-.lp-controls .mode-badge { font-size: 12px; line-height: 1.5; }
-#lp-trend { flex: 1 1 380px; min-width: 0; }
-
-/* ---------- Map popover ---------- */
-.map-pop {
-  position: absolute;
-  z-index: 10;
-  width: 270px;
-  background: var(--panel-2);
-  border: 1px solid var(--muted);
-  border-radius: 6px;
-  padding: 12px 14px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
-}
-.pop-head {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 600;
-}
-.pop-head .det-close { margin-left: auto; }
-.pop-tags {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin: 8px 0 10px;
-}
-.pop-more {
-  margin-top: 10px;
-  width: 100%;
-}
-
-/* ---------- System detail panel ---------- */
-.sys-detail { margin-top: 16px; }
-.det-card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 16px 18px;
-}
-.det-head {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.det-head h3 {
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 600;
-}
-.det-close {
-  margin-left: auto;
-  background: transparent;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1;
-  padding: 3px 8px;
-  cursor: pointer;
-}
-.det-close:hover { color: var(--text); border-color: var(--muted); }
-.det-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px 28px;
-  margin-top: 14px;
-}
-.det-stat {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 3px 0;
-  border-bottom: 1px dashed var(--line);
-  font-size: 13px;
-}
-.spark { width: 100%; max-width: 280px; height: auto; display: block; margin-top: 6px; }
-.spark path { fill: none; stroke: var(--caldari); stroke-width: 1.5; }
-.spark-scale { font-size: 10px; color: var(--muted); margin-top: 2px; }
-.det-neighbors {
-  margin-top: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.chip {
-  background: transparent;
-  border: 1px solid;
-  border-radius: 3px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  padding: 1px 8px;
-  cursor: pointer;
-}
-.chip:hover { background: var(--panel-2); }
-.sys-row { cursor: pointer; }
-
-/* ---------- FAQ ---------- */
-.faq { display: flex; flex-direction: column; gap: 10px; max-width: 860px; }
-.faq-item {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 12px 16px;
-}
-.faq-item summary {
-  cursor: pointer;
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-}
-.faq-item summary:hover { color: var(--caldari); }
-.faq-item p {
-  margin-top: 10px;
-  font-size: 14px;
-  color: var(--text);
-  line-height: 1.6;
 }
 
 /* ---------- States ---------- */
@@ -848,21 +228,423 @@ footer .mono { font-family: var(--font-mono); }
 footer a { color: var(--muted); }
 footer a:hover { color: var(--text); }
 
-@media (prefers-reduced-motion: reduce) {
-  .front-bar .seg { transition: none; }
-  .front-bar .seg:hover { transform: none; }
-}
-
 /* ---------- Small screens ---------- */
 @media (max-width: 700px) {
   .wrap { padding: 0 12px 48px; }
-  header { padding: 14px 0 12px; }
-  .header-top h1 { font-size: 20px; }
-  nav button { padding: 8px 10px; font-size: 12px; }
-  thead th { padding: 8px 8px; font-size: 11px; }
-  tbody td { padding: 7px 8px; font-size: 12.5px; }
-  td.mono { font-size: 11.5px; }
-  .vp-bar { min-width: 70px; }
-  td.req { max-width: 180px; }
-  .wz-stats { grid-template-columns: 1fr; gap: 6px; }
+}
+
+/* ============================================================
+   OPS ROOM — tactical redesign, migrated one tab at a time (see
+   design_handoff_warzone_ops_room/README.md). Everything below uses
+   --ops-* tokens and .ops-* classes so it can't collide with the
+   still-active old design on tabs that haven't been migrated yet.
+   Header/Nav are shared and fully switched over already, since no
+   other tab depends on their classes.
+   ============================================================ */
+
+body {
+  background-image: repeating-linear-gradient(0deg, var(--ops-scan) 0 1px, transparent 1px 3px);
+}
+
+/* ---------- Header ---------- */
+.ops-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--ops-line);
+  background: var(--ops-bg2);
+}
+.ops-header-left { display: flex; align-items: center; gap: 14px; }
+.ops-logo {
+  width: 36px; height: 36px;
+  border: 1px solid var(--ops-dim);
+  display: grid; place-items: center;
+  font: 700 15px var(--ops-font-display);
+  color: var(--ops-accent);
+  clip-path: polygon(0 0, 100% 0, 100% 70%, 70% 100%, 0 100%);
+  flex-shrink: 0;
+}
+.ops-brand-name { font: 700 18px var(--ops-font-display); letter-spacing: .14em; color: var(--ops-text); }
+.ops-tagline { font-size: 9.5px; letter-spacing: .18em; color: var(--ops-dim); margin-top: 2px; }
+.ops-header-right { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 500; flex-wrap: wrap; }
+.ops-status-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid var(--ops-line);
+  background: var(--ops-bg3);
+  color: var(--ops-hi);
+  font-family: var(--font-mono);
+}
+.ops-status-chip.paused { color: var(--ops-dim); }
+.ops-status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.ops-status-dot.live { background: #4dd47a; box-shadow: 0 0 6px #4dd47a; animation: ops-pulse 2s ease-in-out infinite; }
+.ops-status-dot.paused { background: var(--ops-dim); box-shadow: none; animation: none; }
+.ops-btn {
+  padding: 5px 10px;
+  border: 1px solid var(--ops-line);
+  background: var(--ops-bg3);
+  color: var(--ops-dim2);
+  font: 500 10px var(--font-mono);
+  cursor: pointer;
+}
+.ops-btn:hover { border-color: var(--ops-dim); }
+.ops-btn.active { color: var(--ops-hi); border-color: var(--ops-hi); }
+@keyframes ops-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+
+/* ---------- Nav ---------- */
+.ops-nav {
+  display: flex; gap: 2px; flex-wrap: wrap;
+  padding: 0 28px;
+  background: var(--ops-bg2);
+  border-bottom: 1px solid var(--ops-line);
+  font: 600 11px var(--ops-font-display);
+  letter-spacing: .14em;
+}
+.ops-nav a {
+  padding: 11px 16px;
+  color: var(--ops-dim);
+  border-bottom: 2px solid transparent;
+  text-decoration: none;
+  cursor: pointer;
+}
+.ops-nav a:hover { color: var(--ops-text); }
+.ops-nav a.active {
+  color: var(--ops-text);
+  border-bottom-color: var(--ops-hi);
+  background: color-mix(in srgb, var(--ops-hi) 6%, transparent);
+}
+
+/* ---------- Shared page/section chrome ---------- */
+.ops-page { max-width: 1280px; margin: 0 auto; }
+.ops-section-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+.ops-section-title { font: 700 12px var(--ops-font-display); letter-spacing: .16em; color: var(--ops-accent); }
+.ops-section-title::before { content: "▸ "; }
+.ops-chips { display: flex; gap: 8px; flex-wrap: wrap; font-size: 9.5px; }
+.ops-chip {
+  padding: 4px 10px;
+  border: 1px solid var(--ops-line);
+  background: none;
+  color: var(--ops-dim);
+  font: 500 9.5px var(--font-mono);
+  cursor: pointer;
+}
+.ops-chip:hover { border-color: var(--ops-dim); }
+.ops-chip.active {
+  border-color: var(--ops-hi);
+  background: color-mix(in srgb, var(--ops-hi) 12%, transparent);
+  color: var(--ops-hi);
+}
+
+/* ---------- Warzones: faction cards ---------- */
+.ops-wz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 16px;
+  padding: 22px 28px;
+}
+.ops-card { border: 1px solid var(--ops-line); background: var(--ops-bg2); padding: 16px 18px; }
+.ops-wz-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 12px; }
+.ops-wz-title { flex: 1 1 auto; min-width: 0; font: 700 13px var(--ops-font-display); letter-spacing: .12em; color: var(--ops-text); }
+.ops-wz-count { flex: 0 0 auto; font-size: 9.5px; color: var(--ops-dim); white-space: nowrap; }
+.ops-frontbar { display: flex; height: 14px; background: var(--ops-bg3); margin-bottom: 8px; }
+.ops-frontbar .fb-a { clip-path: polygon(0 0, 100% 0, calc(100% - 7px) 100%, 0 100%); transition: width .6s; }
+.ops-frontbar .fb-b { clip-path: polygon(7px 0, 100% 0, 100% 100%, 0 100%); transition: width .6s; }
+.ops-frontbar .fb-mid { flex: 1; }
+.ops-wz-legend { display: flex; justify-content: space-between; font-size: 10.5px; font-weight: 500; }
+
+/* ---------- Warzones: insurgency banner ---------- */
+.ops-ins-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; padding: 0 28px 20px; }
+.ops-ins-card { border: 1px solid var(--ops-line); border-left: 3px solid var(--pirate); background: var(--ops-bg2); padding: 10px 14px; }
+.ops-ins-head { font: 700 11px var(--ops-font-display); letter-spacing: .1em; color: var(--pirate); margin-bottom: 3px; }
+.ops-ins-body { font-size: 10.5px; color: var(--ops-dim2); }
+.ops-ins-body .strong { color: var(--ops-text); font-weight: 600; }
+
+/* ---------- Warzones: table + changes panel ---------- */
+.ops-flex-row { padding: 0 28px 26px; display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.ops-flex-main { flex: 1 1 640px; min-width: 0; }
+
+.ops-table-wrap { border: 1px solid var(--ops-line); background: var(--ops-bg2); overflow-x: auto; }
+/* Scoped to the Warzones systems table specifically (via #contested-*) —
+   other tables reusing .ops-table-head/.ops-row (e.g. History's flips log)
+   have far fewer columns and must NOT inherit this width. */
+#contested-head, #contested-body .ops-row, #contested-body .ops-detail { min-width: 865px; }
+.ops-table-head { display: flex; padding: 0 14px; background: var(--ops-head); }
+/* Non-sortable tables (e.g. History's flips log) use plain spans for header
+   cells instead of buttons — same look, just not clickable/uppercase-active. */
+.ops-table-head button, .ops-table-head > span {
+  display: flex; align-items: center; gap: 4px;
+  padding: 6px 4px;
+  border: none; background: none;
+  text-align: left;
+  white-space: pre-line;
+  text-transform: uppercase;
+  font: 600 9px var(--font-mono);
+  letter-spacing: .12em;
+  color: var(--ops-dim);
+}
+.ops-table-head button { cursor: pointer; }
+.ops-table-head button.active { color: var(--ops-head-active); }
+.ops-table-head button:hover { color: var(--ops-dim2); }
+.ops-row {
+  display: flex; align-items: center;
+  padding: 5px 14px;
+  border-top: 1px solid var(--ops-line2);
+  font-size: 11px; font-weight: 500;
+  cursor: pointer;
+}
+.ops-row:hover { background: var(--ops-bg3); }
+.ops-row.critical { background: color-mix(in srgb, var(--ops-min) 5%, transparent); }
+.ops-detail {
+  display: flex; gap: 32px; flex-wrap: wrap;
+  padding: 14px 18px;
+  border-top: 1px solid var(--ops-line2);
+  background: var(--ops-bg3);
+  font-size: 10px;
+}
+.ops-detail .dl { color: var(--ops-dim); letter-spacing: .12em; margin-bottom: 4px; text-transform: uppercase; font-size: 9px; }
+.ops-detail .dv { font-size: 12px; color: var(--ops-text); }
+
+/* Widths match the design_handoff prototype's colDefs exactly (System 170 ·
+   Region 130 · Besatzer 110 · Status 120 · Δ24h 80 · Adv 70 · Kills 70 ·
+   Jumps 60). The prototype never uses a row `gap` — spacing between columns
+   comes from these boxes being wider than their content, with plain
+   left-aligned text, so the gap always falls AFTER a value, before the next
+   column starts. VP is the one exception: it was flex:1 1 160 with a growing
+   progress bar filling that space — with the bar removed (per your request),
+   a left-aligned percentage would leave the gap BEFORE the number instead,
+   so VP alone stays right-aligned against its own padding-right, matching
+   where the bar used to end. */
+.c-system { flex: 0 0 170px; color: var(--ops-text); display: flex; align-items: center; gap: 5px; min-width: 0; }
+.c-system .sys-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.c-region { flex: 0 0 130px; color: var(--ops-dim); font-size: 9.5px; }
+.c-occ { flex: 0 0 110px; }
+.c-status { flex: 0 0 120px; }
+.c-vp { flex: 1 1 60px; padding-right: 14px; font-weight: 600; text-align: right; justify-content: flex-end; }
+.c-delta { flex: 0 0 80px; color: var(--ops-body); }
+.c-adv { flex: 0 0 70px; color: var(--ops-body); }
+.c-kills { flex: 0 0 70px; color: var(--ops-body); }
+.c-jumps { flex: 0 0 60px; color: var(--ops-dim2); }
+
+.ops-status-tag { padding: 2px 7px; font-size: 9px; border: 1px solid; }
+
+/* External reference links (zKillboard, Dotlan) — shown in the Warzones
+   row-detail expand and the Map's system detail panel. */
+.ops-ext-links { display: flex; gap: 6px; }
+.ops-ext-link {
+  padding: 2px 7px;
+  font: 500 9px var(--font-mono);
+  letter-spacing: .04em;
+  color: var(--ops-dim);
+  border: 1px solid var(--ops-line);
+  text-decoration: none;
+}
+.ops-ext-link:hover { color: var(--ops-text); border-color: var(--ops-dim); }
+
+/* Compact variant for inline use right next to a system name (Warzones
+   table rows) — same idea as .ops-ext-link, smaller footprint. */
+.ops-ext-icon {
+  flex: 0 0 auto;
+  padding: 1px 4px;
+  font: 500 8px var(--font-mono);
+  letter-spacing: .02em;
+  color: var(--ops-dim);
+  border: 1px solid var(--ops-line);
+  text-decoration: none;
+}
+.ops-ext-icon:hover { color: var(--ops-text); border-color: var(--ops-dim); }
+
+/* flex-grow:0 — the design allows this panel to grow up to 320px, but its
+   content (a short flip list) never needs more than its 240px base, and
+   letting it grow was the last thing squeezing the table into a ~40px
+   horizontal scroll. Staying at 240px keeps it within spec's stated range
+   and gives that reclaimed width to the table instead. */
+.ops-changes { flex: 0 1 240px; max-width: 320px; border: 1px solid var(--ops-line); background: var(--ops-bg2); }
+.ops-changes-head { padding: 11px 14px; border-bottom: 1px solid var(--ops-line2); font: 700 11px var(--ops-font-display); letter-spacing: .14em; color: var(--ops-text); }
+.ops-changes-row { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-top: 1px solid var(--ops-line2); font-size: 10px; }
+.ops-changes-empty { padding: 20px 14px; font-size: 10px; color: var(--ops-dim); text-align: center; }
+
+/* ---------- Map ---------- */
+.ops-map-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: stretch; padding: 0 28px 26px; }
+.ops-map-frame {
+  flex: 1 1 620px;
+  position: relative;
+  min-height: 520px;
+  border: 1px solid var(--ops-line);
+  background-color: var(--ops-bg2);
+  background-image: linear-gradient(var(--ops-line2) 1px, transparent 1px), linear-gradient(90deg, var(--ops-line2) 1px, transparent 1px);
+  background-size: 44px 44px;
+  overflow: hidden;
+}
+.ops-map-frame svg { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+.ops-map-frame svg.panning { cursor: grabbing; }
+.ops-map-edges line { stroke: var(--ops-dim); stroke-opacity: .35; stroke-width: calc(1px * var(--fk, 1)); vector-effect: non-scaling-stroke; }
+.ops-map-node { cursor: pointer; }
+.ops-map-node .diamond { transition: opacity .15s ease; }
+.ops-map-node:hover .diamond { opacity: 1; }
+.ops-map-node.critical .diamond { animation: ops-pulse 1.6s ease-in-out infinite; }
+.ops-map-label {
+  font: 500 8.5px var(--font-mono);
+  letter-spacing: .06em;
+  fill: var(--ops-dim2);
+}
+.ops-map-node.selected .ops-map-label { fill: var(--ops-text); }
+.ops-map-label-minor { display: none; }
+.ops-map-frame svg.zoomed .ops-map-label-minor { display: block; }
+.ops-map-controls { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.ops-map-controls button {
+  width: 24px; height: 24px;
+  border: 1px solid var(--ops-line);
+  background: var(--ops-bg3);
+  color: var(--ops-dim2);
+  font-size: 13px;
+  cursor: pointer;
+}
+.ops-map-controls button:hover { border-color: var(--ops-dim); color: var(--ops-text); }
+.ops-map-frame .map-code {
+  font: 500 8px var(--font-mono);
+  fill: var(--ops-bg);
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+.ops-map-detail { flex: 1 1 240px; max-width: 300px; border: 1px solid var(--ops-line); background: var(--ops-bg2); padding: 18px; }
+.ops-map-detail-hint {
+  height: 100%; min-height: 220px;
+  display: grid; place-items: center; text-align: center;
+  color: var(--ops-dim); font-size: 10px; letter-spacing: .08em;
+}
+.ops-map-detail-name { font: 700 17px var(--ops-font-display); letter-spacing: .1em; color: var(--ops-text); }
+.ops-map-detail-region { font-size: 9.5px; color: var(--ops-dim); margin-top: 2px; }
+.ops-map-detail-tags { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+.ops-map-detail-vp { margin-top: 14px; }
+.ops-map-detail-vp-row { display: flex; justify-content: space-between; font-size: 9px; color: var(--ops-dim); letter-spacing: .12em; margin-bottom: 5px; }
+.ops-map-detail-vp-track { height: 6px; background: var(--ops-bg3); }
+.ops-map-detail-vp-fill { height: 100%; transition: width .5s; }
+.ops-map-detail-activity { display: flex; gap: 22px; font-size: 10px; margin-top: 14px; }
+.ops-map-detail-note { margin-top: 14px; }
+
+@media (max-width: 700px) {
+  .ops-map-row { padding-left: 14px; padding-right: 14px; }
+}
+
+/* ---------- History ---------- */
+.ops-hist-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 16px; padding: 0 28px 26px; }
+.ops-hist-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 9.5px; margin-bottom: 12px; }
+.ops-hist-legend b { font-weight: 700; }
+.ops-hist-chart-wrap { position: relative; }
+.ops-hist-chart-wrap svg { display: block; width: 100%; height: 200px; }
+.ops-hist-minmax { position: absolute; right: 0; font-size: 8.5px; color: var(--ops-dim); }
+.ops-hist-minmax.max { top: 0; }
+.ops-hist-minmax.min { bottom: 0; }
+.ops-hist-footer { display: flex; justify-content: space-between; font-size: 8.5px; color: var(--ops-dim); margin-top: 6px; }
+.ops-hist-empty { padding: 40px 28px; color: var(--ops-dim); font-size: 11px; text-align: center; }
+
+.ops-flips-row { padding: 0 28px 26px; }
+.fc-time { flex: 0 0 90px; color: var(--ops-dim); }
+.fc-system { flex: 1 1 160px; color: var(--ops-text); }
+.fc-from, .fc-to { flex: 0 0 130px; }
+
+/* ---------- LP Store ---------- */
+.ops-lp-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 0 28px 14px; }
+.ops-lp-toolbar-label { font-size: 9px; letter-spacing: .12em; color: var(--ops-dim); text-transform: uppercase; }
+.ops-lp-trend { padding: 0 28px 22px; }
+.ops-lp-table-row { padding: 0 28px 8px; }
+/* Scoped via #lp-table-head/#lp-body — same reasoning as the Warzones and
+   flips tables: this table's columns must not inherit another table's width. */
+#lp-table-head, #lp-body .ops-row { min-width: 920px; }
+.lc-n { flex: 2 1 220px; color: var(--ops-text); }
+.lc-q { flex: 0 0 70px; color: var(--ops-dim2); }
+.lc-lp { flex: 0 0 90px; color: var(--ops-body); }
+.lc-isk { flex: 0 0 100px; color: var(--ops-body); }
+.lc-req { flex: 1 1 150px; color: var(--ops-dim); font-size: 9.5px; }
+.lc-mkt { flex: 0 0 100px; }
+.lc-depth { flex: 0 0 80px; color: var(--ops-dim2); }
+.lc-ratio { flex: 0 0 110px; display: flex; align-items: center; gap: 8px; }
+.ops-lp-ratio-val { min-width: 44px; font-weight: 600; }
+.ops-lp-ratio-track { flex: 1; height: 4px; background: var(--ops-bg3); }
+.ops-lp-ratio-fill { display: block; height: 100%; transition: width .4s; }
+.ops-lp-footnote { padding: 8px 28px 26px; font-size: 8.5px; color: var(--ops-dim); }
+.ops-lp-depth-thin { text-decoration: underline dotted; text-underline-offset: 2px; }
+
+/* ---------- Leaderboards ---------- */
+.ops-lb-cats { padding: 0 28px 14px; }
+.ops-lb-table-row { padding: 0 28px 26px; }
+/* Scoped via #lb-table-head/#lb-body — same reasoning as the other tables:
+   this table's columns must not inherit another table's width. */
+#lb-table-head, #lb-body .ops-row { min-width: 640px; }
+.lb-rank { flex: 0 0 60px; font: 600 12px var(--ops-font-display); }
+.lb-name { flex: 2 1 200px; color: var(--ops-text); }
+.lb-fac { flex: 0 0 160px; font-size: 9.5px; }
+.lb-val { flex: 1 1 220px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.ops-lb-val-track { flex: 1; height: 5px; background: var(--ops-bg3); }
+.ops-lb-val-fill { display: block; height: 100%; transition: width .4s; }
+.ops-lb-val-num { min-width: 64px; text-align: right; color: var(--ops-body); font-weight: 600; }
+
+/* ---------- Campaigns ---------- */
+/* The prototype's status chip / countdown / progress bar all assume live
+   campaign progress, which ESI has no route for (see the site's own FAQ
+   answer) — SDATA.campaigns only carries title/subtitle/target stage count
+   and a long objective list (career + LP/ISK reward each). Adapted: the
+   status chip stays (these ARE the currently-published SDE campaigns, so
+   "active" is a true label, just without a percentage or end time), the
+   countdown is dropped (no end time exists), the progress bar is dropped
+   (no live progress exists), and the flat objective list becomes a
+   collapsible <details> — real data the mockup's sample didn't have room
+   for, kept per the same pattern as History's flips log / Map's pan-zoom. */
+.ops-cmp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; padding: 0 28px 26px; }
+.ops-cmp-card { border: 1px solid var(--ops-line); border-top: 3px solid; background: var(--ops-bg2); padding: 16px 18px; }
+.ops-cmp-head { margin-bottom: 10px; }
+.ops-cmp-status { padding: 2px 8px; font-size: 9px; border: 1px solid; }
+.ops-cmp-title { font: 700 15px var(--ops-font-display); letter-spacing: .08em; color: var(--ops-text); margin-top: 10px; }
+.ops-cmp-side { font-size: 9.5px; margin-top: 2px; }
+.ops-cmp-subtitle { font-size: 10.5px; color: var(--ops-dim2); line-height: 1.5; margin-top: 8px; }
+.ops-cmp-goal { font-size: 9px; color: var(--ops-dim); letter-spacing: .1em; margin-top: 12px; text-transform: uppercase; }
+.ops-cmp-objectives { margin-top: 12px; }
+.ops-cmp-objectives summary { cursor: pointer; font-size: 9.5px; letter-spacing: .1em; color: var(--ops-dim); text-transform: uppercase; }
+.ops-cmp-objectives summary:hover { color: var(--ops-dim2); }
+.ops-cmp-obj-list { margin: 10px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.ops-cmp-obj-item { padding: 8px 10px; background: var(--ops-bg3); font-size: 10.5px; color: var(--ops-dim2); line-height: 1.5; }
+.ops-cmp-obj-career { display: inline-block; margin-right: 6px; padding: 1px 6px; font-size: 8.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ops-accent); border: 1px solid var(--ops-line); }
+.ops-cmp-obj-reward { display: block; margin-top: 4px; font-size: 9.5px; color: var(--ops-ama); }
+.ops-cmp-footer { display: flex; justify-content: space-between; margin-top: 12px; font-size: 9.5px; }
+.ops-cmp-footer .l { color: var(--ops-dim); }
+.ops-cmp-footer .v { color: var(--ops-ama); }
+
+/* ---------- FAQ ---------- */
+.ops-faq-list { display: flex; flex-direction: column; gap: 10px; padding: 0 28px 26px; max-width: 860px; }
+.ops-faq-item { border: 1px solid var(--ops-line); background: var(--ops-bg2); padding: 14px 18px; }
+.ops-faq-item summary { cursor: pointer; font: 600 12px var(--ops-font-display); letter-spacing: .06em; color: var(--ops-text); }
+.ops-faq-item summary:hover { color: var(--ops-hi); }
+.ops-faq-item p { margin: 10px 0 0; font-size: 11.5px; color: var(--ops-dim2); line-height: 1.6; }
+
+/* ---------- Legal page (/legal/, standalone — not one of the 7 app tabs) ---------- */
+.ops-legal { max-width: 760px; padding: 26px 28px 40px; }
+.ops-legal h2 { font: 700 13px var(--ops-font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--ops-accent); margin: 32px 0 10px; }
+.ops-legal h2:first-child { margin-top: 0; }
+.ops-legal h3 { font: 600 12px var(--font-mono); letter-spacing: .04em; color: var(--ops-text); margin: 20px 0 6px; }
+.ops-legal p, .ops-legal li { font-size: 12.5px; color: var(--ops-dim2); line-height: 1.7; }
+.ops-legal ul { margin: 6px 0 6px 20px; }
+.ops-legal a { color: var(--ops-hi); }
+.ops-legal a:hover { color: var(--ops-accent); }
+.ops-legal .mono { font-family: var(--font-mono); }
+.ops-legal hr { border: none; border-top: 1px solid var(--ops-line); margin: 28px 0; }
+.ops-legal-back { display: inline-block; text-decoration: none; margin-top: 24px; }
+
+@media (max-width: 700px) {
+  .ops-header { padding: 12px 14px; }
+  .ops-nav { padding: 0 14px; }
+  .ops-wz-grid, .ops-ins-grid, .ops-flex-row { padding-left: 14px; padding-right: 14px; }
+  .ops-section-head { padding: 0 14px; }
+  .ops-lb-cats, .ops-lb-table-row { padding-left: 14px; padding-right: 14px; }
+  .ops-cmp-grid { padding-left: 14px; padding-right: 14px; }
+  .ops-faq-list { padding-left: 14px; padding-right: 14px; }
+  .ops-legal { padding-left: 14px; padding-right: 14px; }
+  /* minmax(420px,...) doesn't shrink below 420px even in a single column —
+     drop the floor once there's no room for two columns anyway. */
+  .ops-wz-grid { grid-template-columns: 1fr; }
+  .ops-ins-grid { grid-template-columns: 1fr; }
 }

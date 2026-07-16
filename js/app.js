@@ -27,13 +27,22 @@ const App = (() => {
      never re-triggers the skeleton over an already-visible table. */
   const everLoaded = new Set();
   let autoTimer = null;
-  let lastRefresh = null;
   let currentTheme = "dark";
 
   const $ = (id) => document.getElementById(id);
 
-  function renderTimestamp() {
-    if (lastRefresh) $("timestamp").textContent = t("ts_label") + " " + fmtTime(lastRefresh, {}, true);
+  /* EVE time = UTC, ticks every second — independent of the auto-refresh
+     interval, which only governs how often ESI data is re-fetched. */
+  function tickClock() {
+    $("clock").textContent = new Date().toISOString().slice(11, 19);
+  }
+
+  function updateLiveChip(on) {
+    $("live-chip").classList.toggle("paused", !on);
+    $("live-dot").classList.toggle("live", on);
+    $("live-dot").classList.toggle("paused", !on);
+    $("live-label").textContent = on ? t("live_label") : t("paused_label");
+    $("auto-refresh").classList.toggle("active", on);
   }
 
   function showPanel(tabId) {
@@ -72,18 +81,22 @@ const App = (() => {
       loaded.add(tabId);
       everLoaded.add(tabId);
       tab.view.render();
-      lastRefresh = new Date();
-      renderTimestamp();
       setStatus("idle");
     } catch (err) {
       reportError(err);
     }
   }
 
+  function setLangButtons() {
+    $("lang-de").classList.toggle("active", LANG === "de");
+    $("lang-en").classList.toggle("active", LANG === "en");
+  }
+
   function rerenderAll() {
     applyI18n();
     $("theme-toggle").textContent = currentTheme === "dark" ? t("theme_light") : t("theme_dark");
-    renderTimestamp();
+    updateLiveChip(!!autoTimer);
+    setLangButtons();
     for (const tabId of loaded) TABS[tabId].view.render();
   }
 
@@ -98,7 +111,7 @@ const App = (() => {
 
   function setAutoRefresh(on) {
     localStorage.setItem("tow_auto_refresh", on ? "1" : "0");
-    $("auto-refresh").classList.toggle("active-mode", on);
+    updateLiveChip(on);
     if (autoTimer) clearInterval(autoTimer);
     autoTimer = on
       ? setInterval(() => {
@@ -109,6 +122,9 @@ const App = (() => {
   }
 
   function init() {
+    tickClock();
+    setInterval(tickClock, 1000);
+
     $("refresh").addEventListener("click", () => {
       loaded.delete(activeTab);
       runTab(activeTab, true);
@@ -119,6 +135,7 @@ const App = (() => {
     setAutoRefresh(localStorage.getItem("tow_auto_refresh") === "1");
     $("lang-de").addEventListener("click", () => { LANG = "de"; rerenderAll(); });
     $("lang-en").addEventListener("click", () => { LANG = "en"; rerenderAll(); });
+    setLangButtons();
 
     $("theme-toggle").addEventListener("click", () => {
       setTheme(document.documentElement.dataset.theme === "light" ? "dark" : "light");
