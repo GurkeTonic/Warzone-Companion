@@ -585,16 +585,14 @@ body {
 .ops-lb-val-num { min-width: 64px; text-align: right; color: var(--ops-body); font-weight: 600; }
 
 /* ---------- Campaigns ---------- */
-/* The prototype's status chip / countdown / progress bar all assume live
-   campaign progress, which ESI has no route for (see the site's own FAQ
-   answer) — SDATA.campaigns only carries title/subtitle/target stage count
-   and a long objective list (career + LP/ISK reward each). Adapted: the
-   status chip stays (these ARE the currently-published SDE campaigns, so
-   "active" is a true label, just without a percentage or end time), the
-   countdown is dropped (no end time exists), the progress bar is dropped
-   (no live progress exists), and the flat objective list becomes a
-   collapsible <details> — real data the mockup's sample didn't have room
-   for, kept per the same pattern as History's flips log / Map's pan-zoom. */
+/* Static identity (SDATA.campaigns: titles, texts, targets, rewards) joined
+   by UUID with live progress from data/campaigns.json (mirrored ESI
+   /military-campaigns, compat date 2026-08-04). The prototype's progress
+   bar is back now that a real route exists; the countdown stays dropped
+   (the route exposes no end time). Without live data (mirror not deployed,
+   fetch failed) the bars and participant lines simply don't render and the
+   card falls back to the static layout. The flat objective list stays a
+   collapsible <details>, same pattern as History's flips log. */
 .ops-cmp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; padding: 0 28px 26px; }
 .ops-cmp-card { border: 1px solid var(--ops-line); border-top: 3px solid; background: var(--ops-bg2); padding: 16px 18px; }
 .ops-cmp-head { margin-bottom: 10px; }
@@ -613,6 +611,16 @@ body {
 .ops-cmp-footer { display: flex; justify-content: space-between; margin-top: 12px; font-size: 9.5px; }
 .ops-cmp-footer .l { color: var(--ops-dim); }
 .ops-cmp-footer .v { color: var(--ops-ama); }
+.ops-cmp-progress { margin-top: 12px; }
+.ops-cmp-progress-label { display: flex; justify-content: space-between; font-size: 9px; color: var(--ops-dim); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 4px; }
+.ops-cmp-bar { height: 6px; background: var(--ops-bg3); border: 1px solid var(--ops-line); }
+.ops-cmp-bar-fill { height: 100%; }
+.ops-cmp-obj-sub { display: block; margin-top: 3px; font-size: 9.5px; color: var(--ops-dim); }
+.ops-cmp-obj-progress { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.ops-cmp-obj-progress .ops-cmp-bar { flex: 1; height: 4px; }
+.ops-cmp-obj-progress .n { font-size: 9px; color: var(--ops-dim2); white-space: nowrap; }
+.ops-cmp-obj-part { display: block; margin-top: 4px; font-size: 9px; color: var(--ops-dim); }
+.ops-cmp-updated { grid-column: 1 / -1; font-size: 9px; color: var(--ops-dim); letter-spacing: .1em; text-transform: uppercase; }
 
 /* ---------- FAQ ---------- */
 .ops-faq-list { display: flex; flex-direction: column; gap: 10px; padding: 0 28px 26px; max-width: 860px; }

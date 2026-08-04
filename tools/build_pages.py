@@ -63,7 +63,8 @@ PAGES = [
         "tab": "campaigns",
         "dir": "campaigns",
         "title": "Military Campaigns — Warzone Companion",
-        "description": "EVE Online Military Campaigns with official titles, objectives, and rewards.",
+        "description": "EVE Online Military Campaigns with live progress, participation, "
+                       "official titles, objectives, and rewards.",
     },
     {
         "tab": "faq",

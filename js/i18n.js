@@ -35,8 +35,8 @@ const I18N = {
     faq_a_lp: "Standardansicht: Bewertung über ESI-Durchschnittspreise — schnelle Näherung, reale Margen können abweichen. Der Jita-Knopf bepreist die Top-Angebote mit dem echten Jita-4-4-Orderbuch: höchste Buy-Order für den Produkterlös, niedrigste Sell-Order für Materialkosten; gerankt werden dann nur neu bepreiste Angebote. Buy-Tiefe = Stückzahl, die sofort in Buy-Orders (bis 5 % unter Bestpreis) verkäuflich ist — rot heißt: weniger als eine Kaufmenge, dünner Markt. ISK/LP ist der Nettoerlös (Wert minus ISK-Kosten minus Materialien) pro Loyalty Point. Der Trend-Chart darüber nutzt den täglichen Jita-Durchschnittskurs (The-Forge-Markthistorie) — er zeigt die Richtung, die Tabelle den ausführbaren Ist-Erlös.",
     faq_q_home: "Was macht das Heimatsystem-Feld?",
     faq_a_home: "Trage ein System ein (z. B. dein Staging), und die Tabelle zeigt die Entfernung in Gate-Jumps zu jedem Warzone-System — kürzeste Route, Security wird ignoriert. Die Angabe wird nur lokal im Browser gespeichert und nie übertragen.",
-    faq_q_campaigns: "Warum zeigen die Campaigns keinen Fortschritt?",
-    faq_a_campaigns: "Titel, Beschreibungen und Objectives stammen aus dem offiziellen Static Data Export. Für den Live-Fortschritt bietet ESI schlicht keine Route — der ist nur im In-Game-Dashboard „Theaters of War“ sichtbar. Sobald CCP eine Route liefert, wird sie eingebaut.",
+    faq_q_campaigns: "Woher kommt der Kampagnen-Fortschritt?",
+    faq_a_campaigns: "Titel, Beschreibungen und Objectives stammen aus dem offiziellen Static Data Export. Der Live-Fortschritt kommt aus den öffentlichen ESI-Routen unter /military-campaigns (verfügbar seit Compatibility Date 2026-08-04) und wird alle 30 Minuten von einer GitHub Action gespiegelt — jeder Snapshot ist wie üblich ein öffentlich nachvollziehbarer Commit im Repo.",
     faq_q_insurgency: "Was bedeuten die lila Ringe (Insurgency)?",
     faq_a_insurgency: "Piraten-Insurgencies (Havoc): Guristas oder Angel Cartel eröffnen eine FOB in einem Warzone-System und breiten Corruption aus; Milizen kontern mit Suppression. Beides läuft pro System in Stufen 0–5 — Corruption 5 ändert die Systemregeln spürbar (z. B. keine Gate-Gun-Unterstützung). Lila Ring auf der Karte = System mit aktiver Insurgency, Details im Tooltip und im System-Detailpanel. Quelle ist der War Report auf eveonline.com (inoffiziell, nicht von CCP supportet — kann wegfallen); ESI bietet diese Daten nicht.",
     faq_q_feed: "Gibt es einen Feed für Bots und andere Tools?",
@@ -170,6 +170,10 @@ const I18N = {
     cmp_reward: "Belohnung",
     cmp_reward_each: "pro Abschluss",
     cmp_none: "Keine Kampagnendaten.",
+    cmp_progress: "Fortschritt",
+    cmp_participants: "Teilnehmer",
+    cmp_contributors: "mit Beitrag",
+    cmp_updated: "Stand",
 
     footer_source: "Datenquelle: EVE Swagger Interface (ESI), ausschließlich öffentliche Endpoints. Abruf erfolgt client-seitig bei Tab-Aufruf.",
     ts_label: "Stand"
@@ -207,8 +211,8 @@ const I18N = {
     faq_a_lp: "Default view: valuation via ESI average prices — a quick approximation; real margins may differ. The Jita button reprices the top offers with the live Jita 4-4 order book: highest buy order for product revenue, lowest sell order for material cost; only repriced offers are then ranked. Buy depth = units sellable instantly into buy orders (within 5% of best price) — red means less than one purchase quantity, thin market. ISK/LP is the net return (value minus ISK cost minus materials) per loyalty point. The trend chart above it uses the daily Jita average (The Forge market history) — it shows direction, the table shows the executable payout.",
     faq_q_home: "What does the home system field do?",
     faq_a_home: "Enter a system (e.g. your staging) and the table shows the distance in gate jumps to every warzone system — shortest route, security ignored. The value is stored locally in your browser only and never transmitted.",
-    faq_q_campaigns: "Why don't the campaigns show progress?",
-    faq_a_campaigns: "Titles, descriptions, and objectives come from the official Static Data Export. ESI simply exposes no route for live progress — that is only visible in the in-game “Theaters of War” dashboard. As soon as CCP ships a route, it will be added.",
+    faq_q_campaigns: "Where does campaign progress come from?",
+    faq_a_campaigns: "Titles, descriptions, and objectives come from the official Static Data Export. Live progress comes from the public ESI routes under /military-campaigns (available since compatibility date 2026-08-04), mirrored every 30 minutes by a GitHub Action — as with all snapshots, every data point is a publicly auditable commit in the repo.",
     faq_q_insurgency: "What do the purple rings (insurgency) mean?",
     faq_a_insurgency: "Pirate insurgencies (Havoc): Guristas or Angel Cartel open a FOB in a warzone system and spread corruption; militias counter with suppression. Both run per system in stages 0–5 — corruption 5 noticeably changes system rules (e.g. no gate gun support). Purple ring on the map = system with an active insurgency; details in the tooltip and the system detail panel. Source is the war report on eveonline.com (unofficial, not supported by CCP — may go away); ESI does not expose this data.",
     faq_q_feed: "Is there a feed for bots and other tools?",
@@ -342,6 +346,10 @@ const I18N = {
     cmp_reward: "Reward",
     cmp_reward_each: "per completion",
     cmp_none: "No campaign data.",
+    cmp_progress: "Progress",
+    cmp_participants: "participants",
+    cmp_contributors: "contributed",
+    cmp_updated: "Updated",
 
     footer_source: "Data source: EVE Swagger Interface (ESI), public endpoints only. Fetched client-side when a tab is opened.",
     ts_label: "As of"

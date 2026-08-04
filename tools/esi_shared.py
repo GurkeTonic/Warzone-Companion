@@ -17,3 +17,9 @@ USER_AGENT = f"{APP_NAME}/{APP_VERSION} ({CONTACT_EMAIL}; +{REPO_URL})"
 
 ESI_BASE = "https://esi.evetech.net"
 COMPAT_DATE = "2026-06-09"
+
+# The /military-campaigns routes only exist from this compatibility date on.
+# Kept separate from COMPAT_DATE because compat dates are route-versioned:
+# bumping the project-wide date would silently change the schema of every
+# other route, so the newer date is opted into per route after verification.
+CAMPAIGNS_COMPAT_DATE = "2026-08-04"

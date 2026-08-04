@@ -98,8 +98,11 @@ def main():
         objectives = {}
         for o in read_jsonl(zf, "militaryCampaignObjectives.jsonl"):
             objectives.setdefault(o["campaignID"], []).append({
+                "id": o["_key"],
                 "career": o.get("careerPath"),
+                "title": loc(o.get("title")),
                 "subtitle": loc(o.get("subtitle")),
+                "target": o.get("targetProgress"),
                 "lp": (o.get("rewards", {}).get("lp") or {}).get("amountPerInterval"),
                 "isk": (o.get("rewards", {}).get("isk") or {}).get("amountPerInterval"),
             })

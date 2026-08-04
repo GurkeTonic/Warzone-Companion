@@ -22,6 +22,14 @@ every 30 minutes; works locally too. Produces:
                          HISTORY_DAYS)
   data/insurgency.json — pirate insurgency state from the war report API
                        (FOB origin, corruption/suppression per system)
+  data/campaigns.json — live Military Campaign progress and participation
+                       from the public ESI /military-campaigns routes
+                       (compat date 2026-08-04). Only IDs and numbers;
+                       names/targets come from the SDE via staticdata.js,
+                       joined in the frontend by UUID. Campaign-level
+                       progress is also appended to data/history.json
+                       (only when a value changed — it moves on the scale
+                       of days).
   data/feed-flips.json — system flips as a stable, documented feed for
                        third parties (Discord bots etc.)
 
@@ -35,7 +43,7 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-from esi_shared import ESI_BASE, COMPAT_DATE, USER_AGENT
+from esi_shared import ESI_BASE, COMPAT_DATE, CAMPAIGNS_COMPAT_DATE, USER_AGENT
 
 WARZONE_API = "https://www.eveonline.com/api/warzone/status"
 INSURGENCY_API = "https://www.eveonline.com/api/warzone/insurgency"
@@ -44,6 +52,7 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 WARZONE_PATH = DATA_DIR / "warzone.json"
 HISTORY_PATH = DATA_DIR / "history.json"
 INSURGENCY_PATH = DATA_DIR / "insurgency.json"
+CAMPAIGNS_PATH = DATA_DIR / "campaigns.json"
 FEED_FLIPS_PATH = DATA_DIR / "feed-flips.json"
 
 HISTORY_DAYS = 90
@@ -156,6 +165,93 @@ def write_insurgency(now_iso):
         encoding="utf-8",
     )
     print(f"wrote {INSURGENCY_PATH} ({len(campaigns)} active campaigns)")
+
+
+# ---------- military campaigns mirror (data/campaigns.json) ----------
+
+def campaigns_esi(path, extra=""):
+    return get_json(
+        f"{ESI_BASE}{path}?compatibility_date={CAMPAIGNS_COMPAT_DATE}"
+        + (f"&{extra}" if extra else "")
+    )
+
+
+def campaign_objectives(campaign_id):
+    """All objectives of a campaign. The route pages newest-first: the
+    'before' cursor walks toward older records, 'after' toward newer ones
+    (immediately empty on the first page). Verified 2026-08-04."""
+    rows = {}
+    cursor = None
+    while True:
+        page = campaigns_esi(
+            f"/military-campaigns/{campaign_id}/objectives",
+            "limit=100" + (f"&before={cursor}" if cursor else ""),
+        )
+        batch = page.get("objectives") or []
+        new = [o for o in batch if o.get("id") not in rows]
+        for o in new:
+            rows[o["id"]] = o
+        cursor = (page.get("cursor") or {}).get("before")
+        if not cursor or not new:
+            break
+    return list(rows.values())
+
+
+def write_campaigns(now_iso):
+    """Mirror live campaign state; returns the campaign list (or None when
+    the routes are unavailable) so append_history can record progress."""
+    try:
+        listing = campaigns_esi("/military-campaigns").get("campaigns") or []
+    except Exception as err:
+        print(f"military campaigns unavailable, skipping: {err}")
+        return None
+    campaigns = []
+    for c in listing:
+        cid = c.get("id")
+        if not cid:
+            continue
+        try:
+            detail = campaigns_esi(f"/military-campaigns/{cid}")
+        except Exception:
+            detail = c  # listing lacks started/finished, but keeps state/progress
+        try:
+            objs = campaign_objectives(cid)
+        except Exception as err:
+            print(f"objectives for {cid} unavailable: {err}")
+            objs = []
+        campaigns.append({
+            "id": cid,
+            "state": detail.get("state"),
+            "progress": detail.get("progress"),
+            "started": detail.get("started"),
+            "finished": detail.get("finished"),
+            "objectives": [
+                {
+                    "id": o.get("id"),
+                    "state": o.get("state"),
+                    "progress": o.get("progress"),
+                    "participants": o.get("participants"),
+                    "started": o.get("started"),
+                    "modified": o.get("last_modified"),
+                }
+                for o in objs
+            ],
+        })
+    if CAMPAIGNS_PATH.exists():
+        try:
+            old = json.loads(CAMPAIGNS_PATH.read_text(encoding="utf-8"))
+            if old.get("campaigns") == campaigns:
+                print("campaigns.json unchanged")
+                return campaigns
+        except (OSError, ValueError):
+            pass
+    CAMPAIGNS_PATH.write_text(
+        json.dumps({"fetched": now_iso, "campaigns": campaigns}, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
+    total_objs = sum(len(c["objectives"]) for c in campaigns)
+    print(f"wrote {CAMPAIGNS_PATH} ({len(campaigns)} campaigns, {total_objs} objectives)")
+    return campaigns
 
 
 # ---------- LP snapshot (appended into data/history.json) ----------
@@ -284,13 +380,15 @@ def load_history():
                 h.setdefault("occ", {})
                 h.setdefault("flips", [])
                 h.setdefault("lp", [])
+                h.setdefault("campaigns", [])
                 return h
         except (OSError, ValueError):
             pass
-    return {"factions": [], "systems": [], "occ": {}, "flips": [], "lp": []}
+    return {"factions": [], "systems": [], "occ": {}, "flips": [], "lp": [],
+            "campaigns": []}
 
 
-def append_history(now_epoch, fw_systems, fw_stats):
+def append_history(now_epoch, fw_systems, fw_stats, campaigns=None):
     history = load_history()
 
     held = {f: 0 for f in EMPIRES}
@@ -341,12 +439,22 @@ def append_history(now_epoch, fw_systems, fw_stats):
     else:
         print("lp: snapshot is fresh, skipping until tomorrow")
 
+    # Campaign progress moves on the scale of days, so append only when a
+    # value actually changed — the series stays tiny.
+    if campaigns:
+        snap = {c["id"]: c.get("progress") for c in campaigns}
+        last = history["campaigns"][-1]["c"] if history["campaigns"] else None
+        if snap != last:
+            history["campaigns"].append({"t": now_epoch, "c": snap})
+            print(f"campaign progress changed: {sorted(snap.values())}")
+
     fac_cutoff = now_epoch - HISTORY_DAYS * 86400
     sys_cutoff = now_epoch - SYSTEM_WINDOW_HOURS * 3600
     history["factions"] = [e for e in history["factions"] if e["t"] >= fac_cutoff]
     history["systems"] = [e for e in history["systems"] if e["t"] >= sys_cutoff]
     history["flips"] = [e for e in history["flips"] if e["t"] >= fac_cutoff]
     history["lp"] = [e for e in history["lp"] if e["t"] >= fac_cutoff]
+    history["campaigns"] = [e for e in history["campaigns"] if e["t"] >= fac_cutoff]
 
     HISTORY_PATH.write_text(
         json.dumps(history, separators=(",", ":")) + "\n",
@@ -378,12 +486,13 @@ def main():
     except Exception as err:
         print(f"war report unavailable, skipping advantage: {err}")
     write_insurgency(now_iso)
+    campaigns = write_campaigns(now_iso)
 
     fw_systems = esi("/fw/systems")
     fw_stats = esi("/fw/stats")
     if not fw_systems or not fw_stats:
         sys.exit("ESI returned no factional warfare data")
-    history = append_history(now_epoch, fw_systems, fw_stats)
+    history = append_history(now_epoch, fw_systems, fw_stats, campaigns)
     write_flip_feed(history["flips"])
 
 
