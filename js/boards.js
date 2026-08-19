@@ -55,9 +55,9 @@ const BoardsView = (() => {
      a fallback beyond the 4-key FACTIONS map instead of crashing on it. */
   function militiaFaction(facId) {
     if (!facId) return null;
-    if (FACTIONS[facId]) return { label: FACTIONS[facId].militiaName, color: opsFactionOf(facId).color };
-    if (PIRATES[facId]) return { label: PIRATES[facId].name, color: "var(--pirate)" };
-    return { label: factionOf(facId).name, color: "var(--ops-dim)" };
+    if (FACTIONS[facId]) return { label: FACTIONS[facId].militiaName, color: factionOf(facId).color };
+    if (PIRATES[facId]) return { label: PIRATES[facId].name, color: "var(--pir)" };
+    return { label: factionOf(facId).name, color: "var(--dim)" };
   }
 
   function collectIds(list, idKey) {
@@ -97,7 +97,7 @@ const BoardsView = (() => {
   function renderPeriodChips() {
     const container = document.getElementById("lb-period-chips");
     container.innerHTML = PERIODS.map(p => `
-      <button class="ops-chip${lbPeriod === p.key ? " active" : ""}" data-period="${p.key}">${t(p.label)}</button>
+      <button class="chip chip-lg${lbPeriod === p.key ? " active" : ""}" data-period="${p.key}">${t(p.label)}</button>
     `).join("");
     container.querySelectorAll("button").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -117,7 +117,7 @@ const BoardsView = (() => {
   function renderCatChips() {
     const container = document.getElementById("lb-cat-chips");
     container.innerHTML = CATS.map(c => `
-      <button class="ops-chip${lbCat === c.key ? " active" : ""}" data-cat="${c.key}">${t(c.label)}</button>
+      <button class="chip chip-lg${lbCat === c.key ? " active" : ""}" data-cat="${c.key}">${t(c.label)}</button>
     `).join("");
     container.querySelectorAll("button").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -127,27 +127,14 @@ const BoardsView = (() => {
     });
   }
 
-  function renderTableHead() {
-    const head = document.getElementById("lb-table-head");
-    const metric = t(CAT_DEFS[lbCat].kills ? "boards_kills" : "boards_vp");
-    const period = t(PERIODS.find(p => p.key === lbPeriod).label);
-    head.innerHTML = `
-      <span class="lb-rank">${t("lb_rank")}</span>
-      <span class="lb-name">${t("lb_name")}</span>
-      <span class="lb-fac">${t("lb_miliz")}</span>
-      <span class="lb-val">${esc(metric)} · ${esc(period)}</span>
-    `;
-  }
-
   function render() {
     renderPeriodChips();
     renderCatChips();
-    renderTableHead();
 
     const body = document.getElementById("lb-body");
     const rows = currentRows();
     if (rows.length === 0) {
-      body.innerHTML = `<div class="ops-row" style="cursor:default">${t("boards_none")}</div>`;
+      body.innerHTML = `<div class="lb-row">${t("boards_none")}</div>`;
       return;
     }
 
@@ -155,21 +142,21 @@ const BoardsView = (() => {
     const maxV = rows[0].amount || 1;
     body.innerHTML = rows.map((e, i) => {
       const id = e[def.idKey];
-      const facId = def.facMap.get(id);
-      const mf = militiaFaction(facId);
+      const mf = militiaFaction(def.facMap.get(id));
       const facLabel = mf ? mf.label : "—";
-      const facColor = mf ? mf.color : "var(--ops-dim)";
-      const rankColor = i === 0 ? "var(--ops-ama)" : (i < 3 ? "var(--ops-dim2)" : "var(--ops-dim)");
+      const facColor = mf ? mf.color : "var(--dim)";
+      const rankCls = i === 0 ? " g1" : (i < 3 ? " g2" : "");
       const pct = Math.max(0, Math.round(e.amount / maxV * 100));
-      const rowBg = i === 0 ? "color-mix(in srgb, var(--ops-ama) 4%, transparent)" : "transparent";
       return `
-        <div class="ops-row" style="cursor:default;background:${rowBg}">
-          <span class="lb-rank" style="color:${rankColor}">${String(i + 1).padStart(2, "0")}</span>
-          <span class="lb-name">${esc(ESI.name(id))}</span>
-          <span class="lb-fac" style="color:${facColor}">${esc(facLabel)}</span>
+        <div class="lb-row${i === 0 ? " top" : ""}">
+          <span class="lb-rank${rankCls}">${String(i + 1).padStart(2, "0")}</span>
+          <span class="lb-who">
+            <span class="lb-name">${esc(ESI.name(id))}</span>
+            <span class="lb-militia" style="color:${facColor}">${esc(facLabel)}</span>
+          </span>
           <span class="lb-val">
-            <span class="ops-lb-val-track"><span class="ops-lb-val-fill" style="width:${pct}%;background:${facColor}"></span></span>
-            <span class="ops-lb-val-num">${fmtNum(e.amount)}</span>
+            <span class="bar bar-6"><span style="width:${pct}%;background:${facColor}"></span></span>
+            <span class="num">${fmtNum(e.amount)}</span>
           </span>
         </div>
       `;

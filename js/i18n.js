@@ -4,7 +4,7 @@
 const I18N = {
   de: {
     subtitle: "Factional-Warfare-Begleiter für EVE Online — Live-Frontverlauf, LP-Optimierung und Military Campaigns",
-    tagline: "FRAKTIONSKRIEG · LIVE-FEED",
+    tagline: "FRAKTIONSKRIEG · LIVE-LAGE",
     live_label: "LIVE",
     paused_label: "PAUSIERT",
     refresh: "Aktualisieren",
@@ -175,12 +175,52 @@ const I18N = {
     cmp_contributors: "mit Beitrag",
     cmp_updated: "Stand",
 
+    tab_overview: "Lage",
+
+    pt_overview: "Lagebild",
+    pt_warzones: "Warzones",
+    pt_map: "Taktische Karte",
+    pt_history: "Verlauf",
+    pt_lp: "LP-Store Optimizer",
+    pt_boards: "Ranglisten",
+    pt_campaigns: "Military Campaigns",
+    pt_faq: "Häufige Fragen",
+
+    ps_overview: "Beide Kriegsschauplätze auf einen Blick — Frontverlauf, kritische Systeme, Systemwechsel und laufende Insurgencies.",
+    ps_warzones: "Alle umkämpften Systeme mit Besatzer, Rolle an der Front, Victory Points und Kills der letzten Stunde.",
+    ps_map: "Systeme und Sprungverbindungen einer Warzone. Ein System anklicken für Details.",
+    ps_history: "Wie sich die Front über den gewählten Zeitraum bewegt hat — gehaltene Systeme und Pilotenzahlen.",
+    ps_lp: "Welche Loyalitätspunkt-Belohnungen aktuell am meisten ISK pro LP bringen.",
+    ps_boards: "Die besten Piloten und Corporations — Zeitraum und Kategorie umschaltbar.",
+    ps_campaigns: "Die offiziellen Military Campaigns, ihre Ziele und Belohnungen.",
+    ps_faq: "Wie die einzelnen Ansichten zu lesen sind und woher die Daten kommen.",
+
+    sec_critical: "Kritische Systeme",
+    sec_insurgency: "Insurgencies",
+    sec_fliplog: "Vollständiges Wechsel-Protokoll",
+    lb_category: "Kategorie",
+    lb_period: "Zeitraum",
+
+    ov_stat_frontlines: "Frontlinien",
+    ov_stat_kills: "Kills / h",
+    ov_stat_pilots: "Piloten",
+    ov_crit_none: "Aktuell kein System über der kritischen Schwelle.",
+    ov_flips_none: "Keine Systemwechsel in den letzten 48 Stunden.",
+
+    updated_label: "STAND",
+    btn_auto: "AUTO",
+    theme_to_light: "HELL",
+    theme_to_dark: "DUNKEL",
+    ago_d: "T",
+    ago_h: "Std",
+    map_pick: "System anklicken für Details",
+
     footer_source: "Datenquelle: EVE Swagger Interface (ESI), ausschließlich öffentliche Endpoints. Abruf erfolgt client-seitig bei Tab-Aufruf.",
     ts_label: "Stand"
   },
   en: {
     subtitle: "Factional Warfare companion for EVE Online — live front lines, LP optimization, and Military Campaigns",
-    tagline: "FACTIONAL WARFARE · LIVE FEED",
+    tagline: "FACTIONAL WARFARE · LIVE STATUS",
     live_label: "LIVE",
     paused_label: "PAUSED",
     refresh: "Refresh",
@@ -351,12 +391,54 @@ const I18N = {
     cmp_contributors: "contributed",
     cmp_updated: "Updated",
 
+    tab_overview: "Status",
+
+    pt_overview: "Situation",
+    pt_warzones: "Warzones",
+    pt_map: "Tactical Map",
+    pt_history: "History",
+    pt_lp: "LP Store Optimizer",
+    pt_boards: "Leaderboards",
+    pt_campaigns: "Military Campaigns",
+    pt_faq: "Frequently Asked",
+
+    ps_overview: "Both theatres at a glance — front line, critical systems, recent flips and active insurgencies.",
+    ps_warzones: "Every contested system with its occupier, frontline role, victory points and kills in the last hour.",
+    ps_map: "Systems and stargate links across one warzone. Click a system for details.",
+    ps_history: "How the front has moved over the selected period — systems held and pilot counts.",
+    ps_lp: "Which loyalty point rewards return the most ISK per LP right now.",
+    ps_boards: "Top pilots and corporations — switch period and category.",
+    ps_campaigns: "The official Military Campaigns, their goals and rewards.",
+    ps_faq: "How to read each view and where the data comes from.",
+
+    sec_critical: "Critical Systems",
+    sec_insurgency: "Insurgencies",
+    sec_fliplog: "Full Flip Log",
+    lb_category: "Category",
+    lb_period: "Period",
+
+    ov_stat_frontlines: "Frontlines",
+    ov_stat_kills: "Kills / h",
+    ov_stat_pilots: "Pilots",
+    ov_crit_none: "No system above the critical threshold right now.",
+    ov_flips_none: "No system flips in the last 48 hours.",
+
+    updated_label: "AS OF",
+    btn_auto: "AUTO",
+    theme_to_light: "LIGHT",
+    theme_to_dark: "DARK",
+    ago_d: "d",
+    ago_h: "h",
+    map_pick: "Click a system for details",
+
     footer_source: "Data source: EVE Swagger Interface (ESI), public endpoints only. Fetched client-side when a tab is opened.",
     ts_label: "As of"
   }
 };
 
-let LANG = "de";
+/* Persisted so a language choice survives a reload; German stays the default
+   for a first visit, matching <html lang="de"> in the served markup. */
+let LANG = localStorage.getItem("tow_lang") === "en" ? "en" : "de";
 
 function t(key) {
   return (I18N[LANG] && I18N[LANG][key]) || key;
@@ -416,7 +498,7 @@ function applyI18n() {
   document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
     el.placeholder = t(el.dataset.i18nPlaceholder);
   });
-  document.getElementById("lang-de").classList.toggle("active", LANG === "de");
-  document.getElementById("lang-en").classList.toggle("active", LANG === "en");
+  /* One toggle, labelled with the language it switches TO. */
+  document.getElementById("lang-toggle").textContent = LANG === "de" ? "EN" : "DE";
   document.documentElement.lang = LANG;
 }

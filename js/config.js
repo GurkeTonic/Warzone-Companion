@@ -21,33 +21,18 @@ const CONFIG = {
 };
 
 const FACTIONS = {
-  500001: { key: "caldari",  name: "Caldari State",       color: "var(--caldari)",  militiaCorp: 1000180, militiaName: "State Protectorate" },
-  500002: { key: "minmatar", name: "Minmatar Republic",   color: "var(--minmatar)", militiaCorp: 1000182, militiaName: "Tribal Liberation Force" },
-  500003: { key: "amarr",    name: "Amarr Empire",        color: "var(--amarr)",    militiaCorp: 1000179, militiaName: "24th Imperial Crusade" },
-  500004: { key: "gallente", name: "Gallente Federation", color: "var(--gallente)", militiaCorp: 1000181, militiaName: "Federal Defense Union" }
+  500001: { key: "caldari",  short: "CAL", name: "Caldari State",       color: "var(--cal)", militiaCorp: 1000180, militiaName: "State Protectorate" },
+  500002: { key: "minmatar", short: "MIN", name: "Minmatar Republic",   color: "var(--min)", militiaCorp: 1000182, militiaName: "Tribal Liberation Force" },
+  500003: { key: "amarr",    short: "AMA", name: "Amarr Empire",        color: "var(--ama)", militiaCorp: 1000179, militiaName: "24th Imperial Crusade" },
+  500004: { key: "gallente", short: "GAL", name: "Gallente Federation", color: "var(--gal)", militiaCorp: 1000181, militiaName: "Federal Defense Union" }
 };
 
 function factionOf(id) {
-  return FACTIONS[id] || { key: "unknown", name: `Faction ${id}`, color: "var(--muted)" };
+  return FACTIONS[id] || { key: "unknown", short: "???", name: `Faction ${id}`, color: "var(--dim)" };
 }
 
-/* Same faction lookup, colored with the Ops Room --ops-* tokens instead of
-   the old --caldari/--gallente/... tokens — used by tabs migrated to the new
-   design (see design_handoff_warzone_ops_room/README.md). Old, not-yet
-   migrated tabs keep using factionOf() so their colors don't change. */
-const OPS_FACTION_COLOR = {
-  500001: { color: "var(--ops-cal)", bar: "var(--ops-cal-bar)" },
-  500002: { color: "var(--ops-min)", bar: "var(--ops-min-bar)" },
-  500003: { color: "var(--ops-ama)", bar: "var(--ops-ama-bar)" },
-  500004: { color: "var(--ops-gal)", bar: "var(--ops-gal-bar)" }
-};
-
-function opsFactionOf(id) {
-  return { ...factionOf(id), ...(OPS_FACTION_COLOR[id] || { color: "var(--ops-dim)", bar: "var(--ops-dim)" }) };
-}
-
-/* The faction on the other side of id's warzone — used to color VP bars by
-   attacker (per the Ops Room spec), not occupier. */
+/* The faction on the other side of id's warzone — VP bars are coloured by
+   the attacker, not the occupier. */
 function enemyFactionOf(id) {
   const wz = warzoneOf(id);
   return wz ? (wz.a === id ? wz.b : wz.a) : null;
@@ -65,12 +50,12 @@ function warzoneOf(factionId) {
 
 /* Pirate factions running insurgencies in the warzones (Havoc). */
 const PIRATES = {
-  500010: { name: "Guristas Pirates", color: "var(--pirate)" },
-  500011: { name: "Angel Cartel", color: "var(--pirate)" }
+  500010: { name: "Guristas Pirates", color: "var(--pir)" },
+  500011: { name: "Angel Cartel", color: "var(--pir)" }
 };
 
 function pirateOf(id) {
-  return PIRATES[id] || { name: `Faction ${id}`, color: "var(--pirate)" };
+  return PIRATES[id] || { name: `Faction ${id}`, color: "var(--pir)" };
 }
 
 /* External references for a solar system. */
