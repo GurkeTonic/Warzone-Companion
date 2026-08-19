@@ -931,7 +931,7 @@ button:focus-visible, select:focus-visible, a:focus-visible, summary:focus-visib
 /* ============================================================
    LEGAL (standalone page, shares the header only)
    ============================================================ */
-.legal { max-width: 820px; padding: var(--pad) 0 64px; }
+.legal { max-width: 820px; margin: 0 auto; padding: var(--pad) 0 64px; }
 .legal h2 {
   font: 700 15px var(--fd);
   letter-spacing: .12em;
