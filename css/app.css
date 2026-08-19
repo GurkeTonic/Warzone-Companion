@@ -1,658 +1,949 @@
-/* Self-hosted fonts (latin subset) — no third-party requests. */
-/* Chakra Petch is dead weight for the 7 migrated tabs (Rajdhani replaced it
-   everywhere in the Ops Room design) but /legal/ — a standalone page outside
-   the tab redesign's scope — still uses it for its headings, so it stays. */
+/* Self-hosted fonts (latin subset) — no third-party requests.
+   Archivo and JetBrains Mono ship as variable fonts (one file covers the
+   whole weight range we use); Saira Condensed only exists as static cuts
+   upstream, hence the three separate files. */
 @font-face {
-  font-family: "Chakra Petch";
+  font-family: "Saira Condensed";
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url("../fonts/chakra-petch-500.woff2") format("woff2");
+  src: url("../fonts/saira-condensed-500.woff2") format("woff2");
 }
 @font-face {
-  font-family: "Chakra Petch";
+  font-family: "Saira Condensed";
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("../fonts/chakra-petch-600.woff2") format("woff2");
+  src: url("../fonts/saira-condensed-600.woff2") format("woff2");
 }
 @font-face {
-  font-family: "Chakra Petch";
+  font-family: "Saira Condensed";
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url("../fonts/chakra-petch-700.woff2") format("woff2");
+  src: url("../fonts/saira-condensed-700.woff2") format("woff2");
 }
 @font-face {
-  font-family: "IBM Plex Sans";
+  font-family: "Archivo";
   font-style: normal;
   font-weight: 400 600;
   font-display: swap;
-  src: url("../fonts/ibm-plex-sans.woff2") format("woff2");
+  src: url("../fonts/archivo.woff2") format("woff2");
 }
 @font-face {
-  font-family: "IBM Plex Mono";
+  font-family: "JetBrains Mono";
   font-style: normal;
-  font-weight: 400;
+  font-weight: 400 700;
   font-display: swap;
-  src: url("../fonts/ibm-plex-mono-400.woff2") format("woff2");
-}
-@font-face {
-  font-family: "IBM Plex Mono";
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("../fonts/ibm-plex-mono-500.woff2") format("woff2");
-}
-@font-face {
-  font-family: "IBM Plex Mono";
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("../fonts/ibm-plex-mono-600.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Rajdhani";
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("../fonts/rajdhani-500.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Rajdhani";
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("../fonts/rajdhani-600.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Rajdhani";
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("../fonts/rajdhani-700.woff2") format("woff2");
+  src: url("../fonts/jetbrains-mono.woff2") format("woff2");
 }
 
-/* --panel/--panel-2 were dropped once the Ops Room migration reached the
-   last tab — nothing renders with the old panel background anymore. The
-   rest of this set stays: --bg/--text/--line/--muted/--danger/--font-mono
-   back the still-active .error-box and footer (never migrated — see the
-   Ops Room README) as well as /legal/ (a standalone page outside the tab
-   redesign's scope, --font-display included); --caldari backs the global
-   focus-visible outline; --caldari/--gallente/--amarr/--minmatar/--pirate
-   are the color values FACTIONS/PIRATES in config.js point at. */
+/* ============================================================
+   TOKENS
+   Everything visual hangs off these. Theme switching swaps values
+   only — no component rule ever names a literal color.
+   ============================================================ */
 :root {
-  --bg: #101419;
-  --line: #2A333D;
-  --text: #D8DEE4;
-  --muted: #7E8A96;
-  --amarr: #C9A227;
-  --caldari: #6B93BD;
-  --gallente: #3FA98C;
-  --minmatar: #BF5B3D;
-  --danger: #C4574A;
-  --pirate: #9B6CC8;
-  --font-display: "Chakra Petch", "Segoe UI", sans-serif;
-  --font-body: "IBM Plex Sans", "Segoe UI", sans-serif;
-  --font-mono: "IBM Plex Mono", "Consolas", monospace;
+  --bg: #07080a;
+  --surf: #0e1014;
+  --surf2: #141821;
+  --surf3: #1b2029;
+  --surfH: #1e242f;
+  --line: #242a35;
+  --line2: #1a1f28;
+  --lineS: #2f3745;
+  --txt: #edeff3;
+  --txt2: #b9c0cc;
+  --dim2: #98a1b0;
+  --dim: #79828f;
+  --cal: #6db3e8;
+  --gal: #57d98f;
+  --ama: #e0b954;
+  --min: #e07a62;
+  --pir: #a97fd4;
+  --crit: #ff5257;
+  --live: #4ade80;
+
+  --fd: "Saira Condensed", "Arial Narrow", sans-serif;
+  --fb: "Archivo", "Segoe UI", sans-serif;
+  --fm: "JetBrains Mono", ui-monospace, monospace;
 }
 
-/* Faction/status colors re-tuned darker for WCAG AA contrast on a white panel. */
+/* Faction and status colors re-tuned darker for AA contrast on white panels. */
 :root[data-theme="light"] {
-  --bg: #F2F4F6;
-  --line: #D3D8DD;
-  --text: #1A2027;
-  --muted: #5B6570;
-  --amarr: #93741A;
-  --caldari: #2E5E8C;
-  --gallente: #1D7A5C;
-  --minmatar: #954226;
-  --danger: #B23A2C;
-  --pirate: #7A4FA3;
+  --bg: #e9ecf0;
+  --surf: #ffffff;
+  --surf2: #f4f6f9;
+  --surf3: #e8ecf1;
+  --surfH: #dfe5ec;
+  --line: #d5dbe3;
+  --line2: #e6eaf0;
+  --lineS: #c3ccd6;
+  --txt: #12151a;
+  --txt2: #39424e;
+  --dim2: #525b68;
+  --dim: #6d7684;
+  --cal: #2f6d9e;
+  --gal: #268051;
+  --ama: #8d6f18;
+  --min: #a04227;
+  --pir: #7444a3;
+  --crit: #c22a2e;
+  --live: #1f8a4c;
 }
 
-/* "Ops Room" redesign tokens — prefixed --ops-* so they can't collide with
-   the tokens above while tabs are migrated one at a time (see design_handoff
-   README). Once every tab is on the new design, these replace the old set
-   and the --ops- prefix goes away. */
+/* ------------------------------------------------------------
+   Layout tokens
+   The whole responsive behaviour is expressed as token swaps at
+   three breakpoints, so no component rule carries a media query.
+   --tbl/--card flip the wide table and the stacked card list; JS
+   reads the same breakpoint (see App.isNarrow) and renders only
+   the variant that is actually visible, so rows never exist twice
+   in the DOM.
+   ------------------------------------------------------------ */
 :root {
-  --ops-bg: #0a0d12;
-  --ops-bg2: #0e1319;
-  --ops-bg3: #141c26;
-  --ops-head: #111823;
-  --ops-line: #1c2632;
-  --ops-line2: #161f2b;
-  --ops-text: #e8eef4;
-  --ops-body: #c9d6e2;
-  --ops-dim: #5a7085;
-  --ops-dim2: #8aa0b5;
-  --ops-hi: #6db3e8;
-  --ops-accent: #8ab4d4;
-  --ops-head-active: #8ab4d4;
-  --ops-cal: #6db3e8;
-  --ops-gal: #57d98f;
-  --ops-ama: #e0b954;
-  --ops-min: #e07a62;
-  --ops-cal-bar: #5495c7;
-  --ops-gal-bar: #57b581;
-  --ops-ama-bar: #cfa94e;
-  --ops-min-bar: #c05a45;
-  --ops-scan: rgba(255, 255, 255, .015);
-  --ops-chipline: rgba(255, 255, 255, .18);
-  --ops-font-display: "Rajdhani", "Segoe UI", sans-serif;
+  --rail: 236px;
+  --railD: flex;
+  --botD: none;
+  --labD: block;
+  --pad: 26px;
+  --cc: 1.6fr 1fr;
+  --two: repeat(2, minmax(0, 1fr));
+  --tbl: block;
+  --card: none;
+  --fs: 13px;
+  --mapH: 640px;
+  --hdr: 56px;
+  --stripD: flex;
+  --brandD: flex;
 }
 
-:root[data-theme="light"] {
-  --ops-bg: #eef1f4;
-  --ops-bg2: #ffffff;
-  --ops-bg3: #e8edf2;
-  --ops-head: #1f2a38;
-  --ops-line: #dde4ea;
-  --ops-line2: #edf1f5;
-  --ops-text: #1f2a38;
-  --ops-body: #2a3644;
-  --ops-dim: #7a8a9a;
-  --ops-dim2: #5a6b7c;
-  --ops-hi: #2a78d6;
-  --ops-accent: #2f5a7e;
-  --ops-head-active: #bfe0f5;
-  --ops-cal: #2f6d9e;
-  --ops-gal: #2f8a58;
-  --ops-ama: #a8842e;
-  --ops-min: #a8452e;
-  --ops-cal-bar: #2f6d9e;
-  --ops-gal-bar: #2f8a58;
-  --ops-ama-bar: #a8842e;
-  --ops-min-bar: #a8452e;
-  --ops-scan: transparent;
-  --ops-chipline: rgba(0, 0, 0, .12);
+/* Rail collapses to icons only — labels would wrap below this. */
+@media (max-width: 1400px) {
+  :root { --rail: 66px; --labD: none; --cc: 1fr; }
+}
+/* Header runs out of room for the front strip well before the content grid
+   collapses; the overview carries the same numbers in full. */
+@media (max-width: 1100px) {
+  :root { --two: 1fr; --cc: 1fr; --stripD: none; }
+}
+/* Wordmark gives way to the bare logo so the header controls stay reachable. */
+@media (max-width: 620px) {
+  :root { --brandD: none; }
 }
 
+/* Rail is replaced entirely by the fixed bottom nav. */
+@media (max-width: 900px) {
+  :root {
+    --rail: 0px; --railD: none; --botD: flex; --pad: 14px;
+    --tbl: none; --card: flex; --mapH: 420px; --fs: 13.5px;
+    --hdr: 52px;
+  }
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 /* Reserve the scrollbar's width on every page, whether or not that page's
-   content is tall enough to need one — otherwise .wrap (centered, max-width)
-   shifts a few px left/right on tab switches depending on scrollbar presence. */
+   content is tall enough to need one — otherwise the main column shifts a
+   few px sideways on tab switches depending on scrollbar presence. */
 html { scrollbar-gutter: stable; }
 
 body {
   background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: 15px;
+  color: var(--txt);
+  font-family: var(--fb);
+  font-size: var(--fs);
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
   min-height: 100vh;
 }
 
-/* 1280px matches the Ops Room redesign's page grid token — widened from the
-   old design's 1180px so migrated tabs get the width they were built for. */
-.wrap { max-width: 1280px; margin: 0 auto; padding: 0 24px 64px; }
+a { color: var(--txt2); text-decoration: none; }
+a:hover { color: var(--txt); }
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
 
-/* Global focus outline — still applies to every button/select on the page,
-   including the Ops Room ones below, since it's never been scoped to the
-   old (now-removed) header/nav markup. */
-button:focus-visible, select:focus-visible {
-  outline: 2px solid var(--caldari);
+button:focus-visible, select:focus-visible, a:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--cal);
   outline-offset: 2px;
 }
 
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--surf); }
+::-webkit-scrollbar-thumb { background: var(--lineS); }
+
+.hidden { display: none !important; }
+.mono { font-family: var(--fm); }
+
+@keyframes bp { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+@keyframes sh { 0% { opacity: .4; } 50% { opacity: .85; } 100% { opacity: .4; } }
+
 /* Loading placeholders — reserve roughly the space the real content will
    take once the ESI fetch resolves, so the page doesn't jump from near-empty
-   to full height in one frame (a severe layout shift otherwise). */
-@keyframes skeleton-pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.7; } }
+   to full height in one frame. */
 .skel-fill {
-  background: var(--ops-bg3);
-  border-radius: 3px;
-  animation: skeleton-pulse 1.4s ease-in-out infinite;
+  background: var(--surf3);
+  animation: sh 1.4s ease-in-out infinite;
 }
 
-/* ---------- States ---------- */
 .error-box {
-  padding: 32px 20px;
+  padding: 28px 20px;
+  margin-bottom: 16px;
+  border: 1px solid var(--crit);
+  background: color-mix(in srgb, var(--crit) 7%, transparent);
   text-align: center;
-  color: var(--danger);
-  font-family: var(--font-mono);
-  font-size: 13px;
-}
-.hidden { display: none !important; }
-
-footer {
-  margin-top: 48px;
-  padding-top: 16px;
-  border-top: 1px solid var(--line);
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.7;
-}
-footer .mono { font-family: var(--font-mono); }
-footer a { color: var(--muted); }
-footer a:hover { color: var(--text); }
-
-/* ---------- Small screens ---------- */
-@media (max-width: 700px) {
-  .wrap { padding: 0 12px 48px; }
+  color: var(--crit);
+  font: 400 12px var(--fm);
 }
 
 /* ============================================================
-   OPS ROOM — tactical redesign, migrated one tab at a time (see
-   design_handoff_warzone_ops_room/README.md). Everything below uses
-   --ops-* tokens and .ops-* classes so it can't collide with the
-   still-active old design on tabs that haven't been migrated yet.
-   Header/Nav are shared and fully switched over already, since no
-   other tab depends on their classes.
+   HEADER
    ============================================================ */
-
-body {
-  background-image: repeating-linear-gradient(0deg, var(--ops-scan) 0 1px, transparent 1px 3px);
-}
-
-/* ---------- Header ---------- */
-.ops-header {
+.hdr {
+  position: sticky;
+  gap: clamp(8px, 2vw, 18px);
+  top: 0;
+  z-index: 40;
   display: flex;
   align-items: center;
+  height: var(--hdr);
+  padding: 0 var(--pad);
+  background: var(--surf);
+  border-bottom: 1px solid var(--line);
+}
+/* The strip is the only part that may be squeezed out; everything else in
+   the header keeps its intrinsic width. */
+.hdr > .hdr-brand, .hdr > .hdr-actions { flex-shrink: 0; }
+
+.hdr-brand { display: flex; align-items: center; gap: 11px; flex: 0 0 auto; color: inherit; }
+.hdr-brand:hover { color: inherit; }
+
+.logo {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--lineS);
+  font: 700 13px var(--fd);
+  letter-spacing: .02em;
+  color: var(--txt);
+  clip-path: polygon(0 0, 100% 0, 100% 68%, 68% 100%, 0 100%);
+}
+
+.brand-text { display: var(--brandD); flex-direction: column; line-height: 1.15; }
+.brand-name { font: 700 15px var(--fd); letter-spacing: .13em; color: var(--txt); }
+.brand-tag { font: 400 8.5px var(--fm); letter-spacing: .2em; color: var(--dim); }
+
+/* Front strip — the compact both-warzones summary that rides along in the
+   header on every tab, not just the overview. Hidden once the header runs
+   out of room; the overview carries the same numbers in full. */
+.hdr-strip-wrap { flex: 1 1 auto; display: var(--stripD); justify-content: center; min-width: 0; }
+.hdr-strip {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  background: var(--surf2);
+  max-width: 100%;
+  overflow: hidden;
+}
+.strip-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  border-right: 1px solid var(--line2);
+  white-space: nowrap;
+}
+.strip-cell:last-child { border-right: 0; }
+.strip-tag { font: 500 8.5px var(--fm); letter-spacing: .16em; color: var(--dim); }
+.strip-val { font: 700 12px var(--fm); }
+.strip-bar { width: 52px; height: 5px; background: var(--surf3); display: block; position: relative; overflow: hidden; }
+.strip-bar > span { position: absolute; left: 0; top: 0; bottom: 0; }
+
+.hdr-actions { flex: 0 0 auto; display: flex; align-items: center; gap: 7px; }
+
+.chip-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  background: var(--surf2);
+  font: 500 9.5px var(--fm);
+  letter-spacing: .08em;
+  color: var(--live);
+}
+.chip-live.paused { color: var(--dim); }
+.chip-live .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.chip-live:not(.paused) .dot { animation: bp 2s ease-in-out infinite; }
+
+.btn {
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  background: var(--surf2);
+  font: 500 9.5px var(--fm);
+  letter-spacing: .08em;
+  color: var(--dim2);
+}
+.btn:hover { border-color: var(--lineS); color: var(--txt); }
+
+/* ============================================================
+   SHELL: rail + main + bottom nav
+   ============================================================ */
+.shell { display: flex; align-items: stretch; min-height: calc(100vh - var(--hdr)); }
+
+.rail {
+  display: var(--railD);
+  flex-direction: column;
+  flex: 0 0 var(--rail);
+  width: var(--rail);
+  background: var(--surf);
+  border-right: 1px solid var(--line);
+  position: sticky;
+  top: var(--hdr);
+  height: calc(100vh - var(--hdr));
+  overflow-y: auto;
+}
+.rail a {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 12px 18px;
+  border-left: 2px solid transparent;
+  color: var(--dim2);
+  text-align: left;
+  width: 100%;
+}
+.rail a:hover { background: var(--surf2); color: var(--txt); }
+.rail a.active { border-left-color: var(--cal); background: var(--surf2); color: var(--txt); }
+.rail-icon { flex: 0 0 18px; font: 500 13px var(--fm); text-align: center; opacity: .9; }
+.rail-label {
+  display: var(--labD);
+  font: 600 11px var(--fd);
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.rail-foot {
+  margin-top: auto;
+  display: var(--labD);
+  padding: 16px 18px;
+  border-top: 1px solid var(--line2);
+  font: 400 8.5px var(--fm);
+  letter-spacing: .1em;
+  color: var(--dim);
+  line-height: 1.7;
+}
+.rail-foot span { color: var(--dim2); }
+
+.main { flex: 1 1 auto; min-width: 0; padding: var(--pad) var(--pad) 92px; }
+
+.bottom-nav {
+  display: var(--botD);
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  background: var(--surf);
+  border-top: 1px solid var(--line);
+  overflow-x: auto;
+}
+.bottom-nav { padding-bottom: env(safe-area-inset-bottom); }
+.bottom-nav a {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 64px;
+  padding: 9px 6px 10px;
+  border-top: 2px solid transparent;
+  color: var(--dim2);
+}
+.bottom-nav a.active { border-top-color: var(--cal); background: var(--surf2); color: var(--txt); }
+.bottom-nav .rail-icon { font: 500 14px var(--fm); flex: none; }
+.bottom-nav .rail-label {
+  display: block;
+  font: 600 8.5px var(--fd);
+  letter-spacing: .1em;
+}
+
+/* ============================================================
+   PAGE HEAD
+   ============================================================ */
+.page-head {
+  display: flex;
+  align-items: baseline;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  padding: 14px 28px;
-  border-bottom: 1px solid var(--ops-line);
-  background: var(--ops-bg2);
+  margin-bottom: 20px;
 }
-.ops-header-left { display: flex; align-items: center; gap: 14px; }
-.ops-logo {
-  width: 36px; height: 36px;
-  border: 1px solid var(--ops-dim);
-  display: grid; place-items: center;
-  font: 700 15px var(--ops-font-display);
-  color: var(--ops-accent);
-  clip-path: polygon(0 0, 100% 0, 100% 70%, 70% 100%, 0 100%);
-  flex-shrink: 0;
-}
-.ops-brand-name { font: 700 18px var(--ops-font-display); letter-spacing: .14em; color: var(--ops-text); }
-.ops-tagline { font-size: 9.5px; letter-spacing: .18em; color: var(--ops-dim); margin-top: 2px; }
-.ops-header-right { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 500; flex-wrap: wrap; }
-.ops-status-chip {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 5px 10px;
-  border: 1px solid var(--ops-line);
-  background: var(--ops-bg3);
-  color: var(--ops-hi);
-  font-family: var(--font-mono);
-}
-.ops-status-chip.paused { color: var(--ops-dim); }
-.ops-status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.ops-status-dot.live { background: #4dd47a; box-shadow: 0 0 6px #4dd47a; animation: ops-pulse 2s ease-in-out infinite; }
-.ops-status-dot.paused { background: var(--ops-dim); box-shadow: none; animation: none; }
-.ops-btn {
-  padding: 5px 10px;
-  border: 1px solid var(--ops-line);
-  background: var(--ops-bg3);
-  color: var(--ops-dim2);
-  font: 500 10px var(--font-mono);
-  cursor: pointer;
-}
-.ops-btn:hover { border-color: var(--ops-dim); }
-.ops-btn.active { color: var(--ops-hi); border-color: var(--ops-hi); }
-@keyframes ops-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
-
-/* ---------- Nav ---------- */
-.ops-nav {
-  display: flex; gap: 2px; flex-wrap: wrap;
-  padding: 0 28px;
-  background: var(--ops-bg2);
-  border-bottom: 1px solid var(--ops-line);
-  font: 600 11px var(--ops-font-display);
-  letter-spacing: .14em;
-}
-.ops-nav a {
-  padding: 11px 16px;
-  color: var(--ops-dim);
-  border-bottom: 2px solid transparent;
-  text-decoration: none;
-  cursor: pointer;
-}
-.ops-nav a:hover { color: var(--ops-text); }
-.ops-nav a.active {
-  color: var(--ops-text);
-  border-bottom-color: var(--ops-hi);
-  background: color-mix(in srgb, var(--ops-hi) 6%, transparent);
-}
-
-/* ---------- Shared page/section chrome ---------- */
-.ops-page { max-width: 1280px; margin: 0 auto; }
-.ops-section-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
-.ops-section-title { font: 700 12px var(--ops-font-display); letter-spacing: .16em; color: var(--ops-accent); }
-.ops-section-title::before { content: "▸ "; }
-.ops-chips { display: flex; gap: 8px; flex-wrap: wrap; font-size: 9.5px; }
-.ops-chip {
-  padding: 4px 10px;
-  border: 1px solid var(--ops-line);
-  background: none;
-  color: var(--ops-dim);
-  font: 500 9.5px var(--font-mono);
-  cursor: pointer;
-}
-.ops-chip:hover { border-color: var(--ops-dim); }
-.ops-chip.active {
-  border-color: var(--ops-hi);
-  background: color-mix(in srgb, var(--ops-hi) 12%, transparent);
-  color: var(--ops-hi);
-}
-
-/* ---------- Warzones: faction cards ---------- */
-.ops-wz-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-  gap: 16px;
-  padding: 22px 28px;
-}
-.ops-card { border: 1px solid var(--ops-line); background: var(--ops-bg2); padding: 16px 18px; }
-.ops-wz-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 12px; }
-.ops-wz-title { flex: 1 1 auto; min-width: 0; font: 700 13px var(--ops-font-display); letter-spacing: .12em; color: var(--ops-text); }
-.ops-wz-count { flex: 0 0 auto; font-size: 9.5px; color: var(--ops-dim); white-space: nowrap; }
-.ops-frontbar { display: flex; height: 14px; background: var(--ops-bg3); margin-bottom: 8px; }
-.ops-frontbar .fb-a { clip-path: polygon(0 0, 100% 0, calc(100% - 7px) 100%, 0 100%); transition: width .6s; }
-.ops-frontbar .fb-b { clip-path: polygon(7px 0, 100% 0, 100% 100%, 0 100%); transition: width .6s; }
-.ops-frontbar .fb-mid { flex: 1; }
-.ops-wz-legend { display: flex; justify-content: space-between; font-size: 10.5px; font-weight: 500; }
-
-/* ---------- Warzones: insurgency banner ---------- */
-.ops-ins-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; padding: 0 28px 20px; }
-.ops-ins-card { border: 1px solid var(--ops-line); border-left: 3px solid var(--pirate); background: var(--ops-bg2); padding: 10px 14px; }
-.ops-ins-head { font: 700 11px var(--ops-font-display); letter-spacing: .1em; color: var(--pirate); margin-bottom: 3px; }
-.ops-ins-body { font-size: 10.5px; color: var(--ops-dim2); }
-.ops-ins-body .strong { color: var(--ops-text); font-weight: 600; }
-
-/* ---------- Warzones: table + changes panel ---------- */
-.ops-flex-row { padding: 0 28px 26px; display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
-.ops-flex-main { flex: 1 1 640px; min-width: 0; }
-
-.ops-table-wrap { border: 1px solid var(--ops-line); background: var(--ops-bg2); overflow-x: auto; }
-/* Scoped to the Warzones systems table specifically (via #contested-*) —
-   other tables reusing .ops-table-head/.ops-row (e.g. History's flips log)
-   have far fewer columns and must NOT inherit this width. */
-#contested-head, #contested-body .ops-row, #contested-body .ops-detail { min-width: 865px; }
-.ops-table-head { display: flex; padding: 0 14px; background: var(--ops-head); }
-/* Non-sortable tables (e.g. History's flips log) use plain spans for header
-   cells instead of buttons — same look, just not clickable/uppercase-active. */
-.ops-table-head button, .ops-table-head > span {
-  display: flex; align-items: center; gap: 4px;
-  padding: 6px 4px;
-  border: none; background: none;
-  text-align: left;
-  white-space: pre-line;
-  text-transform: uppercase;
-  font: 600 9px var(--font-mono);
-  letter-spacing: .12em;
-  color: var(--ops-dim);
-}
-.ops-table-head button { cursor: pointer; }
-.ops-table-head button.active { color: var(--ops-head-active); }
-.ops-table-head button:hover { color: var(--ops-dim2); }
-.ops-row {
-  display: flex; align-items: center;
-  padding: 5px 14px;
-  border-top: 1px solid var(--ops-line2);
-  font-size: 11px; font-weight: 500;
-  cursor: pointer;
-}
-.ops-row:hover { background: var(--ops-bg3); }
-.ops-row.critical { background: color-mix(in srgb, var(--ops-min) 5%, transparent); }
-.ops-detail {
-  display: flex; gap: 32px; flex-wrap: wrap;
-  padding: 14px 18px;
-  border-top: 1px solid var(--ops-line2);
-  background: var(--ops-bg3);
-  font-size: 10px;
-}
-.ops-detail .dl { color: var(--ops-dim); letter-spacing: .12em; margin-bottom: 4px; text-transform: uppercase; font-size: 9px; }
-.ops-detail .dv { font-size: 12px; color: var(--ops-text); }
-
-/* Widths match the design_handoff prototype's colDefs exactly (System 170 ·
-   Region 130 · Besatzer 110 · Status 120 · Δ24h 80 · Adv 70 · Kills 70 ·
-   Jumps 60). The prototype never uses a row `gap` — spacing between columns
-   comes from these boxes being wider than their content, with plain
-   left-aligned text, so the gap always falls AFTER a value, before the next
-   column starts. VP is the one exception: it was flex:1 1 160 with a growing
-   progress bar filling that space — with the bar removed (per your request),
-   a left-aligned percentage would leave the gap BEFORE the number instead,
-   so VP alone stays right-aligned against its own padding-right, matching
-   where the bar used to end. */
-.c-system { flex: 0 0 170px; color: var(--ops-text); display: flex; align-items: center; gap: 5px; min-width: 0; }
-.c-system .sys-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.c-region { flex: 0 0 130px; color: var(--ops-dim); font-size: 9.5px; }
-.c-occ { flex: 0 0 110px; }
-.c-status { flex: 0 0 120px; }
-.c-vp { flex: 1 1 60px; padding-right: 14px; font-weight: 600; text-align: right; justify-content: flex-end; }
-.c-delta { flex: 0 0 80px; color: var(--ops-body); }
-.c-adv { flex: 0 0 70px; color: var(--ops-body); }
-.c-kills { flex: 0 0 70px; color: var(--ops-body); }
-.c-jumps { flex: 0 0 60px; color: var(--ops-dim2); }
-
-.ops-status-tag { padding: 2px 7px; font-size: 9px; border: 1px solid; }
-
-/* External reference links (zKillboard, Dotlan) — shown in the Warzones
-   row-detail expand and the Map's system detail panel. */
-.ops-ext-links { display: flex; gap: 6px; }
-.ops-ext-link {
-  padding: 2px 7px;
-  font: 500 9px var(--font-mono);
-  letter-spacing: .04em;
-  color: var(--ops-dim);
-  border: 1px solid var(--ops-line);
-  text-decoration: none;
-}
-.ops-ext-link:hover { color: var(--ops-text); border-color: var(--ops-dim); }
-
-/* Compact variant for inline use right next to a system name (Warzones
-   table rows) — same idea as .ops-ext-link, smaller footprint. */
-.ops-ext-icon {
-  flex: 0 0 auto;
-  padding: 1px 4px;
-  font: 500 8px var(--font-mono);
-  letter-spacing: .02em;
-  color: var(--ops-dim);
-  border: 1px solid var(--ops-line);
-  text-decoration: none;
-}
-.ops-ext-icon:hover { color: var(--ops-text); border-color: var(--ops-dim); }
-
-/* flex-grow:0 — the design allows this panel to grow up to 320px, but its
-   content (a short flip list) never needs more than its 240px base, and
-   letting it grow was the last thing squeezing the table into a ~40px
-   horizontal scroll. Staying at 240px keeps it within spec's stated range
-   and gives that reclaimed width to the table instead. */
-.ops-changes { flex: 0 1 240px; max-width: 320px; border: 1px solid var(--ops-line); background: var(--ops-bg2); }
-.ops-changes-head { padding: 11px 14px; border-bottom: 1px solid var(--ops-line2); font: 700 11px var(--ops-font-display); letter-spacing: .14em; color: var(--ops-text); }
-.ops-changes-row { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-top: 1px solid var(--ops-line2); font-size: 10px; }
-.ops-changes-empty { padding: 20px 14px; font-size: 10px; color: var(--ops-dim); text-align: center; }
-
-/* ---------- Map ---------- */
-.ops-map-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: stretch; padding: 0 28px 26px; }
-.ops-map-frame {
-  flex: 1 1 620px;
-  position: relative;
-  min-height: 520px;
-  border: 1px solid var(--ops-line);
-  background-color: var(--ops-bg2);
-  background-image: linear-gradient(var(--ops-line2) 1px, transparent 1px), linear-gradient(90deg, var(--ops-line2) 1px, transparent 1px);
-  background-size: 44px 44px;
-  overflow: hidden;
-}
-.ops-map-frame svg { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
-.ops-map-frame svg.panning { cursor: grabbing; }
-.ops-map-edges line { stroke: var(--ops-dim); stroke-opacity: .35; stroke-width: calc(1px * var(--fk, 1)); vector-effect: non-scaling-stroke; }
-.ops-map-node { cursor: pointer; }
-.ops-map-node .diamond { transition: opacity .15s ease; }
-.ops-map-node:hover .diamond { opacity: 1; }
-.ops-map-node.critical .diamond { animation: ops-pulse 1.6s ease-in-out infinite; }
-.ops-map-label {
-  font: 500 8.5px var(--font-mono);
+.page-head h1 {
+  font: 700 26px var(--fd);
   letter-spacing: .06em;
-  fill: var(--ops-dim2);
+  text-transform: uppercase;
+  color: var(--txt);
 }
-.ops-map-node.selected .ops-map-label { fill: var(--ops-text); }
-.ops-map-label-minor { display: none; }
-.ops-map-frame svg.zoomed .ops-map-label-minor { display: block; }
-.ops-map-controls { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 4px; }
-.ops-map-controls button {
-  width: 24px; height: 24px;
-  border: 1px solid var(--ops-line);
-  background: var(--ops-bg3);
-  color: var(--ops-dim2);
-  font-size: 13px;
-  cursor: pointer;
+.page-head p {
+  font: 400 11.5px var(--fb);
+  color: var(--dim);
+  margin-top: 3px;
+  max-width: 640px;
 }
-.ops-map-controls button:hover { border-color: var(--ops-dim); color: var(--ops-text); }
-.ops-map-frame .map-code {
-  font: 500 8px var(--font-mono);
-  fill: var(--ops-bg);
-  text-anchor: middle;
-  dominant-baseline: central;
+.page-chips { display: flex; gap: 7px; flex-wrap: wrap; }
+
+/* Filter/segment chips — shared by every view that switches a dataset. */
+.chip {
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  background: transparent;
+  font: 500 9.5px var(--fm);
+  letter-spacing: .09em;
+  color: var(--dim2);
+}
+.chip:hover { border-color: var(--lineS); }
+.chip.active { color: var(--txt); }
+.chip-lg { padding: 7px 13px; font-size: 10px; letter-spacing: .07em; }
+.chip-dot { width: 7px; height: 7px; transform: rotate(45deg); display: block; }
+.chip-group { display: flex; gap: 7px; flex-wrap: wrap; }
+.chip-group-label {
+  font: 500 8.5px var(--fm);
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 7px;
+}
+
+/* ============================================================
+   PANELS
+   ============================================================ */
+.panel { border: 1px solid var(--line); background: var(--surf); }
+.panel-pad { padding: 20px 22px; }
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line2);
+}
+/* Same treatment whether the heading sits in a panel header strip or
+   directly inside a padded panel (charts). */
+.panel-head h2,
+.panel-pad > h2 {
+  font: 700 12px var(--fd);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--txt);
+}
+.panel-count { font: 400 9px var(--fm); letter-spacing: .1em; color: var(--crit); }
+
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.grid-two { display: grid; grid-template-columns: var(--two); gap: 16px; }
+.grid-cc { display: grid; grid-template-columns: var(--cc); gap: 16px; align-items: start; }
+
+/* Progress bars — one shape, sized by modifier. The fill is positioned
+   rather than sized so a width transition never reflows the track. */
+.bar { background: var(--surf3); position: relative; overflow: hidden; display: block; height: 5px; }
+.bar > span { position: absolute; inset: 0 auto 0 0; transition: width .5s; }
+.bar-7 { height: 7px; }
+.bar-6 { height: 6px; }
+.bar-4 { height: 4px; }
+
+/* Key/value tiles, hairline-separated by the grid gap showing through. */
+.stats { display: grid; gap: 1px; background: var(--line2); }
+.stats-3 { grid-template-columns: repeat(3, 1fr); }
+.stats-2 { grid-template-columns: 1fr 1fr; }
+.stats > div { background: var(--surf); padding: 11px 2px; }
+.stat-k {
+  font: 400 8.5px var(--fm);
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 4px;
+}
+.stat-v { font: 700 17px var(--fm); }
+
+/* Small outlined label — status, role, occupier. Color is set inline from
+   the faction/status the row carries. */
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid currentColor;
+  font: 500 9px var(--fm);
+  letter-spacing: .08em;
+}
+.tag-lg { padding: 3px 9px; font-size: 9.5px; }
+
+/* ============================================================
+   OVERVIEW
+   ============================================================ */
+.wz-card h2 {
+  font: 700 15px var(--fd);
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--txt);
+}
+.wz-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.wz-card-total { font: 400 9.5px var(--fm); color: var(--dim); }
+
+/* Two segments growing toward each other, with the slanted inner edges the
+   design uses to read as a contested front rather than a plain stacked bar. */
+.frontbar { display: flex; height: 22px; background: var(--surf3); margin-bottom: 9px; }
+.frontbar > span { transition: width .6s; }
+.frontbar .seg-a { clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 100%, 0 100%); }
+.frontbar .seg-b { clip-path: polygon(9px 0, 100% 0, 100% 100%, 0 100%); }
+.frontbar .seg-gap { flex: 1; }
+.frontbar-legend {
+  display: flex;
+  justify-content: space-between;
+  font: 600 12px var(--fb);
+  margin-bottom: 18px;
+}
+
+.row-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 11px 20px;
+  border-top: 1px solid var(--line2);
+  text-align: left;
+}
+.row-btn:hover { background: var(--surf2); }
+.row-accent { flex: 0 0 5px; height: 26px; }
+.row-main { flex: 1 1 auto; min-width: 0; }
+.row-name { display: block; font: 600 13.5px var(--fb); color: var(--txt); }
+.row-meta {
+  display: block;
+  font: 400 9.5px var(--fm);
+  letter-spacing: .06em;
+  color: var(--dim);
+  margin-top: 1px;
+}
+.row-num { flex: 0 0 auto; text-align: right; }
+.row-num b { display: block; font: 700 14px var(--fm); }
+.row-num span { display: block; font: 400 9px var(--fm); margin-top: 1px; }
+
+.flip-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  border-top: 1px solid var(--line2);
+}
+.flip-ago { flex: 0 0 46px; font: 400 9.5px var(--fm); color: var(--dim); }
+.flip-sys {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: 600 12.5px var(--fb);
+  color: var(--txt);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.flip-move {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font: 500 9.5px var(--fm);
+}
+.flip-from { text-decoration: line-through; opacity: .65; }
+.flip-arrow { color: var(--dim); }
+
+.ins-panel { border-left: 3px solid var(--pir); }
+.ins-panel .panel-head h2 { color: var(--pir); }
+.ins-row { padding: 13px 20px; border-top: 1px solid var(--line2); }
+.ins-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.ins-name { font: 600 13px var(--fb); color: var(--txt); }
+.ins-since { font: 400 9px var(--fm); color: var(--dim); }
+.ins-origin { font: 400 10.5px var(--fm); color: var(--dim2); margin-top: 4px; }
+.ins-bars { display: flex; gap: 14px; margin-top: 9px; }
+.ins-bars > div { flex: 1; }
+.ins-bar-k {
+  display: flex;
+  justify-content: space-between;
+  font: 400 8.5px var(--fm);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 3px;
+}
+.ins-bar-k b { color: var(--txt2); font-weight: 400; }
+
+/* ============================================================
+   TABLES (wide) + CARDS (narrow)
+   Only one of the two is rendered at a time — see the layout token note.
+   ============================================================ */
+.table { display: var(--tbl); border: 1px solid var(--line); background: var(--surf); overflow-x: auto; }
+.thead {
+  display: flex;
+  padding: 0 18px;
+  background: var(--surf2);
+  border-bottom: 1px solid var(--line);
+}
+.thead > * {
+  padding: 10px 6px;
+  text-align: left;
+  font: 500 8.5px var(--fm);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.thead button:hover { color: var(--txt); }
+.thead .sorted { color: var(--txt); }
+.trow {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 9px 18px;
+  border-top: 1px solid var(--line2);
+  text-align: left;
+}
+.trow:hover { background: var(--surfH); }
+.trow.crit { background: color-mix(in srgb, var(--crit) 6%, transparent); }
+.trow.crit:hover { background: color-mix(in srgb, var(--crit) 11%, transparent); }
+
+.cards { display: var(--card); flex-direction: column; gap: 10px; }
+.card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--surf);
+  padding: 14px 16px;
+}
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.card-title { font: 600 16px var(--fb); color: var(--txt); }
+.card-num { font: 700 15px var(--fm); }
+.card-meta { display: block; font: 400 10.5px var(--fm); color: var(--dim); margin-top: 2px; }
+.card-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font: 400 10.5px var(--fm);
+  color: var(--dim2);
+}
+.card-facts b { font-weight: 700; color: var(--txt2); }
+
+/* --- warzone table columns --- */
+.c-sys { flex: 0 0 172px; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.c-sys .diamond { flex: 0 0 6px; height: 6px; transform: rotate(45deg); }
+.c-sys .nm {
+  font: 600 13.5px var(--fb);
+  color: var(--txt);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.c-reg { flex: 0 0 132px; font: 400 10.5px var(--fm); color: var(--dim); }
+.c-occ { flex: 0 0 148px; font: 500 11.5px var(--fb); }
+.c-role { flex: 0 0 118px; }
+.c-vp { flex: 1 1 130px; display: flex; align-items: center; gap: 9px; min-width: 90px; padding-right: 14px; }
+.c-vp .bar { flex: 1; }
+.c-vp .val { flex: 0 0 44px; text-align: right; font: 700 12px var(--fm); color: var(--txt2); }
+.c-d { flex: 0 0 76px; font: 500 11px var(--fm); }
+.c-adv { flex: 0 0 74px; font: 400 11px var(--fm); color: var(--txt2); }
+.c-kills { flex: 0 0 66px; font: 400 11px var(--fm); color: var(--txt2); }
+.table-sys .thead, .table-sys .trow { min-width: 940px; }
+
+/* ============================================================
+   MAP
+   ============================================================ */
+.map-frame {
+  border: 1px solid var(--line);
+  background: var(--surf);
+  height: var(--mapH);
+  position: relative;
+  overflow: hidden;
+  background-image:
+    linear-gradient(var(--line2) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line2) 1px, transparent 1px);
+  background-size: 46px 46px;
+}
+.map-frame svg { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.map-frame svg:active { cursor: grabbing; }
+.map-edges { stroke: var(--lineS); stroke-width: 1.2; opacity: .5; }
+.map-edges line { vector-effect: non-scaling-stroke; }
+.map-node { cursor: pointer; }
+.map-node .diamond { transition: fill .2s; }
+.map-node.critical .diamond { animation: bp 2s ease-in-out infinite; }
+.map-label {
+  font: 500 9px var(--fm);
+  letter-spacing: .04em;
+  fill: var(--dim2);
   pointer-events: none;
 }
+.map-node.selected .map-label { fill: var(--txt); }
 
-.ops-map-detail { flex: 1 1 240px; max-width: 300px; border: 1px solid var(--ops-line); background: var(--ops-bg2); padding: 18px; }
-.ops-map-detail-hint {
-  height: 100%; min-height: 220px;
-  display: grid; place-items: center; text-align: center;
-  color: var(--ops-dim); font-size: 10px; letter-spacing: .08em;
+.map-legend {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  max-width: calc(100% - 28px);
+  padding: 8px 12px;
+  background: var(--surf2);
+  border: 1px solid var(--line);
 }
-.ops-map-detail-name { font: 700 17px var(--ops-font-display); letter-spacing: .1em; color: var(--ops-text); }
-.ops-map-detail-region { font-size: 9.5px; color: var(--ops-dim); margin-top: 2px; }
-.ops-map-detail-tags { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
-.ops-map-detail-vp { margin-top: 14px; }
-.ops-map-detail-vp-row { display: flex; justify-content: space-between; font-size: 9px; color: var(--ops-dim); letter-spacing: .12em; margin-bottom: 5px; }
-.ops-map-detail-vp-track { height: 6px; background: var(--ops-bg3); }
-.ops-map-detail-vp-fill { height: 100%; transition: width .5s; }
-.ops-map-detail-activity { display: flex; gap: 22px; font-size: 10px; margin-top: 14px; }
-.ops-map-detail-note { margin-top: 14px; }
+.map-legend > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 400 9px var(--fm);
+  letter-spacing: .08em;
+  color: var(--dim2);
+}
+.map-legend i { width: 7px; height: 7px; transform: rotate(45deg); display: block; }
 
-@media (max-width: 700px) {
-  .ops-map-row { padding-left: 14px; padding-right: 14px; }
+.map-controls { position: absolute; right: 12px; top: 12px; display: flex; flex-direction: column; gap: 4px; }
+.map-controls button {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--line);
+  background: var(--surf2);
+  font: 500 12px var(--fm);
+  color: var(--dim2);
+}
+.map-controls button:hover { border-color: var(--lineS); color: var(--txt); }
+
+.detail { border: 1px solid var(--line); background: var(--surf); padding: 22px; }
+.detail-k {
+  font: 400 8.5px var(--fm);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.detail-name { font: 700 24px var(--fd); letter-spacing: .07em; color: var(--txt); margin-top: 5px; }
+.detail-region { font: 400 10.5px var(--fm); color: var(--dim2); margin-top: 2px; }
+.detail-tags { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.detail-bar-k {
+  display: flex;
+  justify-content: space-between;
+  font: 400 8.5px var(--fm);
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 5px;
+}
+.detail-links { display: flex; gap: 8px; margin-top: 20px; }
+.detail-links a {
+  flex: 1;
+  text-align: center;
+  padding: 8px;
+  border: 1px solid var(--line);
+  font: 500 9.5px var(--fm);
+  letter-spacing: .08em;
+  color: var(--dim2);
+}
+.detail-links a:hover { border-color: var(--lineS); color: var(--txt); }
+.detail-empty {
+  display: grid;
+  place-items: center;
+  min-height: 200px;
+  text-align: center;
+  font: 400 10.5px var(--fm);
+  color: var(--dim);
+  line-height: 2;
 }
 
-/* ---------- History ---------- */
-.ops-hist-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 16px; padding: 0 28px 26px; }
-.ops-hist-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 9.5px; margin-bottom: 12px; }
-.ops-hist-legend b { font-weight: 700; }
-.ops-hist-chart-wrap { position: relative; }
-.ops-hist-chart-wrap svg { display: block; width: 100%; height: 200px; }
-.ops-hist-minmax { position: absolute; right: 0; font-size: 8.5px; color: var(--ops-dim); }
-.ops-hist-minmax.max { top: 0; }
-.ops-hist-minmax.min { bottom: 0; }
-.ops-hist-footer { display: flex; justify-content: space-between; font-size: 8.5px; color: var(--ops-dim); margin-top: 6px; }
-.ops-hist-empty { padding: 40px 28px; color: var(--ops-dim); font-size: 11px; text-align: center; }
-
-.ops-flips-row { padding: 0 28px 26px; }
-.fc-time { flex: 0 0 90px; color: var(--ops-dim); }
-.fc-system { flex: 1 1 160px; color: var(--ops-text); }
-.fc-from, .fc-to { flex: 0 0 130px; }
-
-/* ---------- LP Store ---------- */
-.ops-lp-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 0 28px 14px; }
-.ops-lp-toolbar-label { font-size: 9px; letter-spacing: .12em; color: var(--ops-dim); text-transform: uppercase; }
-.ops-lp-trend { padding: 0 28px 22px; }
-.ops-lp-table-row { padding: 0 28px 8px; }
-/* Scoped via #lp-table-head/#lp-body — same reasoning as the Warzones and
-   flips tables: this table's columns must not inherit another table's width. */
-#lp-table-head, #lp-body .ops-row { min-width: 920px; }
-.lc-n { flex: 2 1 220px; color: var(--ops-text); }
-.lc-q { flex: 0 0 70px; color: var(--ops-dim2); }
-.lc-lp { flex: 0 0 90px; color: var(--ops-body); }
-.lc-isk { flex: 0 0 100px; color: var(--ops-body); }
-.lc-req { flex: 1 1 150px; color: var(--ops-dim); font-size: 9.5px; }
-.lc-mkt { flex: 0 0 100px; }
-.lc-depth { flex: 0 0 80px; color: var(--ops-dim2); }
-.lc-ratio { flex: 0 0 110px; display: flex; align-items: center; gap: 8px; }
-.ops-lp-ratio-val { min-width: 44px; font-weight: 600; }
-.ops-lp-ratio-track { flex: 1; height: 4px; background: var(--ops-bg3); }
-.ops-lp-ratio-fill { display: block; height: 100%; transition: width .4s; }
-.ops-lp-footnote { padding: 8px 28px 26px; font-size: 8.5px; color: var(--ops-dim); }
-.ops-lp-depth-thin { text-decoration: underline dotted; text-underline-offset: 2px; }
-
-/* ---------- Leaderboards ---------- */
-.ops-lb-cats { padding: 0 28px 14px; }
-.ops-lb-table-row { padding: 0 28px 26px; }
-/* Scoped via #lb-table-head/#lb-body — same reasoning as the other tables:
-   this table's columns must not inherit another table's width. */
-#lb-table-head, #lb-body .ops-row { min-width: 640px; }
-.lb-rank { flex: 0 0 60px; font: 600 12px var(--ops-font-display); }
-.lb-name { flex: 2 1 200px; color: var(--ops-text); }
-.lb-fac { flex: 0 0 160px; font-size: 9.5px; }
-.lb-val { flex: 1 1 220px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
-.ops-lb-val-track { flex: 1; height: 5px; background: var(--ops-bg3); }
-.ops-lb-val-fill { display: block; height: 100%; transition: width .4s; }
-.ops-lb-val-num { min-width: 64px; text-align: right; color: var(--ops-body); font-weight: 600; }
-
-/* ---------- Campaigns ---------- */
-/* Static identity (SDATA.campaigns: titles, texts, targets, rewards) joined
-   by UUID with live progress from data/campaigns.json (mirrored ESI
-   /military-campaigns, compat date 2026-08-04). The prototype's progress
-   bar is back now that a real route exists; the countdown stays dropped
-   (the route exposes no end time). Without live data (mirror not deployed,
-   fetch failed) the bars and participant lines simply don't render and the
-   card falls back to the static layout. The flat objective list stays a
-   collapsible <details>, same pattern as History's flips log. */
-.ops-cmp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; padding: 0 28px 26px; }
-.ops-cmp-card { border: 1px solid var(--ops-line); border-top: 3px solid; background: var(--ops-bg2); padding: 16px 18px; }
-.ops-cmp-head { margin-bottom: 10px; }
-.ops-cmp-status { padding: 2px 8px; font-size: 9px; border: 1px solid; }
-.ops-cmp-title { font: 700 15px var(--ops-font-display); letter-spacing: .08em; color: var(--ops-text); margin-top: 10px; }
-.ops-cmp-side { font-size: 9.5px; margin-top: 2px; }
-.ops-cmp-subtitle { font-size: 10.5px; color: var(--ops-dim2); line-height: 1.5; margin-top: 8px; }
-.ops-cmp-goal { font-size: 9px; color: var(--ops-dim); letter-spacing: .1em; margin-top: 12px; text-transform: uppercase; }
-.ops-cmp-objectives { margin-top: 12px; }
-.ops-cmp-objectives summary { cursor: pointer; font-size: 9.5px; letter-spacing: .1em; color: var(--ops-dim); text-transform: uppercase; }
-.ops-cmp-objectives summary:hover { color: var(--ops-dim2); }
-.ops-cmp-obj-list { margin: 10px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
-.ops-cmp-obj-item { padding: 8px 10px; background: var(--ops-bg3); font-size: 10.5px; color: var(--ops-dim2); line-height: 1.5; }
-.ops-cmp-obj-career { display: inline-block; margin-right: 6px; padding: 1px 6px; font-size: 8.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ops-accent); border: 1px solid var(--ops-line); }
-.ops-cmp-obj-reward { display: block; margin-top: 4px; font-size: 9.5px; color: var(--ops-ama); }
-.ops-cmp-footer { display: flex; justify-content: space-between; margin-top: 12px; font-size: 9.5px; }
-.ops-cmp-footer .l { color: var(--ops-dim); }
-.ops-cmp-footer .v { color: var(--ops-ama); }
-.ops-cmp-progress { margin-top: 12px; }
-.ops-cmp-progress-label { display: flex; justify-content: space-between; font-size: 9px; color: var(--ops-dim); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 4px; }
-.ops-cmp-bar { height: 6px; background: var(--ops-bg3); border: 1px solid var(--ops-line); }
-.ops-cmp-bar-fill { height: 100%; }
-.ops-cmp-obj-sub { display: block; margin-top: 3px; font-size: 9.5px; color: var(--ops-dim); }
-.ops-cmp-obj-progress { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-.ops-cmp-obj-progress .ops-cmp-bar { flex: 1; height: 4px; }
-.ops-cmp-obj-progress .n { font-size: 9px; color: var(--ops-dim2); white-space: nowrap; }
-.ops-cmp-obj-part { display: block; margin-top: 4px; font-size: 9px; color: var(--ops-dim); }
-.ops-cmp-updated { grid-column: 1 / -1; font-size: 9px; color: var(--ops-dim); letter-spacing: .1em; text-transform: uppercase; }
-
-/* ---------- FAQ ---------- */
-.ops-faq-list { display: flex; flex-direction: column; gap: 10px; padding: 0 28px 26px; max-width: 860px; }
-.ops-faq-item { border: 1px solid var(--ops-line); background: var(--ops-bg2); padding: 14px 18px; }
-.ops-faq-item summary { cursor: pointer; font: 600 12px var(--ops-font-display); letter-spacing: .06em; color: var(--ops-text); }
-.ops-faq-item summary:hover { color: var(--ops-hi); }
-.ops-faq-item p { margin: 10px 0 0; font-size: 11.5px; color: var(--ops-dim2); line-height: 1.6; }
-
-/* ---------- Legal page (/legal/, standalone — not one of the 7 app tabs) ---------- */
-.ops-legal { max-width: 760px; padding: 26px 28px 40px; }
-.ops-legal h2 { font: 700 13px var(--ops-font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--ops-accent); margin: 32px 0 10px; }
-.ops-legal h2:first-child { margin-top: 0; }
-.ops-legal h3 { font: 600 12px var(--font-mono); letter-spacing: .04em; color: var(--ops-text); margin: 20px 0 6px; }
-.ops-legal p, .ops-legal li { font-size: 12.5px; color: var(--ops-dim2); line-height: 1.7; }
-.ops-legal ul { margin: 6px 0 6px 20px; }
-.ops-legal a { color: var(--ops-hi); }
-.ops-legal a:hover { color: var(--ops-accent); }
-.ops-legal .mono { font-family: var(--font-mono); }
-.ops-legal hr { border: none; border-top: 1px solid var(--ops-line); margin: 28px 0; }
-.ops-legal-back { display: inline-block; text-decoration: none; margin-top: 24px; }
-
-@media (max-width: 700px) {
-  .ops-header { padding: 12px 14px; }
-  .ops-nav { padding: 0 14px; }
-  .ops-wz-grid, .ops-ins-grid, .ops-flex-row { padding-left: 14px; padding-right: 14px; }
-  .ops-section-head { padding: 0 14px; }
-  .ops-lb-cats, .ops-lb-table-row { padding-left: 14px; padding-right: 14px; }
-  .ops-cmp-grid { padding-left: 14px; padding-right: 14px; }
-  .ops-faq-list { padding-left: 14px; padding-right: 14px; }
-  .ops-legal { padding-left: 14px; padding-right: 14px; }
-  /* minmax(420px,...) doesn't shrink below 420px even in a single column —
-     drop the floor once there's no room for two columns anyway. */
-  .ops-wz-grid { grid-template-columns: 1fr; }
-  .ops-ins-grid { grid-template-columns: 1fr; }
+/* ============================================================
+   HISTORY
+   ============================================================ */
+.chart-legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 10px 0 14px; }
+.chart-legend > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 400 10px var(--fm);
+  color: var(--dim2);
 }
+.chart-legend i { width: 14px; height: 2px; display: block; }
+.chart-legend b { font-weight: 700; }
+.chart { display: block; width: 100%; height: 200px; }
+.chart-axis {
+  display: flex;
+  justify-content: space-between;
+  font: 400 9px var(--fm);
+  color: var(--dim);
+  margin-top: 7px;
+}
+
+.log-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 11px 20px;
+  border-top: 1px solid var(--line2);
+}
+.log-date { flex: 0 0 118px; font: 400 10px var(--fm); color: var(--dim); }
+.log-sys { flex: 1 1 150px; font: 600 13px var(--fb); color: var(--txt); }
+.log-move {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font: 500 10.5px var(--fm);
+}
+.log-move .from { opacity: .7; }
+
+/* ============================================================
+   LP STORE
+   ============================================================ */
+.c-item {
+  flex: 2 1 240px;
+  font: 500 13px var(--fb);
+  color: var(--txt);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.c-lp { flex: 0 0 92px; font: 400 11.5px var(--fm); color: var(--txt2); }
+.c-isk { flex: 0 0 108px; font: 400 11.5px var(--fm); color: var(--txt2); }
+.c-mkt { flex: 0 0 120px; font: 400 11.5px var(--fm); color: var(--txt2); }
+.c-ratio { flex: 1 1 150px; display: flex; align-items: center; gap: 10px; }
+.c-ratio .val { flex: 0 0 62px; font: 700 12.5px var(--fm); }
+.c-ratio .bar { flex: 1; }
+.table-lp .thead, .table-lp .trow { min-width: 900px; }
+.table-lp .trow { cursor: default; }
+.table-lp .trow:hover { background: var(--surf2); }
+.lp-foot { font: 400 10px var(--fm); color: var(--dim); margin-top: 14px; }
+
+/* ============================================================
+   LEADERBOARDS
+   ============================================================ */
+.lb-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  border-top: 1px solid var(--line2);
+}
+.lb-row.top { background: color-mix(in srgb, var(--ama) 5%, transparent); }
+.lb-rank { flex: 0 0 40px; font: 700 20px var(--fd); color: var(--dim); }
+.lb-rank.g1 { color: var(--ama); }
+.lb-rank.g2 { color: var(--dim2); }
+.lb-who { flex: 2 1 200px; min-width: 0; }
+.lb-name {
+  display: block;
+  font: 600 14px var(--fb);
+  color: var(--txt);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lb-militia { display: block; font: 400 9.5px var(--fm); margin-top: 1px; }
+.lb-val { flex: 1 1 200px; display: flex; align-items: center; gap: 12px; min-width: 140px; }
+.lb-val .bar { flex: 1; }
+.lb-val .num { flex: 0 0 76px; text-align: right; font: 700 14px var(--fm); color: var(--txt); }
+
+/* ============================================================
+   CAMPAIGNS
+   ============================================================ */
+.cmp-card { border-top-width: 3px; border-top-style: solid; padding: 20px 22px; }
+.cmp-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cmp-side { font: 400 9.5px var(--fm); color: var(--dim); }
+.cmp-card h2 { font: 700 19px var(--fd); letter-spacing: .06em; color: var(--txt); margin-top: 12px; }
+.cmp-text {
+  font: 400 12px var(--fb);
+  color: var(--dim2);
+  margin-top: 8px;
+  text-wrap: pretty;
+}
+.cmp-obj { margin-top: 16px; }
+.cmp-obj + .cmp-obj { margin-top: 10px; }
+.cmp-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  font: 400 10.5px var(--fm);
+}
+.cmp-foot .lbl { color: var(--dim); }
+.cmp-foot .val { color: var(--ama); font-weight: 500; }
+.cmp-card.done { opacity: .55; }
+
+/* ============================================================
+   FAQ
+   ============================================================ */
+.faq-list { display: flex; flex-direction: column; gap: 10px; max-width: 900px; }
+.faq-list details { border: 1px solid var(--line); background: var(--surf); padding: 16px 20px; }
+.faq-list summary {
+  cursor: pointer;
+  font: 600 14px var(--fd);
+  letter-spacing: .05em;
+  color: var(--txt);
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.faq-list summary::-webkit-details-marker { display: none; }
+/* Marker is drawn rather than inherited so it can flip on open without
+   depending on the UA's disclosure triangle. */
+.faq-list summary::after { content: "+"; color: var(--dim); font-family: var(--fm); }
+.faq-list details[open] summary::after { content: "−"; }
+.faq-list p {
+  font: 400 12.5px var(--fb);
+  color: var(--dim2);
+  margin-top: 11px;
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+.faq-list p + p { margin-top: 8px; }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.site-foot {
+  margin-top: 40px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  font: 400 10.5px var(--fb);
+  color: var(--dim);
+  line-height: 1.8;
+  max-width: 1100px;
+}
+.site-foot > div + div { margin-top: 8px; }
+.site-foot .ver { font-family: var(--fm); font-size: 9.5px; letter-spacing: .06em; }
+
+/* ============================================================
+   LEGAL (standalone page, shares the header only)
+   ============================================================ */
+.legal { max-width: 820px; margin: 0 auto; padding: var(--pad) 0 64px; }
+.legal h2 {
+  font: 700 15px var(--fd);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--txt);
+  margin: 28px 0 10px;
+}
+.legal h2:first-child { margin-top: 0; }
+.legal h3 { font: 600 12.5px var(--fb); color: var(--txt2); margin: 18px 0 6px; }
+.legal p, .legal li { font: 400 12.5px var(--fb); color: var(--dim2); line-height: 1.75; }
+.legal p + p { margin-top: 10px; }
+.legal ul { margin: 8px 0 0 18px; }
+.legal a { color: var(--cal); }
+.legal a:hover { text-decoration: underline; }
+.legal-back { display: inline-block; margin-bottom: 22px; }

@@ -9,7 +9,7 @@ const LpStoreView = (() => {
   let jitaMode = false;
   let jitaLoading = false;
   let lpHistory = null;         // [{t, m: {factionId: [best, median]}}]
-  let sortKey = "ratio";        // n | q | lp | isk | mkt | depth | ratio
+  let sortKey = "ratio";        // n | lp | isk | mkt | ratio
   let sortDir = "desc";
 
   const TREND_DAYS = 30;
@@ -34,7 +34,7 @@ const LpStoreView = (() => {
     const cutoff = Date.now() / 1000 - TREND_DAYS * 86400;
     const entries = lpHistory.filter(e => e.t >= cutoff);
     const series = Object.keys(FACTIONS).map(facId => {
-      const fac = opsFactionOf(Number(facId));
+      const fac = factionOf(Number(facId));
       return {
         label: fac.key.toUpperCase(),
         color: fac.color,
@@ -47,7 +47,7 @@ const LpStoreView = (() => {
       container.innerHTML = "";
       return;
     }
-    container.innerHTML = `<div class="ops-card">${Charts.opsLineChart(t("hist_lp"), series, TREND_DAYS + "d")}</div>`;
+    container.innerHTML = `<section class="panel panel-pad">${Charts.lineChart(t("hist_lp"), series, TREND_DAYS + "d")}</section>`;
   }
 
   async function loadPrices() {
@@ -137,7 +137,7 @@ const LpStoreView = (() => {
       .filter(r => r.value > 0);
   }
 
-  const SORT_FIELD = { n: null, q: "quantity", lp: "lp_cost", isk: "isk_cost", mkt: "value", depth: "depth", ratio: "iskPerLp" };
+  const SORT_FIELD = { n: null, lp: "lp_cost", isk: "isk_cost", mkt: "value", ratio: "iskPerLp" };
 
   function currentRows() {
     let offers = offerCache.get(currentCorp) || [];
@@ -147,7 +147,7 @@ const LpStoreView = (() => {
     let rows = evaluate(offers, jitaMode);
     /* mkt/depth/ratio need Jita data to mean anything — before that's
        loaded, fall back to ranking by ISK/LP so the list isn't arbitrary. */
-    const field = (!jitaMode && ["mkt", "depth"].includes(sortKey)) ? "iskPerLp" : SORT_FIELD[sortKey];
+    const field = (!jitaMode && sortKey === "mkt") ? "iskPerLp" : SORT_FIELD[sortKey];
     rows = rows.slice().sort((a, b) => {
       const av = field === null ? ESI.name(a.type_id) : (a[field] ?? -Infinity);
       const bv = field === null ? ESI.name(b.type_id) : (b[field] ?? -Infinity);
@@ -210,7 +210,8 @@ const LpStoreView = (() => {
     const container = document.getElementById("lp-corp-chips");
     container.innerHTML = Object.values(FACTIONS).map(fac => {
       const active = currentCorp === fac.militiaCorp;
-      return `<button class="ops-chip${active ? " active" : ""}" data-corp="${fac.militiaCorp}" style="${active ? `border-color:color-mix(in srgb, ${fac.color} 55%, transparent);background:color-mix(in srgb, ${fac.color} 10%, transparent);color:${fac.color}` : ""}">${esc(fac.militiaName)}</button>`;
+      return `<button class="chip chip-lg${active ? " active" : ""}" data-corp="${fac.militiaCorp}" style="${active ? `border-color:color-mix(in srgb, ${fac.color} 55%, transparent);background:color-mix(in srgb, ${fac.color} 10%, transparent);color:${fac.color}` : ""}">
+        <span class="chip-dot" style="background:${fac.color}"></span>${esc(fac.militiaName)}</button>`;
     }).join("");
     container.querySelectorAll("button").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -223,37 +224,34 @@ const LpStoreView = (() => {
     });
   }
 
+  /* This layout gives each view one control slot in the page head; the LP
+     tab spends it on the Jita repricing toggle. */
   function renderJitaButton() {
-    const btn = document.getElementById("lp-jita");
-    btn.textContent = jitaLoading ? t("lp_jita_loading") : (jitaMode ? "↻ " + t("lp_jita_reload") : "▼ " + t("lp_jita_btn"));
-    btn.disabled = jitaLoading;
-    btn.classList.toggle("active", jitaMode);
-    if (!btn.dataset.bound) {
-      btn.dataset.bound = "1";
-      btn.addEventListener("click", refineWithJita);
-    }
-    document.getElementById("lp-mode").textContent =
-      jitaMode ? t("lp_mode_jita") : t("lp_mode_avg");
+    const container = document.getElementById("page-chips");
+    const label = jitaLoading ? t("lp_jita_loading") : (jitaMode ? "↻ " + t("lp_jita_reload") : "▼ " + t("lp_jita_btn"));
+    container.innerHTML = `<button class="chip${jitaMode ? " active" : ""}" id="lp-jita"${jitaLoading ? " disabled" : ""}>${esc(label)}</button>`;
+    container.querySelector("#lp-jita").addEventListener("click", refineWithJita);
+    document.getElementById("lp-mode").textContent = jitaMode ? t("lp_mode_jita") : t("lp_mode_avg");
   }
 
-  const LP_COLS = [
-    { key: "n", label: t("th_item"), cls: "lc-n" },
-    { key: "q", label: t("th_qty"), cls: "lc-q" },
-    { key: "lp", label: t("th_lp"), cls: "lc-lp" },
-    { key: "isk", label: t("th_isk_cost"), cls: "lc-isk" },
-    { key: null, label: t("th_req"), cls: "lc-req" },
-    { key: "mkt", label: t("th_value"), cls: "lc-mkt" },
-    { key: "depth", label: t("th_depth"), cls: "lc-depth" },
-    { key: "ratio", label: t("th_isk_per_lp"), cls: "lc-ratio" }
+  /* Five columns, matching the design. Quantity and required items ride along
+     on the item cell's tooltip and the narrow-layout card instead of taking
+     columns of their own; buy depth stays as the thin-market marker on the
+     market value, which is the only place it changes a decision. */
+  const LP_COLS = () => [
+    { key: "n", label: t("th_item"), cls: "c-item" },
+    { key: "lp", label: t("th_lp"), cls: "c-lp" },
+    { key: "isk", label: t("th_isk_cost"), cls: "c-isk" },
+    { key: "mkt", label: t("th_value"), cls: "c-mkt" },
+    { key: "ratio", label: t("th_isk_per_lp"), cls: "c-ratio" }
   ];
 
   function renderTableHead() {
-    const head = document.getElementById("lp-table-head");
-    head.innerHTML = LP_COLS.map(c => {
-      if (c.key === null) return `<span class="${c.cls}">${esc(c.label)}</span>`;
+    const head = document.getElementById("lp-head");
+    head.innerHTML = LP_COLS().map(c => {
       const active = c.key === sortKey;
-      const arrow = active ? (sortDir === "asc" ? "▲" : "▼") : "";
-      return `<button class="${c.cls}${active ? " active" : ""}" data-key="${c.key}">${esc(c.label)} ${arrow}</button>`;
+      const arrow = active ? (sortDir === "asc" ? " ▲" : " ▼") : "";
+      return `<button class="${c.cls}${active ? " sorted" : ""}" data-key="${c.key}">${esc(c.label)}${arrow}</button>`;
     }).join("");
     head.querySelectorAll("button").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -265,42 +263,72 @@ const LpStoreView = (() => {
     });
   }
 
+  function rowFacts(r) {
+    const thin = r.depth !== null && r.depth < r.quantity;
+    const ratio = Math.round(r.iskPerLp);
+    const ratioColor = !jitaMode ? "var(--dim)" : (ratio >= 1500 ? "var(--gal)" : (ratio >= 1000 ? "var(--ama)" : "var(--dim2)"));
+    const req = (r.required_items || [])
+      .map(x => `${fmtNum(x.quantity)}× ${ESI.name(x.type_id)}`)
+      .join(", ") || t("req_none");
+    return { thin, ratio, ratioColor, req };
+  }
+
   function render() {
     renderCorpChips();
     renderJitaButton();
-    renderTableHead();
     renderTrend();
 
-    const body = document.getElementById("lp-body");
     const rows = currentRows();
+    const table = document.getElementById("lp-body");
+    const cards = document.getElementById("lp-cards");
+
     if (rows.length === 0) {
-      body.innerHTML = `<div class="ops-row" style="cursor:default">${t("lp_none")}</div>`;
+      table.innerHTML = `<div class="trow">${t("lp_none")}</div>`;
+      cards.innerHTML = "";
       return;
     }
 
     const bestRatio = Math.max(...rows.map(r => r.iskPerLp), 1);
-    body.innerHTML = rows.map(r => {
-      const req = (r.required_items || [])
-        .map(x => `${fmtNum(x.quantity)}× ${esc(ESI.name(x.type_id))}`)
-        .join(", ") || t("req_none");
-      const thin = r.depth !== null && r.depth < r.quantity;
-      const depthText = r.depth === null ? "—" : fmtNum(r.depth);
-      const ratio = Math.round(r.iskPerLp);
-      const ratioColor = !jitaMode ? "var(--ops-dim)" : (ratio >= 1500 ? "var(--ops-gal)" : (ratio >= 1000 ? "var(--ops-ama)" : "var(--ops-dim2)"));
-      const ratioPct = jitaMode ? Math.max(0, Math.round(r.iskPerLp / bestRatio * 100)) : 0;
+
+    if (App.isNarrow()) {
+      table.innerHTML = "";
+      document.getElementById("lp-head").innerHTML = "";
+      cards.innerHTML = rows.map(r => {
+        const { thin, ratio, ratioColor, req } = rowFacts(r);
+        const pct = jitaMode ? Math.max(0, Math.round(r.iskPerLp / bestRatio * 100)) : 0;
+        return `
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title">${esc(ESI.name(r.type_id))}</span>
+              <span class="card-num" style="color:${ratioColor}">${jitaMode ? fmtNum(ratio) : "—"}</span>
+            </div>
+            <span class="card-meta">×${fmtNum(r.quantity)} · ${esc(req)}</span>
+            <div class="bar" style="margin:10px 0"><span style="width:${pct}%;background:${ratioColor}"></span></div>
+            <div class="card-facts">
+              <span>LP <b>${fmtNum(r.lp_cost)}</b></span>
+              <span>ISK <b>${fmtIsk(r.isk_cost)}</b></span>
+              <span>${esc(t("th_value"))} <b style="${thin ? "color:var(--crit)" : ""}">${jitaMode ? fmtIsk(r.value) : "—"}</b></span>
+            </div>
+          </div>`;
+      }).join("");
+      return;
+    }
+
+    cards.innerHTML = "";
+    renderTableHead();
+    table.innerHTML = rows.map(r => {
+      const { thin, ratio, ratioColor, req } = rowFacts(r);
+      const pct = jitaMode ? Math.max(0, Math.round(r.iskPerLp / bestRatio * 100)) : 0;
       const isBest = jitaMode && rows[0] === r;
       return `
-        <div class="ops-row" style="cursor:default${isBest ? ";background:color-mix(in srgb, var(--ops-gal) 5%, transparent)" : ""}">
-          <span class="lc-n">${esc(ESI.name(r.type_id))}</span>
-          <span class="lc-q">×${fmtNum(r.quantity)}</span>
-          <span class="lc-lp">${fmtNum(r.lp_cost)} LP</span>
-          <span class="lc-isk">${fmtIsk(r.isk_cost)}</span>
-          <span class="lc-req">${req}</span>
-          <span class="lc-mkt" style="color:${jitaMode ? "var(--ops-body)" : "var(--ops-dim)"}">${jitaMode ? fmtIsk(r.value) : "—"}</span>
-          <span class="lc-depth${thin ? " ops-lp-depth-thin" : ""}" title="${thin ? t("lp_thin") : ""}">${depthText}</span>
-          <span class="lc-ratio">
-            <span class="ops-lp-ratio-val" style="color:${ratioColor}">${jitaMode ? fmtNum(ratio) : "—"}</span>
-            <span class="ops-lp-ratio-track"><span class="ops-lp-ratio-fill" style="width:${ratioPct}%;background:${ratioColor}"></span></span>
+        <div class="trow"${isBest ? ' style="background:color-mix(in srgb, var(--gal) 5%, transparent)"' : ""}>
+          <span class="c-item" title="×${fmtNum(r.quantity)} — ${esc(req)}">${esc(ESI.name(r.type_id))}</span>
+          <span class="c-lp">${fmtNum(r.lp_cost)}</span>
+          <span class="c-isk">${fmtIsk(r.isk_cost)}</span>
+          <span class="c-mkt"${thin ? ` style="color:var(--crit)" title="${esc(t("lp_thin"))}"` : ""}>${jitaMode ? fmtIsk(r.value) : "—"}</span>
+          <span class="c-ratio">
+            <span class="val" style="color:${ratioColor}">${jitaMode ? fmtNum(ratio) : "—"}</span>
+            <span class="bar"><span style="width:${pct}%;background:${ratioColor}"></span></span>
           </span>
         </div>
       `;

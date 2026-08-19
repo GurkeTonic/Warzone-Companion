@@ -14,20 +14,19 @@
 <script>document.documentElement.dataset.theme = localStorage.getItem("tow_theme") || "dark";</script>
 </head>
 <body>
-<div class="wrap">
 
-  <header class="ops-header">
-    <a href="/" class="ops-header-left" style="text-decoration:none;color:inherit">
-      <div class="ops-logo">WZ</div>
-      <div>
-        <div class="ops-brand-name">WARZONE COMPANION</div>
-        <div class="ops-tagline">DATENSCHUTZ &amp; RECHTLICHES</div>
-      </div>
-    </a>
-  </header>
+<header class="hdr">
+  <a class="hdr-brand" href="/">
+    <div class="logo">WZ</div>
+    <div class="brand-text">
+      <span class="brand-name">WARZONE COMPANION</span>
+      <span class="brand-tag">DATENSCHUTZ &amp; RECHTLICHES</span>
+    </div>
+  </a>
+</header>
 
-  <div class="ops-page">
-    <div class="ops-legal">
+<main class="main">
+  <div class="legal">
 
       <h2>Summary (English)</h2>
       <p>
@@ -126,16 +125,13 @@
         Anbieter.
       </p>
 
-      <a href="/" class="ops-btn ops-legal-back">‹ ZURÜCK ZUR STARTSEITE</a>
+      <a href="/" class="btn legal-back">‹ ZURÜCK ZUR STARTSEITE</a>
 
-    </div>
   </div>
 
-  <footer>
-    <div>&copy; CCP hf. All rights reserved. "EVE", "EVE Online", "CCP", and all related logos and images are trademarks or registered trademarks of CCP hf.</div>
-    <div>This material is used with limited permission of CCP Games. No official affiliation or endorsement by CCP Games is stated or implied.</div>
+  <footer class="site-foot">
+    <div>&copy; CCP hf. All rights reserved. "EVE", "EVE Online", "CCP", and all related logos and images are trademarks or registered trademarks of CCP hf. This material is used with limited permission of CCP Games. No official affiliation or endorsement by CCP Games is stated or implied.</div>
   </footer>
-
-</div>
+</main>
 </body>
 </html>

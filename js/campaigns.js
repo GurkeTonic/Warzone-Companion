@@ -36,17 +36,15 @@ const CampaignsView = (() => {
     return Math.max(0, Math.min(100, progress / target * 100));
   }
 
-  function bar(pct, color) {
-    return `
-      <div class="ops-cmp-bar"><div class="ops-cmp-bar-fill" style="width:${pct.toFixed(1)}%;background:${color}"></div></div>
-    `;
+  function bar(pct, color, cls = "bar bar-7") {
+    return `<div class="${cls}"><span style="width:${pct.toFixed(1)}%;background:${color}"></span></div>`;
   }
 
   function render() {
     const container = document.getElementById("campaigns");
     const camps = SDATA.campaigns || [];
     if (camps.length === 0) {
-      container.innerHTML = `<div class="ops-cmp-card" style="border-top-color:var(--ops-line)">${t("cmp_none")}</div>`;
+      container.innerHTML = `<div class="panel panel-pad">${t("cmp_none")}</div>`;
       return;
     }
 
@@ -58,10 +56,10 @@ const CampaignsView = (() => {
     }
 
     container.innerHTML = camps.map(c => {
-      const fac = opsFactionOf(c.faction);
+      const fac = factionOf(c.faction);
       const wz = warzoneOf(c.faction);
-      const wzLabel = wz ? `${factionOf(wz.a).key.toUpperCase()} — ${factionOf(wz.b).key.toUpperCase()}` : "";
-      const sideLabel = (factionOf(c.faction).name || "").toUpperCase();
+      const wzLabel = wz ? `${factionOf(wz.a).short} — ${factionOf(wz.b).short}` : "";
+      const sideLabel = (fac.name || "").toUpperCase();
       const lc = liveCamps[c.id];
 
       /* Anything that is not "Active" (finished, expired, future states) is
@@ -69,18 +67,16 @@ const CampaignsView = (() => {
          state names and inventing translations would guess at CCP's enum. */
       const active = !lc || lc.state === "Active";
       const statusLabel = active ? t("cmp_status_active") : lc.state;
-      const statusStyle = active
-        ? "background:color-mix(in srgb, var(--ops-gal) 12%, transparent);color:var(--ops-gal);border-color:color-mix(in srgb, var(--ops-gal) 35%, transparent);animation:ops-pulse 2s infinite"
-        : "background:color-mix(in srgb, var(--ops-dim) 12%, transparent);color:var(--ops-dim);border-color:var(--ops-line)";
+      const statusColor = active ? "var(--gal)" : "var(--dim)";
 
       const cPct = lc ? pctOf(lc.progress, c.target) : null;
       const progressBlock = cPct === null ? (
-        c.target ? `<div class="ops-cmp-goal">${t("cmp_target")}: ${fmtNum(c.target)} ${t("cmp_stages")}</div>` : ""
+        c.target ? `<div class="cmp-obj"><div class="detail-bar-k"><span>${t("cmp_target")}</span><span>${fmtNum(c.target)} ${t("cmp_stages")}</span></div></div>` : ""
       ) : `
-        <div class="ops-cmp-progress">
-          <div class="ops-cmp-progress-label">
+        <div class="cmp-obj">
+          <div class="detail-bar-k">
             <span>${t("cmp_progress")}</span>
-            <span>${fmtNum(lc.progress)} / ${fmtNum(c.target)} ${t("cmp_stages")} · ${Math.round(cPct)}%</span>
+            <span style="color:${fac.color}">${fmtNum(lc.progress)} / ${fmtNum(c.target)} · ${Math.round(cPct)}%</span>
           </div>
           ${bar(cPct, fac.color)}
         </div>
@@ -99,47 +95,47 @@ const CampaignsView = (() => {
         const oPct = lo ? pctOf(lo.progress, o.target) : null;
         const p = lo?.participants;
         return `
-          <li class="ops-cmp-obj-item">
-            <span class="ops-cmp-obj-career">${esc(careerLabel(o.career))}</span>${esc(locText(o.title) || locText(o.subtitle))}
-            ${locText(o.title) && locText(o.subtitle) ? `<span class="ops-cmp-obj-sub">${esc(locText(o.subtitle))}</span>` : ""}
+          <li style="margin-top:12px;list-style:none">
+            <div class="row-name">${esc(locText(o.title) || locText(o.subtitle))}</div>
+            <div class="row-meta">${esc(careerLabel(o.career))}${locText(o.title) && locText(o.subtitle) ? " · " + esc(locText(o.subtitle)) : ""}</div>
             ${oPct !== null ? `
-              <span class="ops-cmp-obj-progress">
-                ${bar(oPct, fac.color)}
-                <span class="n">${fmtNum(lo.progress)} / ${fmtNum(o.target)} · ${Math.round(oPct)}%</span>
-              </span>
+              <div style="margin-top:6px">
+                <div class="detail-bar-k"><span>${fmtNum(lo.progress)} / ${fmtNum(o.target)}</span><span>${Math.round(oPct)}%</span></div>
+                ${bar(oPct, fac.color, "bar bar-4")}
+              </div>
             ` : ""}
-            ${p ? `<span class="ops-cmp-obj-part">${fmtNum(p.total)} ${t("cmp_participants")} · ${fmtNum(p.contributors)} ${t("cmp_contributors")}</span>` : ""}
-            ${rewards ? `<span class="ops-cmp-obj-reward">${esc(rewards)} ${t("cmp_reward_each")}</span>` : ""}
+            ${p ? `<div class="row-meta" style="margin-top:5px">${fmtNum(p.total)} ${t("cmp_participants")} · ${fmtNum(p.contributors)} ${t("cmp_contributors")}</div>` : ""}
+            ${rewards ? `<div class="row-meta" style="margin-top:3px;color:var(--ama)">${esc(rewards)} ${t("cmp_reward_each")}</div>` : ""}
           </li>
         `;
       }).join("");
 
       return `
-        <div class="ops-cmp-card" style="border-top-color:${fac.color}">
-          <div class="ops-cmp-head">
-            <span class="ops-cmp-status" style="${statusStyle}">${esc(statusLabel)}</span>
+        <section class="panel cmp-card${active ? "" : " done"}" style="border-top-color:${fac.color}">
+          <div class="cmp-top">
+            <span class="tag" style="color:${statusColor}">${esc(statusLabel)}</span>
+            <span class="cmp-side" style="color:${fac.color}">${esc(sideLabel)}${wzLabel ? " · " + esc(wzLabel) : ""}</span>
           </div>
-          <div class="ops-cmp-title">${esc(locText(c.title))}</div>
-          <div class="ops-cmp-side" style="color:${fac.color}">${esc(sideLabel)} · ${esc(wzLabel)}</div>
-          ${locText(c.subtitle) ? `<div class="ops-cmp-subtitle">${esc(locText(c.subtitle))}</div>` : ""}
+          <h2>${esc(locText(c.title))}</h2>
+          ${locText(c.subtitle) ? `<p class="cmp-text">${esc(locText(c.subtitle))}</p>` : ""}
           ${progressBlock}
           ${objItems ? `
-            <details class="ops-cmp-objectives">
-              <summary>${t("cmp_objectives")} (${objectives.length})</summary>
-              <ul class="ops-cmp-obj-list">${objItems}</ul>
+            <details class="cmp-obj">
+              <summary style="cursor:pointer;font:500 9.5px var(--fm);letter-spacing:.1em;text-transform:uppercase;color:var(--dim)">${t("cmp_objectives")} (${objectives.length})</summary>
+              <ul style="margin:0;padding:0">${objItems}</ul>
             </details>
           ` : ""}
           ${(totalLp || totalIsk) ? `
-            <div class="ops-cmp-footer">
-              <span class="l">${t("cmp_reward")}</span>
-              <span class="v">${[totalLp ? fmtNum(totalLp) + " LP" : null, totalIsk ? fmtIsk(totalIsk) + " ISK" : null].filter(Boolean).join(" + ")}</span>
+            <div class="cmp-foot">
+              <span class="lbl">${t("cmp_reward")}</span>
+              <span class="val">${[totalLp ? fmtNum(totalLp) + " LP" : null, totalIsk ? fmtIsk(totalIsk) + " ISK" : null].filter(Boolean).join(" + ")}</span>
             </div>
           ` : ""}
-        </div>
+        </section>
       `;
-    }).join("") + (live?.fetched ? `
-      <div class="ops-cmp-updated">${t("cmp_updated")}: ${esc(live.fetched.slice(0, 16).replace("T", " "))} UTC</div>
-    ` : "");
+    }).join("");
+
+    if (live?.fetched) App.setUpdated(live.fetched.slice(0, 16).replace("T", " ") + " UTC");
   }
 
   return { load, render };

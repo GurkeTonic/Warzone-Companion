@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Generate the tab subpages and sitemap.xml from index.html.
 
-index.html is the source template (the Warzones page). Every other tab gets
-a real subpage directory (/map/index.html, /lp/index.html, ...) so each tab
+index.html is the source template (the Overview page). Every other tab gets
+a real subpage directory (/warzones/index.html, /map/index.html, ...) so each tab
 has its own URL, survives reloads, and is indexable with its own title and
 description. Run after every change to index.html:
 
@@ -23,14 +23,21 @@ CONFIG_JS = ROOT / "js" / "config.js"
 BASE_URL = "https://evewarzone.com"
 
 ROOT_PAGE = {
-    "tab": "warzones",
+    "tab": "overview",
     "dir": "",
     "title": "Warzone Companion — EVE Online Factional Warfare",
-    "description": "Factional Warfare companion for EVE Online: live warzone maps, frontline status, "
-                   "LP store optimizer, leaderboards, and Military Campaigns.",
+    "description": "Factional Warfare companion for EVE Online: both warzones at a glance, live maps, "
+                   "frontline roles, LP store optimizer, leaderboards, and Military Campaigns.",
 }
 
 PAGES = [
+    {
+        "tab": "warzones",
+        "dir": "warzones",
+        "title": "Warzones — Warzone Companion",
+        "description": "Every contested EVE Online Factional Warfare system with its occupier, "
+                       "frontline role, victory points, Advantage, and kills in the last hour.",
+    },
     {
         "tab": "map",
         "dir": "map",
@@ -89,10 +96,10 @@ def build_page(template, page):
         f'<link rel="canonical" href="{BASE_URL}/{page["dir"]}/">',
         html, count=1,
     )
-    html = html.replace('<body data-tab="warzones">', f'<body data-tab="{page["tab"]}">', 1)
+    html = html.replace('<body data-tab="overview">', f'<body data-tab="{page["tab"]}">', 1)
     html = html.replace(
         "<!-- Source template. After editing, run: python tools/build_pages.py\n"
-        "     to regenerate the subpages (/map/, /lp/, ...) and sitemap.xml. -->",
+        "     to regenerate the subpages (/warzones/, /map/, ...) and sitemap.xml. -->",
         f"<!-- Generated from index.html by tools/build_pages.py — do not edit by hand. -->",
         1,
     )
@@ -143,7 +150,7 @@ def main():
     sync_config_js()
 
     template = TEMPLATE.read_text(encoding="utf-8")
-    for marker in ('<body data-tab="warzones">', "<title>", 'rel="canonical"'):
+    for marker in ('<body data-tab="overview">', "<title>", 'rel="canonical"'):
         if marker not in template:
             sys.exit(f"template marker missing: {marker}")
 

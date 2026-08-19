@@ -44,7 +44,10 @@ const Router = (() => {
   }
 
   function init() {
-    document.querySelector("nav").addEventListener("click", onNavClick);
+    /* Bound on the document rather than one nav: the rail, the bottom nav
+       and the header logo all link to routes, and views render in-content
+       links too. onNavClick already ignores anything not in ROUTES. */
+    document.addEventListener("click", onNavClick);
     window.addEventListener("popstate", onPopState);
     history.replaceState({ path: location.pathname }, "", location.pathname);
   }

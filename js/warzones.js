@@ -3,7 +3,7 @@
    Depends on config.js, i18n.js, esi.js, fwlogic.js (SDATA). */
 "use strict";
 
-const [WarzonesView, MapView] = (() => {
+const [WarzonesView, MapView, FwData] = (() => {
   let data = null;         // { systems, stats }
   let occupier = null;     // system_id -> occupier_faction_id
   let classes = null;      // system_id -> frontline | command | rearguard
@@ -175,62 +175,15 @@ const [WarzonesView, MapView] = (() => {
      space for the cards and a batch of table rows so the page doesn't jump
      from near-empty to full height once render() replaces this. */
   function skeleton() {
-    const cardHtml = `
-      <div class="ops-card">
-        <div class="skel-fill" style="height:17px;width:55%;margin-bottom:12px"></div>
-        <div class="skel-fill" style="height:14px;margin-bottom:8px"></div>
-        <div class="skel-fill" style="height:10.5px;width:70%"></div>
-      </div>
-    `;
-    document.getElementById("warzones").innerHTML = cardHtml + cardHtml;
-    document.getElementById("contested-body").innerHTML = Array.from({ length: 20 }, () =>
-      `<div class="ops-row" style="cursor:default"><div class="skel-fill" style="height:14px;width:100%"></div></div>`
+    document.getElementById("sys-body").innerHTML = Array.from({ length: 16 }, () =>
+      `<div class="trow"><span class="skel-fill" style="height:14px;width:100%"></span></div>`
     ).join("");
-  }
-
-  /* ---------- warzone summary cards ---------- */
-
-  function renderCards() {
-    const container = document.getElementById("warzones");
-    container.innerHTML = "";
-
-    for (const wz of WARZONES) {
-      const facA = opsFactionOf(wz.a);
-      const facB = opsFactionOf(wz.b);
-
-      const wzSystems = data.systems.filter(s => s.occupier_faction_id === wz.a || s.occupier_faction_id === wz.b);
-      const heldA = wzSystems.filter(s => s.occupier_faction_id === wz.a).length;
-      const heldB = wzSystems.length - heldA;
-      const pctA = wzSystems.length ? (heldA / wzSystems.length) * 100 : 0;
-      const pctB = wzSystems.length ? (heldB / wzSystems.length) * 100 : 0;
-      const contestedN = wzSystems.filter(s => s.contested !== "uncontested").length;
-
-      const card = document.createElement("div");
-      card.className = "ops-card";
-      card.innerHTML = `
-        <div class="ops-wz-head">
-          <span class="ops-wz-title">${facA.name.toUpperCase()} — ${facB.name.toUpperCase()}</span>
-          <span class="ops-wz-count">${wzSystems.length} ${t("systems_held")}</span>
-        </div>
-        <div class="ops-frontbar">
-          <div class="fb-a" style="width:${pctA.toFixed(1)}%;background:${facA.bar}"></div>
-          <div class="fb-mid"></div>
-          <div class="fb-b" style="width:${pctB.toFixed(1)}%;background:${facB.bar}"></div>
-        </div>
-        <div class="ops-wz-legend">
-          <span style="color:${facA.color}">${facA.name.toUpperCase()} ${heldA}</span>
-          <span style="color:var(--ops-dim)">${contestedN} ${t("contested_n")}</span>
-          <span style="color:${facB.color}">${heldB} ${facB.name.toUpperCase()}</span>
-        </div>
-      `;
-      container.appendChild(card);
-    }
   }
 
   /* ---------- SVG warzone maps ---------- */
 
-  const MAP_W = 960;
-  const MAP_H = 540;
+  const MAP_W = 1000;
+  const MAP_H = 700;
   const MAP_PAD = 36;
   const NODE_R = 10;
   const NODE_GAP = 25;
@@ -313,8 +266,8 @@ const [WarzonesView, MapView] = (() => {
     const byId = new Map(data.systems.map(s => [s.solar_system_id, s]));
     const nodes = ids.map(id => {
       const s = byId.get(id);
-      const fac = opsFactionOf(s.occupier_faction_id);
-      const enemy = opsFactionOf(enemyFactionOf(s.occupier_faction_id));
+      const fac = factionOf(s.occupier_faction_id);
+      const enemy = factionOf(enemyFactionOf(s.occupier_faction_id));
       const p = pct(s);
       const st = statusTag(p);
       const r = NODE_R_BY_STATUS[st.key];
@@ -348,23 +301,29 @@ const [WarzonesView, MapView] = (() => {
         ? `<circle cx="${x}" cy="${y}" r="${r + 3}" data-r="${r + 3}" fill="none" stroke="${glowColor}" stroke-width="3" stroke-opacity="${glowOpacity}"/>`
         : "";
       const fillPct = sel ? 60 : 28;
-      return `<g class="ops-map-node${st.key === "crit" ? " critical" : ""}${sel ? " selected" : ""}" data-id="${id}">
+      return `<g class="map-node${st.key === "crit" ? " critical" : ""}${sel ? " selected" : ""}" data-id="${id}">
         ${insRing}
         ${glow}
-        <rect class="diamond" x="${(x - r).toFixed(1)}" y="${(y - r).toFixed(1)}" width="${(r * 2).toFixed(1)}" height="${(r * 2).toFixed(1)}" transform="rotate(45 ${x} ${y})" data-r="${r}" data-cx="${x}" data-cy="${y}" style="fill:color-mix(in srgb, ${fac.color} ${fillPct}%, var(--ops-bg2));stroke:${fac.color};stroke-width:1.5"><title>${esc(tip)}</title></rect>
-        <text x="${x}" y="${(Number(y) + r + 9).toFixed(1)}" class="ops-map-label ops-map-label-minor" text-anchor="middle">${esc(sysName(id))}</text>
+        <rect class="diamond" x="${(x - r).toFixed(1)}" y="${(y - r).toFixed(1)}" width="${(r * 2).toFixed(1)}" height="${(r * 2).toFixed(1)}" transform="rotate(45 ${x} ${y})" data-r="${r}" data-cx="${x}" data-cy="${y}" style="fill:color-mix(in srgb, ${fac.color} ${fillPct}%, var(--surf));stroke:${fac.color};stroke-width:1.5"><title>${esc(tip)}</title></rect>
+        <text x="${x}" y="${(Number(y) + r + 9).toFixed(1)}" class="map-label" text-anchor="middle">${esc(sysName(id))}</text>
       </g>`;
     }).join("");
 
     return `
         <svg viewBox="0 0 ${MAP_W} ${MAP_H}" role="img">
-          <g class="ops-map-edges">${edges.join("")}</g>
+          <g class="map-edges">${edges.join("")}</g>
           ${nodes}
         </svg>
-        <div class="ops-map-controls">
+        <div class="map-controls">
           <button type="button" data-zoom="in" title="${t("map_zoom_in")}">+</button>
           <button type="button" data-zoom="out" title="${t("map_zoom_out")}">−</button>
           <button type="button" data-zoom="reset" title="${t("map_zoom_reset")}">⌂</button>
+        </div>
+        <div class="map-legend">
+          <span><i style="background:${factionOf(wz.a).color}"></i>${esc(factionOf(wz.a).name)}</span>
+          <span><i style="background:${factionOf(wz.b).color}"></i>${esc(factionOf(wz.b).name)}</span>
+          <span><i style="background:var(--min)"></i>${t("st_critical")}</span>
+          <span><i style="background:var(--ama)"></i>${t("st_contested")}</span>
         </div>
     `;
   }
@@ -455,7 +414,7 @@ const [WarzonesView, MapView] = (() => {
       const wasDragged = dragged;
       endDrag();
       if (wasDragged) return;
-      const sys = document.elementFromPoint(e.clientX, e.clientY)?.closest(".ops-map-node");
+      const sys = document.elementFromPoint(e.clientX, e.clientY)?.closest(".map-node");
       if (!sys) return;
       mapSel = Number(sys.dataset.id);
       renderMapTab();
@@ -463,7 +422,7 @@ const [WarzonesView, MapView] = (() => {
 
     svg.addEventListener("dblclick", () => { vb = { ...base }; apply(); });
 
-    svg.parentElement.querySelectorAll(".ops-map-controls button").forEach(btn => {
+    svg.parentElement.querySelectorAll(".map-controls button").forEach(btn => {
       btn.addEventListener("click", () => {
         const mode = btn.dataset.zoom;
         if (mode === "reset") { vb = { ...base }; apply(); return; }
@@ -480,9 +439,9 @@ const [WarzonesView, MapView] = (() => {
   ];
 
   function renderMapChips() {
-    const container = document.getElementById("map-wz-chips");
+    const container = document.getElementById("page-chips");
     container.innerHTML = WZ_TABS.map(f => `
-      <button class="ops-chip${mapWz === f.id ? " active" : ""}" data-id="${f.id}">${f.label}</button>
+      <button class="chip${mapWz === f.id ? " active" : ""}" data-id="${f.id}">${f.label}</button>
     `).join("");
     container.querySelectorAll("button").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -498,45 +457,49 @@ const [WarzonesView, MapView] = (() => {
   function renderMapDetail() {
     const el = document.getElementById("map-detail");
     if (!el) return;
-    if (mapSel == null) {
-      el.innerHTML = `<div class="ops-map-detail-hint">◈<br><br>${t("map_hint")}</div>`;
-      return;
-    }
-    const s = data.systems.find(x => x.solar_system_id === mapSel);
-    if (!s) { el.innerHTML = `<div class="ops-map-detail-hint">◈<br><br>${t("map_hint")}</div>`; return; }
-    const fac = opsFactionOf(s.occupier_faction_id);
-    const enemy = opsFactionOf(enemyFactionOf(s.occupier_faction_id));
-    const p = pct(s);
+    const empty = `<div class="detail-empty">◈<br>${t("map_pick")}</div>`;
+    if (mapSel == null) { el.innerHTML = empty; return; }
+    const sys = data.systems.find(x => x.solar_system_id === mapSel);
+    if (!sys) { el.innerHTML = empty; return; }
+
+    const fac = factionOf(sys.occupier_faction_id);
+    const enemy = factionOf(enemyFactionOf(sys.occupier_faction_id));
+    const p = pct(sys);
     const st = statusTag(p);
+    const cls = classes.get(mapSel) || "rearguard";
+    const netAdv = netAdvantage(mapSel);
+    const stats = [
+      { k: t("th_class"), v: t("class_" + cls), color: "var(--txt)" },
+      { k: t("th_adv_short"), v: fmtAdv(netAdv), color: advColor(netAdv, fac.color, enemy.color) },
+      { k: t("th_kills1h"), v: fmtNum(kills.get(mapSel) || 0), color: "var(--txt)" },
+      { k: t("th_jumps"), v: fmtNum(traffic.get(mapSel) || 0), color: "var(--txt)" }
+    ];
+
     el.innerHTML = `
-      <div>
-        <div class="ops-map-detail-name">${esc(sysName(mapSel))}</div>
-        <div class="ops-map-detail-region">${esc(sysRegion(mapSel))}</div>
+      <div class="detail-k">${t("th_system")}</div>
+      <div class="detail-name">${esc(sysName(mapSel))}</div>
+      <div class="detail-region">${esc(sysRegion(mapSel))}</div>
+      <div class="detail-tags">
+        <span class="tag tag-lg" style="color:${fac.color}">${esc(fac.name)}</span>
+        <span class="tag tag-lg" style="color:${st.color}">${st.label}</span>
       </div>
-      <div class="ops-map-detail-tags">
-        <span class="ops-status-tag" style="background:${st.bg};color:${st.color};border-color:${st.border}">${st.label}</span>
-        <span style="font-size:11px;color:${fac.color}">${esc(fac.name)}</span>
+      <div style="margin-top:20px">
+        <div class="detail-bar-k"><span>${t("th_vp")}</span><span style="color:${enemy.color}">${p.toFixed(1)}%</span></div>
+        <div class="bar bar-7"><span style="width:${Math.min(100, p).toFixed(1)}%;background:${enemy.color}"></span></div>
       </div>
-      <div class="ops-ext-links" style="margin-top:10px">
-        <a class="ops-ext-link" href="${zkillUrl(mapSel)}" target="_blank" rel="noopener">zKillboard</a>
-        <a class="ops-ext-link" href="${dotlanUrl(sysName(mapSel))}" target="_blank" rel="noopener">Dotlan</a>
+      <div class="stats stats-2" style="margin-top:20px">
+        ${stats.map(x => `<div><div class="stat-k">${esc(x.k)}</div><div class="stat-v" style="font-size:15px;color:${x.color}">${esc(x.v)}</div></div>`).join("")}
       </div>
-      <div class="ops-map-detail-vp">
-        <div class="ops-map-detail-vp-row"><span>VICTORY POINTS</span><span style="color:${enemy.color}">${p.toFixed(1)}%</span></div>
-        <div class="ops-map-detail-vp-track"><div class="ops-map-detail-vp-fill" style="width:${Math.min(100, p).toFixed(1)}%;background:${enemy.color}"></div></div>
-      </div>
-      <div class="ops-map-detail-activity">
-        <div><div class="dl" style="color:var(--ops-dim);letter-spacing:.12em;font-size:8.5px;margin-bottom:3px;text-transform:uppercase">${t("det_activity")}</div><div style="color:var(--ops-text);font-size:12px">${fmtNum(kills.get(mapSel) || 0)} Kills · ${fmtNum(traffic.get(mapSel) || 0)} Jumps</div></div>
-      </div>
-      <div class="ops-map-detail-note">
-        <div class="dl" style="color:var(--ops-dim);letter-spacing:.12em;font-size:8.5px;margin-bottom:4px;text-transform:uppercase">${t("det_note")}</div>
-        <div style="color:var(--ops-dim2);font-size:10.5px;line-height:1.55">${esc(rowNote(s))}</div>
+      <div class="detail-links">
+        <a href="${zkillUrl(mapSel)}" target="_blank" rel="noopener">zKillboard</a>
+        <a href="${dotlanUrl(sysName(mapSel))}" target="_blank" rel="noopener">Dotlan</a>
       </div>
     `;
   }
 
   function renderMapTab() {
     if (!data) return;
+    App.renderFrontStrip(frontStripRows());
     if (!mapWz) mapWz = WARZONES[0].id;
     renderMapChips();
     renderMapDetail();
@@ -546,52 +509,22 @@ const [WarzonesView, MapView] = (() => {
     if (svg) bindMapInteractions(svg, mapViewBox);
   }
 
-  /* ---------- insurgency summary ---------- */
-
-  function renderInsurgencies() {
-    const container = document.getElementById("insurgencies");
-    if (!insurgency || insurgency.campaigns.length === 0) {
-      container.innerHTML = "";
-      container.classList.add("hidden");
-      return;
-    }
-    container.classList.remove("hidden");
-    container.innerHTML = insurgency.campaigns.map(c => {
-      const pirate = pirateOf(c.pirate);
-      const entries = Object.entries(c.systems || {});
-      const corrupted = entries.filter(([, v]) => v[0] >= 5).length;
-      const suppressed = entries.filter(([, v]) => v[2] >= 5).length;
-      return `
-        <div class="ops-ins-card">
-          <div class="ops-ins-head">${esc(pirate.name)}</div>
-          <div class="ops-ins-body">
-            ${t("ins_origin")}: <span class="strong">${esc(c.origin?.name ?? "?")}</span>
-            · ${entries.length} ${t("ins_affected")}
-            · ${t("ins_corruption")} 5/5: ${corrupted}
-            · ${t("ins_suppression")} 5/5: ${suppressed}
-          </div>
-        </div>
-      `;
-    }).join("");
-  }
-
-
   /* ---------- systems table ---------- */
 
   /* Status is derived purely from VP% (not ESI's contested/vulnerable enum)
      per the Ops Room design: >=85 critical, >=30 contested, else stable. */
   function statusTag(p) {
     if (p >= 85) return {
-      key: "crit", label: t("st_critical"), color: "var(--ops-min)",
-      bg: "color-mix(in srgb, var(--ops-min) 14%, transparent)", border: "color-mix(in srgb, var(--ops-min) 35%, transparent)"
+      key: "crit", label: t("st_critical"), color: "var(--min)",
+      bg: "color-mix(in srgb, var(--min) 14%, transparent)", border: "color-mix(in srgb, var(--min) 35%, transparent)"
     };
     if (p >= 30) return {
-      key: "cont", label: t("st_contested"), color: "var(--ops-ama)",
-      bg: "color-mix(in srgb, var(--ops-ama) 12%, transparent)", border: "color-mix(in srgb, var(--ops-ama) 35%, transparent)"
+      key: "cont", label: t("st_contested"), color: "var(--ama)",
+      bg: "color-mix(in srgb, var(--ama) 12%, transparent)", border: "color-mix(in srgb, var(--ama) 35%, transparent)"
     };
     return {
-      key: "stab", label: t("st_stable"), color: "var(--ops-dim2)",
-      bg: "color-mix(in srgb, var(--ops-dim) 15%, transparent)", border: "var(--ops-line)"
+      key: "stab", label: t("st_stable"), color: "var(--dim2)",
+      bg: "color-mix(in srgb, var(--dim) 15%, transparent)", border: "var(--line)"
     };
   }
 
@@ -611,9 +544,11 @@ const [WarzonesView, MapView] = (() => {
   /* Advantage colored by whichever side it favors: positive = occupier,
      negative = the enemy (attacker), zero/unknown = neutral. */
   function advColor(v, occColor, enemyColor) {
-    if (v === null || v === 0) return "var(--ops-body)";
+    if (v === null || v === 0) return "var(--txt2)";
     return v > 0 ? occColor : enemyColor;
   }
+
+  const ROLE_ORDER = ["frontline", "command", "rearguard"];
 
   function visibleRows() {
     let rows = data.systems.filter(s => s.contested !== "uncontested");
@@ -640,7 +575,8 @@ const [WarzonesView, MapView] = (() => {
       adv: (a, b) => (a.adv ?? -999) - (b.adv ?? -999),
       kills: (a, b) => a.kills - b.kills,
       jumps: (a, b) => a.jmp - b.jmp,
-      vp: (a, b) => a.pct - b.pct
+      vp: (a, b) => a.pct - b.pct,
+      role: (a, b) => ROLE_ORDER.indexOf(classes.get(a.s.solar_system_id)) - ROLE_ORDER.indexOf(classes.get(b.s.solar_system_id))
     }[sortKey] || ((a, b) => a.pct - b.pct);
 
     withMeta.sort((a, b) => sortDir === "asc" ? cmp(a, b) : -cmp(a, b));
@@ -654,162 +590,208 @@ const [WarzonesView, MapView] = (() => {
   ];
 
   function renderFilterChips() {
-    const container = document.getElementById("wz-filter-chips");
+    const container = document.getElementById("page-chips");
     container.innerHTML = WZ_FILTERS.map(f => `
-      <button class="ops-chip${wzFilter === f.id ? " active" : ""}" data-id="${f.id}">${f.labelKey ? t(f.labelKey) : f.label}</button>
+      <button class="chip${wzFilter === f.id ? " active" : ""}" data-id="${f.id}">${f.labelKey ? t(f.labelKey) : f.label}</button>
     `).join("");
     container.querySelectorAll("button").forEach(btn => {
       btn.addEventListener("click", () => { wzFilter = btn.dataset.id; renderTable(); });
     });
   }
 
-  /* key === sortKey's own key normally, but the STATUS column sorts by VP
-     without ever showing itself as the active/arrowed column (design spec). */
+  /* Role (frontline / command / rearguard) replaces the old VP-derived status
+     column: it comes from FwLogic.classify() and is what actually governs LP
+     multipliers and plex respawn. Criticality still exists — it tints the row
+     and drives the overview's critical list — it just isn't a column. */
   const TABLE_COLS = () => [
-    { key: "system", label: t("th_system"), cls: "c-system" },
-    { key: "region", label: t("th_region"), cls: "c-region" },
+    { key: "system", label: t("th_system"), cls: "c-sys" },
+    { key: "region", label: t("th_region"), cls: "c-reg" },
     { key: "occ", label: t("th_occupier"), cls: "c-occ" },
-    { key: "vp", label: t("th_status"), cls: "c-status", noActive: true },
-    { key: "vp", label: t("th_vp").replace(" ", "\n"), cls: "c-vp" },
-    { key: "delta", label: t("th_delta"), cls: "c-delta" },
+    { key: "role", label: t("th_class"), cls: "c-role" },
+    { key: "vp", label: t("th_vp"), cls: "c-vp" },
+    { key: "delta", label: t("th_delta"), cls: "c-d" },
     { key: "adv", label: t("th_adv_short"), cls: "c-adv" },
-    { key: "kills", label: t("th_kills1h").replace(" ", "\n"), cls: "c-kills" },
-    { key: "jumps", label: t("th_jumps"), cls: "c-jumps" }
+    { key: "kills", label: t("th_kills1h"), cls: "c-kills" }
   ];
 
   function renderTableHead() {
-    const head = document.getElementById("contested-head");
+    const head = document.getElementById("sys-head");
     head.innerHTML = TABLE_COLS().map(c => {
-      const active = !c.noActive && c.key === sortKey;
-      const arrow = active ? (sortDir === "asc" ? "▲" : "▼") : "";
-      return `<button class="${c.cls}${active ? " active" : ""}" data-key="${c.key}">${esc(c.label)} ${arrow}</button>`;
+      const active = c.key === sortKey;
+      const arrow = active ? (sortDir === "asc" ? " ▲" : " ▼") : "";
+      return `<button class="${c.cls}${active ? " sorted" : ""}" data-key="${c.key}">${esc(c.label)}${arrow}</button>`;
     }).join("");
     head.querySelectorAll("button").forEach(btn => {
       btn.addEventListener("click", () => {
         const key = btn.dataset.key;
-        /* New column: name/region default ascending (A-Z), everything else
+        /* New column: name/region/role default ascending, everything else
            starts high-to-low. Same column again: flip direction. */
-        sortDir = (key === sortKey) ? (sortDir === "asc" ? "desc" : "asc") : (key === "system" || key === "region") ? "asc" : "desc";
+        sortDir = (key === sortKey) ? (sortDir === "asc" ? "desc" : "asc")
+          : ["system", "region", "role"].includes(key) ? "asc" : "desc";
         sortKey = key;
         renderTable();
       });
     });
   }
 
-  function rowDetailHtml(s, netAdv, delta) {
-    const id = s.solar_system_id;
-    const fac = opsFactionOf(s.occupier_faction_id);
-    const enemy = opsFactionOf(enemyFactionOf(s.occupier_faction_id));
-    let deltaTxt = "—";
-    if (delta === "flip") deltaTxt = t("delta_flip");
-    else if (typeof delta === "number") deltaTxt = `${delta > 0 ? "+" : ""}${delta.toFixed(1)}% / 24h`;
+  /* Colours and derived labels shared by the row, the card and the detail. */
+  function rowStyle(sys, p, delta) {
+    const fac = factionOf(sys.occupier_faction_id);
+    const enemy = factionOf(enemyFactionOf(sys.occupier_faction_id));
+    const st = statusTag(p);
+    const cls = classes.get(sys.solar_system_id) || "rearguard";
+    /* Delta colour: the enemy's colour while contested% is rising (bad for
+       the occupier), dim otherwise — not a fixed red/green scale. */
+    let deltaTxt = "—", deltaColor = "var(--dim)";
+    if (delta === "flip") { deltaTxt = t("delta_flip"); deltaColor = enemy.color; }
+    else if (typeof delta === "number" && delta > 0) { deltaTxt = `▲ ${delta.toFixed(1)}%`; deltaColor = enemy.color; }
+    else if (typeof delta === "number" && delta < 0) { deltaTxt = `▼ ${Math.abs(delta).toFixed(1)}%`; }
+    return { fac, enemy, st, cls, deltaTxt, deltaColor };
+  }
+
+  function rowDetailHtml(sys, netAdv, delta) {
+    const id = sys.solar_system_id;
+    const { fac, enemy, cls } = rowStyle(sys, pct(sys), delta);
+    let trend = "—";
+    if (delta === "flip") trend = t("delta_flip");
+    else if (typeof delta === "number") trend = `${delta > 0 ? "+" : ""}${delta.toFixed(1)}% / 24h`;
+    const cells = [
+      { k: t("th_occupier"), v: fac.name, color: fac.color },
+      { k: t("th_class"), v: t("class_" + cls), color: "var(--txt)" },
+      { k: t("th_adv"), v: fmtAdv(netAdv), color: advColor(netAdv, fac.color, enemy.color) },
+      { k: t("det_trend_short"), v: trend, color: "var(--txt)" },
+      { k: t("th_kills1h"), v: fmtNum(kills.get(id) || 0), color: "var(--txt)" },
+      { k: t("th_jumps"), v: fmtNum(traffic.get(id) || 0), color: "var(--txt)" }
+    ];
     return `
-      <div class="ops-detail">
-        <div><div class="dl">${t("th_occupier")}</div><div class="dv" style="color:${fac.color}">${esc(fac.name)}</div></div>
-        <div><div class="dl">${t("th_adv")}</div><div class="dv" style="color:${advColor(netAdv, fac.color, enemy.color)}">${fmtAdv(netAdv)}</div></div>
-        <div><div class="dl">${t("det_activity")}</div><div class="dv">${fmtNum(kills.get(id) || 0)} Kills · ${fmtNum(traffic.get(id) || 0)} Jumps</div></div>
-        <div><div class="dl">${t("det_trend_short")}</div><div class="dv">${deltaTxt}</div></div>
-        <div style="flex:1;min-width:200px"><div class="dl">${t("det_note")}</div><div class="dv" style="color:var(--ops-dim2);font-size:11px;line-height:1.5">${esc(rowNote(s))}</div></div>
+      <div style="padding:14px 18px;border-top:1px solid var(--line2);background:var(--surf2)">
+        <div style="display:flex;flex-wrap:wrap;gap:22px">
+          ${cells.map(c => `<div><div class="stat-k">${esc(c.k)}</div><div class="stat-v" style="font-size:14px;color:${c.color}">${esc(c.v)}</div></div>`).join("")}
+        </div>
+        <div class="detail-links" style="margin-top:14px;max-width:280px">
+          <a href="${zkillUrl(id)}" target="_blank" rel="noopener">zKillboard</a>
+          <a href="${dotlanUrl(sysName(id))}" target="_blank" rel="noopener">Dotlan</a>
+        </div>
       </div>
     `;
   }
 
-  /* Short auto-generated situation line — the design mock uses free text here;
-     ours is derived from what we already know about the system. */
-  function rowNote(s) {
-    const cls = classes.get(s.solar_system_id) || "rearguard";
-    return `${t("class_" + cls)} · ${t("status_" + s.contested)}`;
+  function toggleRow(id) {
+    openRows.has(id) ? openRows.delete(id) : openRows.add(id);
+    renderTable();
   }
 
   function renderTable() {
     renderFilterChips();
-    renderTableHead();
 
-    const body = document.getElementById("contested-body");
-    body.innerHTML = "";
-
+    const table = document.getElementById("sys-body");
+    const cards = document.getElementById("sys-cards");
+    const head = document.getElementById("sys-head");
     const rows = visibleRows();
+
+    head.innerHTML = "";
+    table.innerHTML = "";
+    cards.innerHTML = "";
+
     if (rows.length === 0) {
-      body.innerHTML = `<div class="ops-row" style="cursor:default">${t("contested_none")}</div>`;
+      table.innerHTML = `<div class="trow">${t("contested_none")}</div>`;
       return;
     }
 
-    for (const { s, pct: p, kills: k, jmp, delta, adv: netAdv } of rows) {
-      const id = s.solar_system_id;
-      const fac = opsFactionOf(s.occupier_faction_id);
-      const enemy = opsFactionOf(enemyFactionOf(s.occupier_faction_id));
-      const st = statusTag(p);
-      /* Delta color: enemy's color while contested% is rising (bad for the
-         occupier), dim otherwise — not a fixed red/green scale. */
-      let deltaTxt = "—", deltaColor = "var(--ops-dim)";
-      if (delta === "flip") { deltaTxt = t("delta_flip"); deltaColor = enemy.color; }
-      else if (typeof delta === "number" && delta > 0) { deltaTxt = `▲ ${delta.toFixed(1)}%`; deltaColor = enemy.color; }
-      else if (typeof delta === "number" && delta < 0) { deltaTxt = `▼ ${Math.abs(delta).toFixed(1)}%`; }
+    /* Narrow and wide are alternatives, never both in the DOM at once —
+       App.isNarrow() tracks the same breakpoint the stylesheet switches on. */
+    const narrow = App.isNarrow();
+    if (!narrow) renderTableHead();
+    const host = narrow ? cards : table;
 
-      const row = document.createElement("div");
-      row.className = "ops-row" + (st.key === "crit" ? " critical" : "");
-      row.innerHTML = `
-        <span class="c-system">
-          <span class="sys-name">${esc(sysName(id))}</span>
-          <a class="ops-ext-icon" href="${zkillUrl(id)}" target="_blank" rel="noopener" title="zKillboard">ZKB</a>
-          <a class="ops-ext-icon" href="${dotlanUrl(sysName(id))}" target="_blank" rel="noopener" title="Dotlan">DTL</a>
-        </span>
-        <span class="c-region">${esc(sysRegion(id))}</span>
-        <span class="c-occ" style="color:${fac.color}">${esc(fac.key[0].toUpperCase() + fac.key.slice(1))}</span>
-        <span class="c-status"><span class="ops-status-tag" style="background:${st.bg};color:${st.color};border-color:${st.border}">${st.label}</span></span>
-        <span class="c-vp" style="color:${enemy.color}">${p.toFixed(1)}%</span>
-        <span class="c-delta" style="color:${deltaColor}">${deltaTxt}</span>
-        <span class="c-adv" style="color:${advColor(netAdv, fac.color, enemy.color)}">${fmtAdv(netAdv)}</span>
-        <span class="c-kills">${fmtNum(k)}</span>
-        <span class="c-jumps">${fmtNum(jmp)}</span>
-      `;
-      row.addEventListener("click", (e) => {
-        if (e.target.closest(".ops-ext-icon")) return;
-        openRows.has(id) ? openRows.delete(id) : openRows.add(id);
-        renderTable();
-      });
-      body.appendChild(row);
-      if (openRows.has(id)) body.insertAdjacentHTML("beforeend", rowDetailHtml(s, netAdv, delta));
+    for (const { s: sys, pct: p, kills: k, delta, adv: netAdv } of rows) {
+      const id = sys.solar_system_id;
+      const { fac, enemy, st, cls, deltaTxt, deltaColor } = rowStyle(sys, p, delta);
+      const el = document.createElement("button");
+
+      if (narrow) {
+        el.className = "card";
+        el.style.borderLeft = `3px solid ${fac.color}`;
+        el.innerHTML = `
+          <span class="card-head">
+            <span class="card-title">${esc(sysName(id))}</span>
+            <span class="card-num" style="color:${enemy.color}">${p.toFixed(1)}%</span>
+          </span>
+          <span class="card-meta">${esc(sysRegion(id))} · ${esc(fac.name)}</span>
+          <span class="bar" style="margin:10px 0"><span style="width:${Math.min(100, p).toFixed(1)}%;background:${enemy.color}"></span></span>
+          <span class="card-facts">
+            <span class="tag" style="color:${st.color}">${st.label}</span>
+            <span class="tag" style="color:var(--dim2)">${esc(t("class_" + cls))}</span>
+            <span>Δ24h <b style="color:${deltaColor}">${deltaTxt}</b></span>
+            <span>ADV <b>${fmtAdv(netAdv)}</b></span>
+            <span>KILLS <b>${fmtNum(k)}</b></span>
+          </span>`;
+      } else {
+        el.className = "trow" + (st.key === "crit" ? " crit" : "");
+        el.innerHTML = `
+          <span class="c-sys">
+            <span class="diamond" style="background:${fac.color}"></span>
+            <span class="nm">${esc(sysName(id))}</span>
+          </span>
+          <span class="c-reg">${esc(sysRegion(id))}</span>
+          <span class="c-occ" style="color:${fac.color}">${esc(fac.name)}</span>
+          <span class="c-role"><span class="tag" style="color:${st.key === "crit" ? st.color : "var(--dim2)"}">${esc(t("class_" + cls))}</span></span>
+          <span class="c-vp">
+            <span class="bar"><span style="width:${Math.min(100, p).toFixed(1)}%;background:${enemy.color}"></span></span>
+            <span class="val">${p.toFixed(1)}%</span>
+          </span>
+          <span class="c-d" style="color:${deltaColor}">${deltaTxt}</span>
+          <span class="c-adv" style="color:${advColor(netAdv, fac.color, enemy.color)}">${fmtAdv(netAdv)}</span>
+          <span class="c-kills">${fmtNum(k)}</span>`;
+      }
+
+      el.addEventListener("click", () => toggleRow(id));
+      host.appendChild(el);
+      if (openRows.has(id)) host.insertAdjacentHTML("beforeend", rowDetailHtml(sys, netAdv, delta));
     }
   }
 
-  /* ---------- recent system changes (last 48h) ---------- */
-
-  function renderChangesPanel() {
-    const list = document.getElementById("changes-list");
-    if (!list) return;
-    const cutoff = Date.now() / 1000 - 48 * 3600;
-    const recent = histFlips.filter(f => f.t >= cutoff).sort((a, b) => b.t - a.t).slice(0, 8);
-    if (recent.length === 0) {
-      list.innerHTML = `<div class="ops-changes-empty">${t("flips_none")}</div>`;
-      return;
-    }
-    list.innerHTML = recent.map(f => {
-      const from = opsFactionOf(f.from);
-      const to = opsFactionOf(f.to);
-      const time = fmtDate(new Date(f.t * 1000), { hour: "2-digit", minute: "2-digit" });
-      return `
-        <div class="ops-changes-row">
-          <span style="flex:0 0 44px;color:var(--ops-dim)">${time}</span>
-          <span style="flex:1;color:var(--ops-text)">${esc(sysName(f.id))}</span>
-          <span style="color:${from.color}">${from.key.slice(0, 3).toUpperCase()}</span>
-          <span style="color:var(--ops-dim)">▶</span>
-          <span style="color:${to.color}">${to.key.slice(0, 3).toUpperCase()}</span>
-        </div>
-      `;
-    }).join("");
+  /* Both warzones condensed for the header strip, which every tab shows. */
+  function frontStripRows() {
+    if (!data) return [];
+    return WARZONES.map(wz => {
+      const facA = factionOf(wz.a);
+      const facB = factionOf(wz.b);
+      const held = f => data.systems.filter(x => x.occupier_faction_id === f).length;
+      const a = held(wz.a), b = held(wz.b);
+      return {
+        tag: `${facA.short}/${facB.short}`,
+        a, b,
+        aColor: facA.color,
+        bColor: facB.color,
+        pct: `${(a + b ? a / (a + b) * 100 : 50).toFixed(1)}%`
+      };
+    });
   }
 
   function render() {
     if (!data) return;
-    renderCards();
-    renderInsurgencies();
+    App.renderFrontStrip(frontStripRows());
     renderTable();
-    renderChangesPanel();
   }
+
+  /* The overview tab needs the same occupancy/kills/insurgency load; this
+     facade lets it reuse the fetch (and its 60 s reuse window) instead of
+     issuing a second round of ESI requests. */
+  const FwData = {
+    load,
+    systems: () => data?.systems ?? [],
+    stats: () => data?.stats ?? [],
+    kills: () => kills,
+    classes: () => classes,
+    insurgency: () => insurgency,
+    flips: () => histFlips,
+    frontStripRows, sysName, sysRegion, pct, statusTag, delta24h
+  };
 
   return [
     { load, render, skeleton },
-    { load, render: renderMapTab }
+    { load, render: renderMapTab },
+    FwData
   ];
 })();
