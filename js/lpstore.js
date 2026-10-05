@@ -161,6 +161,29 @@ const LpStoreView = (() => {
       ...(r.required_items || []).map(x => x.type_id)
     ]);
     await ESI.names(typeIds);
+    /* Jita prices are part of the build's snapshot (tools/fetch_esi.py
+       prices exactly this shortlist), so they are applied right away
+       instead of behind a button. Without the file the list stays on
+       average prices. */
+    try {
+      await applyJita();
+    } catch { /* average prices */ }
+  }
+
+  async function applyJita() {
+    const shortlist = evaluate(offerCache.get(currentCorp) || [], false)
+      .sort((a, b) => b.iskPerLp - a.iskPerLp)
+      .slice(0, CONFIG.LP_JITA_ROWS);
+    await fetchJitaBatch(shortlist.flatMap(r => [
+      r.type_id,
+      ...(r.required_items || []).map(x => x.type_id)
+    ]));
+    if (shortlist.some(r => ESI.jita(r.type_id))) jitaMode = true;
+    const rows = currentRows();
+    await ESI.names(rows.flatMap(r => [
+      r.type_id,
+      ...(r.required_items || []).map(x => x.type_id)
+    ]));
   }
 
   /* Refine the current top rows with live Jita 4-4 order-book prices. */
@@ -210,13 +233,10 @@ const LpStoreView = (() => {
     });
   }
 
-  /* This layout gives each view one control slot in the page head; the LP
-     tab spends it on the Jita repricing toggle. */
+  /* No button any more: Jita prices come with the snapshot (see load()).
+     Only the line naming the price basis stays. */
   function renderJitaButton() {
-    const container = document.getElementById("page-chips");
-    const label = jitaLoading ? t("lp_jita_loading") : (jitaMode ? "↻ " + t("lp_jita_reload") : "▼ " + t("lp_jita_btn"));
-    container.innerHTML = `<button class="chip${jitaMode ? " active" : ""}" id="lp-jita"${jitaLoading ? " disabled" : ""}>${esc(label)}</button>`;
-    container.querySelector("#lp-jita").addEventListener("click", refineWithJita);
+    document.getElementById("page-chips").innerHTML = "";
     document.getElementById("lp-mode").textContent = jitaMode ? t("lp_mode_jita") : t("lp_mode_avg");
   }
 
