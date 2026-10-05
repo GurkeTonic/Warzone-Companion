@@ -4,7 +4,8 @@
 Produces a single plain-script data file consumed by the frontend:
   - k-space stargate adjacency graph (for jump counts and frontline logic)
   - system names and regions (for search, tables, and the warzone map)
-  - factional warfare system set with 2D map positions (from ESI + SDE)
+  - factional warfare system set with schematic 2D and geographic 3D
+    map positions (from ESI + SDE)
   - Military Campaigns with objectives (official titles, DE/EN texts)
 
 Usage:
@@ -80,6 +81,7 @@ def main():
                 "region": s["regionID"],
                 "sec": round(s["securityStatus"], 2),
                 "pos": s.get("position2D"),
+                "pos3": s.get("position"),
             }
 
         graph = {sid: [] for sid in systems}
@@ -129,6 +131,9 @@ def main():
             "sec": s["sec"],
             "x": s["pos"]["x"] if s["pos"] else None,
             "y": s["pos"]["y"] if s["pos"] else None,
+            # Geographic 3D position for the map's 3D view, in light years
+            # (the SDE gives metres; 1 ly = 9.4607e15 m), two decimals.
+            "p3": [round(s["pos3"][k] / 9.4607e15, 2) for k in ("x", "y", "z")] if s.get("pos3") else None,
         }
 
     payload = {
