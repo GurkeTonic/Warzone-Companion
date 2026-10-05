@@ -2,7 +2,7 @@
 
 A companion site for EVE Online's Factional Warfare.
 
-**Live: https://evewarzone.com**
+**Live: https://warzone.tonicdock.com**
 
 Runs entirely in your browser, straight from EVE's own public game data —
 no account, no login, no cookies, no tracking. Every visit shows the

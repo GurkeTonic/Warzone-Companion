@@ -5,7 +5,7 @@ labels: bug
 ---
 
 **Page / tab**
-e.g. https://evewarzone.com/map/
+e.g. https://warzone.tonicdock.com/map/
 
 **What happened**
 

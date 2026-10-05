@@ -349,7 +349,7 @@ def write_flip_feed(flips):
     names = resolve_names([f["id"] for f in flips])
     payload = {
         "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "source": "https://evewarzone.com — snapshots every 30 minutes",
+        "source": "https://warzone.tonicdock.com — snapshots every 30 minutes",
         "flips": [
             {
                 "time": datetime.fromtimestamp(f["t"], timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
