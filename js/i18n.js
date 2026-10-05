@@ -9,7 +9,7 @@ const I18N = {
     paused_label: "PAUSIERT",
     refresh: "Aktualisieren",
     err_prefix: "ESI-Abruf fehlgeschlagen: ",
-    err_hint: "Prüfe die Internetverbindung oder den ESI-Status unter esi.evetech.net.",
+    err_hint: "Prüfe die Internetverbindung und lade die Seite in ein paar Minuten neu.",
     err_rate_limit: "ESI-Rate-Limit erreicht. Kurz warten, dann erneut versuchen.",
 
     tab_warzones: "Warzones",
@@ -22,7 +22,7 @@ const I18N = {
 
     faq_title: "Häufige Fragen",
     faq_q_data: "Woher kommen die Daten?",
-    faq_a_data: "Live-Daten kommen direkt von ESI (öffentliche Endpoints, client-seitig bei Tab-Aufruf abgerufen — kein Login, kein Tracking). Advantage stammt vom offiziellen War Report auf eveonline.com und wird alle 30 Minuten per GitHub Action gespiegelt. Statische Inhalte (Kartenpositionen, Systemnamen, Kampagnen) kommen aus CCPs offiziellem Static Data Export. Alles ist im GitHub-Repo öffentlich nachprüfbar — jeder Daten-Snapshot ist ein Commit.",
+    faq_a_data: "Alle Daten holt eine GitHub Action alle 30 Minuten von ESI (öffentliche Endpoints) und vom offiziellen War Report auf eveonline.com (Advantage) und baut daraus die Seite. Dein Browser lädt nur Dateien von dieser Seite — kein Login, kein Tracking, keine Abfrage bei CCP. ESI selbst erneuert diese Daten höchstens alle 30 Minuten, Kills stündlich, Ranglisten täglich. Statische Inhalte (Kartenpositionen, Systemnamen, Kampagnen) kommen aus CCPs offiziellem Static Data Export. Code und Werkzeuge sind im GitHub-Repo öffentlich nachprüfbar, die Historie wird täglich im Branch data gesichert.",
     faq_q_map: "Wie lese ich die Karte?",
     faq_a_map: "Jeder Kreis ist ein System, die Farbe zeigt den Besatzer, das Kürzel die ersten zwei Buchstaben des Namens. Weißer Ring = umkämpft, roter Ring = verwundbar (iHub angreifbar), Leuchten = Kills der letzten Stunde, Linien = Stargate-Verbindungen. Mausrad zoomt auf den Cursor, Ziehen verschiebt, Doppelklick setzt zurück — ab doppeltem Zoom erscheinen die vollen Systemnamen. Details pro System im Tooltip.",
     faq_q_roles: "Was bedeuten Frontline, Command Ops und Rearguard?",
@@ -215,7 +215,7 @@ const I18N = {
     ago_h: "Std",
     map_pick: "System anklicken für Details",
 
-    footer_source: "Datenquelle: EVE Swagger Interface (ESI), ausschließlich öffentliche Endpoints. Abruf erfolgt client-seitig bei Tab-Aufruf.",
+    footer_source: "Datenquelle: EVE Swagger Interface (ESI), ausschließlich öffentliche Endpoints. Alle 30 Minuten beim Bau der Seite abgerufen, nicht von deinem Browser.",
     ts_label: "Stand"
   },
   en: {
@@ -225,7 +225,7 @@ const I18N = {
     paused_label: "PAUSED",
     refresh: "Refresh",
     err_prefix: "ESI request failed: ",
-    err_hint: "Check your internet connection or the ESI status at esi.evetech.net.",
+    err_hint: "Check your internet connection and reload the page in a few minutes.",
     err_rate_limit: "ESI rate limit reached. Wait a moment, then try again.",
 
     tab_warzones: "Warzones",
@@ -238,7 +238,7 @@ const I18N = {
 
     faq_title: "Frequently Asked Questions",
     faq_q_data: "Where does the data come from?",
-    faq_a_data: "Live data comes straight from ESI (public endpoints, fetched client-side when a tab is opened — no login, no tracking). Advantage comes from the official war report on eveonline.com, mirrored every 30 minutes by a GitHub Action. Static content (map positions, system names, campaigns) comes from CCP's official Static Data Export. Everything is publicly auditable in the GitHub repo — every data snapshot is a commit.",
+    faq_a_data: "A GitHub Action fetches all data every 30 minutes from ESI (public endpoints) and from the official war report on eveonline.com (Advantage) and builds the site from it. Your browser only loads files from this site — no login, no tracking, no request to CCP. ESI itself refreshes this data every 30 minutes at most, kills hourly, leaderboards daily. Static content (map positions, system names, campaigns) comes from CCP's official Static Data Export. Code and tools are publicly auditable in the GitHub repo; the history is backed up daily in the data branch.",
     faq_q_map: "How do I read the map?",
     faq_a_map: "Each circle is a system, the color shows the occupier, the code shows the first two letters of the name. White ring = contested, red ring = vulnerable (iHub attackable), glow = kills in the last hour, lines = stargate connections. The wheel zooms toward the cursor, dragging pans, double click resets — full system names appear from 2× zoom. Per-system details are in the tooltip.",
     faq_q_roles: "What do Frontline, Command Ops, and Rearguard mean?",
@@ -431,7 +431,7 @@ const I18N = {
     ago_h: "h",
     map_pick: "Click a system for details",
 
-    footer_source: "Data source: EVE Swagger Interface (ESI), public endpoints only. Fetched client-side when a tab is opened.",
+    footer_source: "Data source: EVE Swagger Interface (ESI), public endpoints only. Fetched every 30 minutes when the site is built, not by your browser.",
     ts_label: "As of"
   }
 };

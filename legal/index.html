@@ -33,9 +33,9 @@
         This is a private, non-commercial fan project for EVE Online — no
         products, no revenue, no ads. The site sets no cookies, uses no
         analytics or tracking, and has no accounts or forms. To work, your
-        browser talks to Cloudflare (delivery), GitHub Pages (hosting) and
-        CCP's ESI API (game data); all three technically receive your IP
-        address — see their
+        browser talks to Cloudflare (delivery) and GitHub Pages (hosting);
+        both technically receive your IP address. Game data is fetched from
+        CCP's ESI when the site is built, not by your browser — see their
         privacy policies linked below. Two settings (color theme, auto
         refresh) are stored only in your browser's localStorage and never
         leave it. Contact:
@@ -97,16 +97,14 @@
         an einer sicheren und schnellen Auslieferung).
       </p>
 
-      <h3>4. Abruf von Spieldaten (EVE Online / CCP)</h3>
+      <h3>4. Spieldaten (EVE Online / CCP)</h3>
       <p>
-        Die angezeigten Spieldaten lädt Ihr Browser direkt von Schnittstellen
-        des Spielbetreibers CCP hf., Grandagarður 8, 101 Reykjavík, Island
-        (Domains: <span class="mono">esi.evetech.net</span>). Dabei übermittelt
-        Ihr Browser technisch bedingt Ihre IP-Adresse an CCP. Island ist Teil
-        des EWR; es gilt europäisches Datenschutzrecht. Details:
-        <a href="https://www.eveonline.com/de/legal/privacy-policy" target="_blank" rel="noopener">CCP Privacy Policy</a>.
-        Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (Kernfunktion der
-        Website: Anzeige aktueller Spieldaten).
+        Die angezeigten Spieldaten (ESI unter
+        <span class="mono">esi.evetech.net</span> und der War Report auf
+        eveonline.com, beides vom Spielbetreiber CCP hf., Grandagarður 8, 101
+        Reykjavík, Island) werden alle 30 Minuten beim Bau der Website
+        abgerufen und als Dateien mit ausgeliefert. Ihr Browser nimmt dabei
+        keinen Kontakt zu CCP auf, CCP erhält keine Daten über Ihren Besuch.
       </p>
 
       <h3>5. Lokale Speicherung (localStorage)</h3>
@@ -133,7 +131,7 @@
         Datenübertragbarkeit (Art. 20) und Widerspruch (Art. 21) sowie das Recht
         auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde (Art. 77). Da diese
         Website selbst keine personenbezogenen Daten speichert, richten Sie
-        Anfragen zu Verbindungsdaten bitte auch an die unter 3. und 4. genannten
+        Anfragen zu Verbindungsdaten bitte auch an die unter 3. genannten
         Anbieter.
       </p>
 

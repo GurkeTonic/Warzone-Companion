@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Mirror warzone data into data/ for the statically hosted frontend.
 
-Run by the scheduled GitHub Action (.github/workflows/warzone-data.yml)
-every 30 minutes; works locally too. Produces:
+Run by .github/workflows/deploy.yml every 30 minutes, before the site is
+built; works locally too. The workflow first restores these files from the
+live site (history.json falls back to the data branch), so the series
+continue. Produces:
 
   data/warzone.json  — current Advantage per system, from the war report API
                        on www.eveonline.com (no CORS headers, hence
@@ -33,7 +35,7 @@ every 30 minutes; works locally too. Produces:
   data/feed-flips.json — system flips as a stable, documented feed for
                        third parties (Discord bots etc.)
 
-Git history of these files doubles as a full, publicly auditable archive.
+history.json and feed-flips.json are backed up once a day in the data branch.
 """
 import json
 import statistics

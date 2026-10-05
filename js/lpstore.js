@@ -74,28 +74,14 @@ const LpStoreView = (() => {
     return j && j.sell > 0 ? j.sell : avgPrice(typeId);
   }
 
+  /* Jita 4-4 order book summary, precomputed per build by
+     tools/fetch_esi.py (same buy/sell/depth formula as before). */
   async function fetchJitaOrders(typeId) {
     if (jitaMap.has(typeId)) return;
-    const orders = await ESI.get(`/markets/${CONFIG.JITA_REGION}/orders`, {
-      type_id: typeId,
-      order_type: "all"
-    });
-    const buys = [];
-    let sell = 0;
-    for (const o of orders) {
-      if (o.location_id !== CONFIG.JITA_STATION) continue;
-      if (o.is_buy_order) {
-        buys.push(o);
-      } else {
-        if (sell === 0 || o.price < sell) sell = o.price;
-      }
-    }
-    const buy = buys.reduce((max, o) => Math.max(max, o.price), 0);
-    /* Executable depth: units sellable into buy orders within 5% of best. */
-    const buyDepth = buys
-      .filter(o => o.price >= buy * 0.95)
-      .reduce((sum, o) => sum + (o.volume_remain || 0), 0);
-    jitaMap.set(typeId, { buy, sell, buyDepth });
+    await ESI.loadJita();
+    const j = ESI.jita(typeId);
+    if (!j) throw new Error(`no Jita data for ${typeId}`);
+    jitaMap.set(typeId, j);
   }
 
   async function fetchJitaBatch(typeIds) {

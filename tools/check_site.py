@@ -12,6 +12,9 @@ is made:
             there, is not truncated, and is valid JavaScript (node --check).
   --pages   on every push: the subpages, routes.js and sitemap.xml match what
             tools/build_pages.py generates from index.html.
+  --esi     the snapshot from tools/fetch_esi.py is complete and fresh.
+  --history PREV   history.json did not lose data against the previous
+            published version PREV (a shrinking history means a broken run).
 
 Stdlib only (plus node for --static). Exit 1 on any failure.
 """
@@ -62,7 +65,9 @@ def check_data():
             fail(f"warzone.json: only {n} systems (expected about 160)")
         else:
             ok(f"warzone.json: {n} systems")
-        recent("warzone.json", w.get("fetched"), 2)
+        # The war report API is unofficial; when it is down the mirror keeps
+        # the last snapshot, and the frontend drops it after 24 h.
+        recent("warzone.json", w.get("fetched"), 24)
     i = load("insurgency.json")
     if i is not None:
         if not isinstance(i.get("campaigns"), list):
@@ -123,7 +128,62 @@ def check_pages():
         ok("subpages, routes.js and sitemap.xml match index.html")
 
 
-modes = set(sys.argv[1:]) or {"--data", "--static", "--pages"}
+def check_esi():
+    base = DATA / "esi"
+    need = ["fw/systems.json", "fw/stats.json", "universe/system_kills.json",
+            "universe/system_jumps.json", "fw/leaderboards/characters.json",
+            "fw/leaderboards/corporations.json", "affiliation.json", "corporations.json",
+            "markets/prices.json", "jita.json", "names.json", "meta.json"]
+    need += [f"loyalty/stores/{c}/offers.json" for c in (1000180, 1000182, 1000179, 1000181)]
+    for rel in need:
+        try:
+            d = json.loads((base / rel).read_text(encoding="utf-8"))
+        except (OSError, ValueError) as e:
+            fail(f"esi/{rel}: {e}")
+            continue
+        if not d:
+            fail(f"esi/{rel}: empty")
+    try:
+        meta = json.loads((base / "meta.json").read_text(encoding="utf-8"))
+        recent("esi/meta.json fw", meta.get("fw"), 1)
+        for group in ("leaderboards", "lp", "names"):
+            recent(f"esi/meta.json {group}", meta.get(group), 26)
+        recent("esi/meta.json jita", meta.get("jita"), 6)
+        ok(f"esi snapshot: {len(need)} files, fw fetched {meta.get('fw')}")
+    except (OSError, ValueError) as e:
+        fail(f"esi/meta.json: {e}")
+
+
+def check_history(prev_path):
+    try:
+        prev = json.loads(Path(prev_path).read_text(encoding="utf-8"))
+        new = json.loads((DATA / "history.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        fail(f"history: {e}")
+        return
+    for key in ("factions", "systems", "flips", "lp"):
+        a, b = len(prev.get(key) or []), len(new.get(key) or [])
+        # Old entries are pruned by age, a few per run; losing more than a
+        # tenth at once means the run started from a wrong or empty state.
+        if b < a * 0.9:
+            fail(f"history.json: {key} shrank from {a} to {b} entries")
+    last_prev = max((e["t"] for e in prev.get("factions") or []), default=0)
+    last_new = max((e["t"] for e in new.get("factions") or []), default=0)
+    if last_new < last_prev:
+        fail(f"history.json: newest entry {last_new} older than before ({last_prev})")
+    else:
+        ok(f"history.json: {len(new.get('factions') or [])} faction snapshots, none lost")
+
+
+args = sys.argv[1:]
+if "--history" in args:
+    i = args.index("--history")
+    check_history(args[i + 1])
+    del args[i:i + 2]
+if "--esi" in args:
+    args.remove("--esi")
+    check_esi()
+modes = set(args) or ({"--data", "--static", "--pages"} if not errors and not sys.argv[1:] else set())
 if "--data" in modes:
     check_data()
 if "--static" in modes:

@@ -104,9 +104,11 @@ const App = (() => {
       await tab.view.load();
       loaded.add(tabId);
       everLoaded.add(tabId);
-      /* Set before render() so a view with a better answer (a mirror's own
-         fetch timestamp, say) can still overwrite it. */
-      setUpdated(new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC");
+      /* The data comes from the build's ESI snapshot, so show when that was
+         fetched, not when the browser loaded it. Set before render() so a
+         view with a better answer (the campaigns mirror) can overwrite it. */
+      const stamp = await ESI.fetched("fw");
+      setUpdated((stamp || new Date().toISOString()).slice(0, 16).replace("T", " ") + " UTC");
       tab.view.render();
       setStatus("idle");
     } catch (err) {

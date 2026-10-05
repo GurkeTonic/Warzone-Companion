@@ -1,0 +1,125 @@
+name: Build and deploy
+
+# Fetches all data, checks it, builds the site and publishes it to GitHub
+# Pages. Replaces the old split of "mirror commits data every 30 minutes,
+# Pages serves main": data is no longer committed, visitors' browsers no
+# longer call ESI, and nothing reaches the live site unless every check
+# passed. A red run leaves the previous deployment online.
+#
+# State that grows from run to run (data/history.json and the other mirror
+# files) is taken from the live site, the way the Almanach does it. It is
+# backed up once a day in the "data" branch; if the live site cannot provide
+# it, the run falls back to that branch.
+on:
+  schedule:
+    - cron: '11,41 * * * *'   # ESI refreshes /fw/systems every 30 minutes
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      fresh:
+        description: 'Start without previous history (only for a deliberate reset)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write   # daily history backup to the data branch
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  SITE: https://warzone.tonicdock.com
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+
+      - name: Previous state from the live site
+        if: ${{ !inputs.fresh }}
+        run: |
+          mkdir -p data/esi
+          for f in history warzone insurgency campaigns feed-flips; do
+            curl -fsS --retry 3 -o "data/$f.json" "$SITE/data/$f.json" || rm -f "data/$f.json"
+          done
+          for f in meta jita; do
+            curl -fsS --retry 3 -o "data/esi/$f.json" "$SITE/data/esi/$f.json" || rm -f "data/esi/$f.json"
+          done
+          if ! python3 -c "import json,sys; h=json.load(open('data/history.json')); sys.exit(0 if len(h.get('factions',[]))>0 else 1)" 2>/dev/null; then
+            echo "::warning::history.json not available from $SITE, using the data branch"
+            git fetch --depth=1 origin data
+            git show origin/data:history.json > data/history.json
+          fi
+          cp data/history.json "$RUNNER_TEMP/prev_history.json"
+
+      - name: War report mirror and history
+        run: python3 tools/mirror_warzone.py
+
+      - name: ESI snapshot
+        run: python3 tools/fetch_esi.py
+
+      - name: Check data
+        run: |
+          if [ "${{ inputs.fresh }}" = "true" ]; then
+            python3 tools/check_site.py --data --esi --static --pages
+          else
+            python3 tools/check_site.py --data --esi --static --pages --history "$RUNNER_TEMP/prev_history.json"
+          fi
+
+      - name: Assemble site
+        run: |
+          mkdir _site
+          git ls-files | grep -v -E '^(\.github/|tools/|.*\.md$|serve\.py$|LICENSE$|\.gitignore$)' | xargs cp --parents -t _site
+          cp -r data _site/
+
+      - name: Every page in a real browser
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.63.0
+          npx playwright install --with-deps chromium
+          python3 -m http.server 8099 --bind 127.0.0.1 --directory _site &
+          sleep 1
+          node tools/smoke.mjs http://127.0.0.1:8099
+
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: _site }
+
+      # Once a day, or when the branch is missing: keep a copy of the growing
+      # state outside the live site.
+      - name: Back up history to the data branch
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch --depth=1 origin data 2>/dev/null; then
+            last=$(git log -1 --format=%ct origin/data)
+            age=$(( $(date +%s) - last ))
+            if [ "$age" -lt 72000 ]; then echo "backup is $((age/3600)) h old, skipping"; exit 0; fi
+            git worktree add -q "$RUNNER_TEMP/backup" origin/data
+            git -C "$RUNNER_TEMP/backup" checkout -q -B data
+          else
+            git worktree add -q --detach "$RUNNER_TEMP/backup"
+            git -C "$RUNNER_TEMP/backup" checkout -q --orphan data
+            git -C "$RUNNER_TEMP/backup" rm -rq .
+          fi
+          cp data/history.json data/feed-flips.json "$RUNNER_TEMP/backup/"
+          cd "$RUNNER_TEMP/backup"
+          git add history.json feed-flips.json
+          git commit -q -m "backup: history $(date -u +%Y-%m-%d)" && git push -q origin data || echo "nothing to back up"
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

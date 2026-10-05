@@ -4,9 +4,8 @@ A companion site for EVE Online's Factional Warfare.
 
 **Live: https://warzone.tonicdock.com**
 
-Runs entirely in your browser, straight from EVE's own public game data —
-no account, no login, no cookies, no tracking. Every visit shows the
-current state of the war.
+Built from EVE's own public game data every 30 minutes — no account, no
+login, no cookies, no tracking, and your browser never talks to CCP.
 
 ## What you'll find
 
@@ -26,10 +25,20 @@ Switch language (DE/EN) top right.
 
 ## How fresh is the data?
 
-Most of it loads live the moment you open a tab; the refresh button and
-optional auto-refresh (every 5 minutes) pull it again. A few things
-(Advantage, history, the flip log) are snapshotted in the background every
-30 minutes so there's something to chart over time.
+Every 30 minutes a GitHub Action (`.github/workflows/deploy.yml`) fetches
+everything from ESI and the war report, checks it, and publishes the site
+with the data as plain JSON files. ESI itself refreshes factional warfare
+every 30 minutes, kills and prices hourly and leaderboards daily, so that
+is as fresh as it gets. Auto-refresh (every 5 minutes) reloads those files.
+The growing history is carried over from the live site on every run and
+backed up daily in the `data` branch.
+
+To run it locally, fetch the data first:
+
+```
+python3 tools/mirror_warzone.py && python3 tools/fetch_esi.py
+python3 serve.py
+```
 
 ## Legal
 
