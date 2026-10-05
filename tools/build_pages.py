@@ -15,11 +15,9 @@ import re
 import sys
 from pathlib import Path
 
-from esi_shared import ESI_BASE, COMPAT_DATE, USER_AGENT
 
 ROOT = Path(__file__).resolve().parent.parent
 TEMPLATE = ROOT / "index.html"
-CONFIG_JS = ROOT / "js" / "config.js"
 BASE_URL = "https://warzone.tonicdock.com"
 
 ROOT_PAGE = {
@@ -146,23 +144,7 @@ def build_routes_js():
     )
 
 
-def sync_config_js():
-    """Keep CONFIG.ESI_BASE / COMPAT_DATE / USER_AGENT in js/config.js in
-    sync with tools/esi_shared.py — the single source both the Python tools
-    and the browser client draw from. Everything else in config.js (rows,
-    market settings, ...) is hand-maintained and left untouched."""
-    js = CONFIG_JS.read_text(encoding="utf-8")
-    js, n1 = re.subn(r'ESI_BASE: "[^"]*",', f'ESI_BASE: "{ESI_BASE}",', js, count=1)
-    js, n2 = re.subn(r'COMPAT_DATE: "[^"]*",', f'COMPAT_DATE: "{COMPAT_DATE}",', js, count=1)
-    js, n3 = re.subn(r'USER_AGENT: "[^"]*",', f'USER_AGENT: "{USER_AGENT}",', js, count=1)
-    if (n1, n2, n3) != (1, 1, 1):
-        sys.exit(f"js/config.js: expected 1 match each for ESI_BASE/COMPAT_DATE/USER_AGENT, got {(n1, n2, n3)}")
-    CONFIG_JS.write_text(js, encoding="utf-8", newline="\n")
-    print("synced js/config.js (ESI_BASE, COMPAT_DATE, USER_AGENT) from tools/esi_shared.py")
-
-
 def main():
-    sync_config_js()
 
     template = TEMPLATE.read_text(encoding="utf-8")
     for marker in ('<body data-tab="overview">', "<title>", 'rel="canonical"'):

@@ -43,6 +43,15 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
 
+      # ESI responses with their expires and ETag (tools/esi_client.py). A new
+      # key per run, restored from the newest: nothing is asked again before
+      # ESI says it has changed.
+      - uses: actions/cache/restore@v4
+        with:
+          path: .esi-cache
+          key: esi-${{ github.run_id }}
+          restore-keys: esi-
+
       - name: Previous state from the live site
         if: ${{ !inputs.fresh }}
         run: |
@@ -50,9 +59,14 @@ jobs:
           for f in history warzone insurgency campaigns feed-flips; do
             curl -fsS --retry 3 -o "data/$f.json" "$SITE/data/$f.json" || rm -f "data/$f.json"
           done
-          for f in meta jita; do
-            curl -fsS --retry 3 -o "data/esi/$f.json" "$SITE/data/esi/$f.json" || rm -f "data/esi/$f.json"
-          done
+          # The previous ESI snapshot, so a group ESI could not deliver this run
+          # (halted, error) keeps its last good files.
+          if curl -fsS --retry 3 -o data/esi/files.json "$SITE/data/esi/files.json"; then
+            python3 -c "import json; print('\n'.join(json.load(open('data/esi/files.json'))))" | while read -r f; do
+              mkdir -p "data/esi/$(dirname "$f")"
+              curl -fsS --retry 3 -o "data/esi/$f" "$SITE/data/esi/$f" || rm -f "data/esi/$f"
+            done
+          fi
           if ! python3 -c "import json,sys; h=json.load(open('data/history.json')); sys.exit(0 if len(h.get('factions',[]))>0 else 1)" 2>/dev/null; then
             echo "::warning::history.json not available from $SITE, using the data branch"
             git fetch --depth=1 origin data
@@ -60,11 +74,23 @@ jobs:
           fi
           cp data/history.json "$RUNNER_TEMP/prev_history.json"
 
+      # fetch_esi first: the mirror then gets /fw/systems, /fw/stats, prices
+      # and LP offers from the shared cache instead of asking ESI twice.
+      - name: ESI snapshot
+        run: python3 tools/fetch_esi.py
+
       - name: War report mirror and history
         run: python3 tools/mirror_warzone.py
 
-      - name: ESI snapshot
-        run: python3 tools/fetch_esi.py
+      - name: Keep the ESI cache for the next run
+        if: always()
+        run: python3 -c "import sys; sys.path.insert(0, 'tools'); import esi_client; esi_client.prune('.esi-cache')"
+
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: .esi-cache
+          key: esi-${{ github.run_id }}
 
       - name: Check data
         run: |

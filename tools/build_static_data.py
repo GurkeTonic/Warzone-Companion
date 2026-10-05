@@ -21,9 +21,7 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-from esi_shared import ESI_BASE, COMPAT_DATE, USER_AGENT
-
-ESI_FW_SYSTEMS = f"{ESI_BASE}/fw/systems?compatibility_date={COMPAT_DATE}"
+from esi_shared import client
 OUT_PATH = Path(__file__).resolve().parent.parent / "js" / "data" / "staticdata.js"
 
 # Wormhole/abyssal/void regions start at 11000000; k-space regions are below.
@@ -52,12 +50,8 @@ def loc(obj, keys=("de", "en")):
 
 
 def fetch_fw_system_ids():
-    req = urllib.request.Request(
-        ESI_FW_SYSTEMS,
-        headers={"Accept": "application/json", "User-Agent": USER_AGENT},
-    )
-    with urllib.request.urlopen(req, timeout=30) as res:
-        return {row["solar_system_id"] for row in json.load(res)}
+    """Through tools/esi_client.py, like every ESI request."""
+    return {row["solar_system_id"] for row in client().get("/fw/systems")}
 
 
 def main():

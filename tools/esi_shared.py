@@ -23,3 +23,13 @@ COMPAT_DATE = "2026-06-09"
 # bumping the project-wide date would silently change the schema of every
 # other route, so the newer date is opted into per route after verification.
 CAMPAIGNS_COMPAT_DATE = "2026-08-04"
+
+
+def client():
+    """The shared ESI client (tools/esi_client.py) with this project's
+    identification. Its cache sits in .esi-cache/ and is carried between
+    workflow runs by actions/cache."""
+    from pathlib import Path
+    from esi_client import Client
+    root = Path(__file__).resolve().parent.parent
+    return Client(ESI_BASE, COMPAT_DATE, USER_AGENT, root / ".esi-cache")

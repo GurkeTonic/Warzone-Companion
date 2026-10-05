@@ -2,14 +2,6 @@
 "use strict";
 
 const CONFIG = {
-  /* ESI_BASE, COMPAT_DATE, USER_AGENT are synced from tools/esi_shared.py by
-     tools/build_pages.py — edit the values there, not here, they get
-     overwritten on the next build. Sent as X-User-Agent on every ESI request
-     (browsers drop User-Agent on fetch) — see
-     developers.eveonline.com/docs/services/esi/best-practices */
-  ESI_BASE: "https://esi.evetech.net",
-  COMPAT_DATE: "2026-06-09",
-  USER_AGENT: "WarzoneCompanion/0.4 (webmaster@tonicbeacon.com; +https://github.com/GurkeTonic/Warzone-Companion)",
   CONTESTED_ROWS: 40,
   LP_ROWS: 50,
   LB_ROWS: 10,

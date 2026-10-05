@@ -34,14 +34,12 @@ degrades to "missing file", which the views already handle.
 """
 import json
 import sys
-import time
-import urllib.error
-import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 
-from esi_shared import ESI_BASE, COMPAT_DATE, USER_AGENT
+from esi_client import Halted
+from esi_shared import client
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "esi"
@@ -51,36 +49,20 @@ JITA_REGION = 10000002
 JITA_STATION = 60003760
 LP_JITA_ROWS = 25        # js/config.js CONFIG.LP_JITA_ROWS
 JITA_MAX_AGE_H = 2
-WORKERS = 6
+WORKERS = 4   # parallel requests; the docs ask to spread, not burst
 
 now = datetime.now(timezone.utc)
 NOW_ISO = now.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+ESI = client()
+
+
 def request(path, params=None, body=None):
-    q = {"compatibility_date": COMPAT_DATE, **(params or {})}
-    url = f"{ESI_BASE}{path}?" + "&".join(f"{k}={v}" for k, v in q.items())
-    data = json.dumps(body).encode() if body is not None else None
-    headers = {"Accept": "application/json", "User-Agent": USER_AGENT}
-    if data is not None:
-        headers["Content-Type"] = "application/json"
-    for attempt in range(3):
-        req = urllib.request.Request(url, data=data, headers=headers)
-        try:
-            with urllib.request.urlopen(req, timeout=30) as res:
-                return json.load(res)
-        except urllib.error.HTTPError as e:
-            # 420/429: ESI asks us to slow down. 5xx: try again shortly.
-            if e.code in (420, 429) or e.code >= 500:
-                wait = int(e.headers.get("Retry-After") or 0) or 5 * (attempt + 1)
-                print(f"  {path}: HTTP {e.code}, waiting {wait}s")
-                time.sleep(min(wait, 60))
-                continue
-            raise
-        except (urllib.error.URLError, TimeoutError) as e:
-            print(f"  {path}: {e}, retrying")
-            time.sleep(5 * (attempt + 1))
-    raise RuntimeError(f"ESI {path}: gave up after 3 attempts")
+    """Through tools/esi_client.py: expires, ETag, error and rate limits."""
+    if body is not None:
+        return ESI.post(path, body)
+    return ESI.get(path, params)
 
 
 def write(rel, payload):
@@ -94,6 +76,23 @@ meta = {}
 sizes = {}
 
 
+def prev_file(rel):
+    try:
+        return json.loads((OUT / rel).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+prev_meta_all = prev_file("meta.json")
+
+
+def age_of(group):
+    stamp = prev_meta_all.get(group)
+    if not stamp:
+        return None
+    return (now - datetime.fromisoformat(stamp.replace("Z", "+00:00"))).total_seconds() / 3600
+
+
 def done(group, *files):
     meta[group] = NOW_ISO
     for f, payload in files:
@@ -102,8 +101,11 @@ def done(group, *files):
 
 # ---------- core FW data: without it the build must fail ----------
 
-systems = request("/fw/systems")
-stats = request("/fw/stats")
+try:
+    systems = request("/fw/systems")
+    stats = request("/fw/stats")
+except Halted as e:
+    sys.exit(f"ESI halted before the core data: {e}")
 if not systems or not stats:
     sys.exit("ESI returned no factional warfare data")
 fw_ids = {s["solar_system_id"] for s in systems}
@@ -132,10 +134,20 @@ try:
     corps = request("/fw/leaderboards/corporations")
     char_ids = sorted(collect(chars, "character_id"))
     corp_ids = sorted(collect(corps, "corporation_id"))
-    affiliation = {}
-    for i in range(0, len(char_ids), 1000):
-        for e in request("/characters/affiliation", body=char_ids[i:i + 1000]):
+    # POST routes carry no cache headers. A pilot's militia changes rarely,
+    # so known pilots are taken from the previous file for up to a day and
+    # only new ones are asked for.
+    prev_aff = {int(k): v for k, v in prev_file("affiliation.json").items()}
+    fresh = age_of("affiliation") is not None and age_of("affiliation") < 24
+    affiliation = {c: prev_aff[c] for c in char_ids if fresh and c in prev_aff}
+    ask = [c for c in char_ids if c not in affiliation]
+    for i in range(0, len(ask), 1000):
+        for e in request("/characters/affiliation", body=ask[i:i + 1000]):
             affiliation[e["character_id"]] = e.get("faction_id")
+    if ask or not fresh:
+        meta["affiliation"] = NOW_ISO
+    else:
+        meta["affiliation"] = prev_meta_all.get("affiliation")
 
     def corp_faction(cid):
         try:
@@ -225,10 +237,14 @@ except Exception as e:
 # ---------- names ----------
 
 try:
-    ids = sorted(i for i in unresolved if isinstance(i, int))
+    # Names of items, pilots and corporations do not change in practice
+    # (renames are rare); only IDs not in the previous file are resolved.
+    names = {int(k): v for k, v in prev_file("names.json").items() if int(k) in unresolved}
+    ids = sorted(i for i in unresolved if isinstance(i, int) and i not in names)
     for i in range(0, len(ids), 900):
         for e in request("/universe/names", body=ids[i:i + 900]):
             names[e["id"]] = e["name"]
+    print(f"names: {len(ids)} resolved, {len(names) - len(ids)} reused")
     done("names", ("names.json", names))
 except Exception as e:
     print(f"names unavailable, keeping previous file: {e}")
@@ -240,4 +256,6 @@ except (OSError, ValueError):
     pass
 write("meta.json", {**prev, **meta})
 total = sum(sizes.values())
+write("files.json", sorted(str(p.relative_to(OUT)) for p in OUT.rglob("*.json") if p.name != "files.json"))
 print(f"data/esi: {len(sizes)} files, {total // 1024} kB, groups {', '.join(sorted(meta))}")
+print(ESI.summary())

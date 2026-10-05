@@ -45,7 +45,13 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-from esi_shared import ESI_BASE, COMPAT_DATE, CAMPAIGNS_COMPAT_DATE, USER_AGENT
+from esi_shared import CAMPAIGNS_COMPAT_DATE, USER_AGENT, client
+
+# Every ESI request goes through tools/esi_client.py (expires, ETag, error and
+# rate limits). tools/fetch_esi.py runs first in the workflow, so the routes
+# both need (/fw/systems, /fw/stats, /markets/prices, LP offers) come from the
+# shared cache here instead of a second request.
+ESI = client()
 
 WARZONE_API = "https://www.eveonline.com/api/warzone/status"
 INSURGENCY_API = "https://www.eveonline.com/api/warzone/insurgency"
@@ -81,6 +87,7 @@ MILITIA_CORPS = {500001: 1000180, 500002: 1000182, 500003: 1000179, 500004: 1000
 
 
 def get_json(url):
+    """Only for the war report API on www.eveonline.com (not ESI)."""
     req = urllib.request.Request(
         url,
         headers={"Accept": "application/json", "User-Agent": USER_AGENT},
@@ -89,8 +96,8 @@ def get_json(url):
         return json.load(res)
 
 
-def esi(path):
-    return get_json(f"{ESI_BASE}{path}?compatibility_date={COMPAT_DATE}")
+def esi(path, params=None):
+    return ESI.get(path, params)
 
 
 # ---------- advantage mirror (data/warzone.json) ----------
@@ -171,11 +178,8 @@ def write_insurgency(now_iso):
 
 # ---------- military campaigns mirror (data/campaigns.json) ----------
 
-def campaigns_esi(path, extra=""):
-    return get_json(
-        f"{ESI_BASE}{path}?compatibility_date={CAMPAIGNS_COMPAT_DATE}"
-        + (f"&{extra}" if extra else "")
-    )
+def campaigns_esi(path, params=None):
+    return ESI.get(path, params, compat=CAMPAIGNS_COMPAT_DATE)
 
 
 def campaign_objectives(campaign_id):
@@ -185,10 +189,10 @@ def campaign_objectives(campaign_id):
     rows = {}
     cursor = None
     while True:
-        page = campaigns_esi(
-            f"/military-campaigns/{campaign_id}/objectives",
-            "limit=100" + (f"&before={cursor}" if cursor else ""),
-        )
+        params = {"limit": 100}
+        if cursor:
+            params["before"] = cursor
+        page = campaigns_esi(f"/military-campaigns/{campaign_id}/objectives", params)
         batch = page.get("objectives") or []
         new = [o for o in batch if o.get("id") not in rows]
         for o in new:
@@ -268,10 +272,7 @@ def forge_daily_price(type_id):
         return _forge_cache[type_id]
     price = 0
     try:
-        rows = get_json(
-            f"{ESI_BASE}/markets/{FORGE_REGION}/history"
-            f"?compatibility_date={COMPAT_DATE}&type_id={type_id}"
-        )
+        rows = esi(f"/markets/{FORGE_REGION}/history", {"type_id": type_id})
         if rows:
             price = rows[-1].get("average") or 0
     except Exception:
@@ -307,9 +308,7 @@ def lp_snapshot():
     avg_of = lambda tid: averages.get(tid, 0)
     result = {}
     for faction, corp in MILITIA_CORPS.items():
-        offers = get_json(
-            f"{ESI_BASE}/loyalty/stores/{corp}/offers?compatibility_date={COMPAT_DATE}"
-        )
+        offers = esi(f"/loyalty/stores/{corp}/offers")
         ranked = sorted(
             (o for o in offers if offer_ratio(o, avg_of) is not None),
             key=lambda o: offer_ratio(o, avg_of),
@@ -331,20 +330,20 @@ def lp_snapshot():
 # ---------- flip feed (data/feed-flips.json) ----------
 
 def resolve_names(ids):
-    if not ids:
-        return {}
-    body = json.dumps(sorted(set(ids))).encode()
-    req = urllib.request.Request(
-        f"{ESI_BASE}/universe/names?compatibility_date={COMPAT_DATE}",
-        data=body,
-        headers={
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "User-Agent": USER_AGENT,
-        },
-    )
-    with urllib.request.urlopen(req, timeout=30) as res:
-        return {row["id"]: row["name"] for row in json.load(res)}
+    """System names: from the previous feed where known (POST routes have no
+    cache headers), only new IDs are asked for."""
+    known = {}
+    try:
+        for f in json.loads(FEED_FLIPS_PATH.read_text(encoding="utf-8")).get("flips", []):
+            if f.get("system_name") and f["system_name"] != str(f["system_id"]):
+                known[f["system_id"]] = f["system_name"]
+    except (OSError, ValueError):
+        pass
+    ask = sorted(set(ids) - set(known))
+    if ask:
+        for row in ESI.post("/universe/names", ask):
+            known[row["id"]] = row["name"]
+    return known
 
 
 def write_flip_feed(flips):
@@ -496,6 +495,7 @@ def main():
         sys.exit("ESI returned no factional warfare data")
     history = append_history(now_epoch, fw_systems, fw_stats, campaigns)
     write_flip_feed(history["flips"])
+    print(ESI.summary())
 
 
 if __name__ == "__main__":

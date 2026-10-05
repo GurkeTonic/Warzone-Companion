@@ -95,7 +95,27 @@ def check_data():
             ok("history.json: shape ok")
 
 
+def check_esi_access():
+    """ESI only through tools/esi_client.py (rules of
+    developers.eveonline.com/docs/services/esi, read 5.10.2026). Fails if any
+    other tool or the frontend talks to esi.evetech.net directly."""
+    allowed = {"esi_client.py", "esi_shared.py"}
+    hits = []
+    for p in list((ROOT / "tools").glob("*.py")) + list((ROOT / "js").glob("*.js")) + [ROOT / "serve.py"]:
+        if not p.exists() or p.name in allowed or p.name == "check_site.py":
+            continue
+        for n, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
+            code = line.split("#")[0] if p.suffix == ".py" else line.split("//")[0]
+            if "ESI_BASE" in code or ("esi.evetech.net" in code and "http" in code):
+                hits.append(f"{p.relative_to(ROOT)}:{n}")
+    if hits:
+        fail("ESI called outside tools/esi_client.py: " + ", ".join(hits))
+    else:
+        ok("ESI only through tools/esi_client.py")
+
+
 def check_static():
+    check_esi_access()
     p = ROOT / "js" / "data" / "staticdata.js"
     if not p.exists():
         fail("js/data/staticdata.js missing")
