@@ -22,6 +22,13 @@ const [WarzonesView, MapView, FwData] = (() => {
      auto-refresh) don't silently reset the user's view — only switching
      warzones (renderMapChips' click handler) resets this to null (=> base). */
   let mapViewBox = null;
+  /* 2d: CCP's schematic position2D. 3d: the geographic position, turnable.
+     Remembered per browser. */
+  let mapView = (() => { try { return localStorage.getItem("tow_mapview") === "3d" ? "3d" : "2d"; } catch { return "2d"; } })();
+  const ROT_TOP = { yaw: 0, pitch: 90 };
+  let rot = { ...ROT_TOP };
+  let fit3d = null;      // { scale, cx, cy } held while a drag turns the map
+  let keepFit = false;
 
   /* Insurgency state (Havoc): same proxy/mirror pattern as Advantage. */
   async function loadInsurgency() {
@@ -186,7 +193,7 @@ const [WarzonesView, MapView, FwData] = (() => {
   const MAP_H = 700;
   const MAP_PAD = 36;
   const NODE_R = 10;
-  const NODE_GAP = 34;
+  const NODE_GAP = 24;
   /* Label font size in map units at base zoom. The 1000-unit map renders
      at roughly 700–900 px, so 15 units come out near 11 px on screen. */
   const LABEL_FS = 15;
@@ -230,35 +237,108 @@ const [WarzonesView, MapView, FwData] = (() => {
     }
   }
 
+  /* Two views of the same systems, both from the SDE and drawn the way
+     CCP's map guide says (developers.eveonline.com/docs/guides/map-data):
+       2D  position2D, the "schematic" layout of the in-game 2D map:
+           Ximg = X, Yimg = -Y (its Y points like the 3D Z, north).
+       3D  position, the geographic location in space, in light years.
+           Starts top-down (Ximg = X, Yimg = -Z, the guide's projection) and
+           turns with the mouse.
+     Both scale uniformly — independent axis scaling would distort them.
+     On 5.10.2026 a blend of position and rank was tried for the 2D view to
+     spread the dense knots; it changed the distances CCP draws, so it went
+     again the same day. Readability comes from the labels and the zoom. */
+  function layout(ids) {
+    if (mapView === "3d") return layout3d(ids);
+    const xs = ids.map(id => SDATA.fw[id].x);
+    const ys = ids.map(id => SDATA.fw[id].y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const spanX = maxX - minX || 1;
+    const spanY = maxY - minY || 1;
+    const scale = Math.min((MAP_W - 2 * MAP_PAD) / spanX, (MAP_H - 2 * MAP_PAD) / spanY);
+    const offX = (MAP_W - spanX * scale) / 2;
+    const offY = (MAP_H - spanY * scale) / 2;
+    const pos = new Map(ids.map(id => [id, {
+      x: offX + (SDATA.fw[id].x - minX) * scale,
+      y: MAP_H - offY - (SDATA.fw[id].y - minY) * scale,
+      z: 0
+    }]));
+    /* Only nodes that would sit on top of each other are nudged apart, by
+       less than a node's width. */
+    relaxPositions(pos, ids, NODE_GAP);
+    return pos;
+  }
+
+  function layout3d(ids) {
+    const P = ids.map(id => SDATA.fw[id].p3);
+    /* Centre of the bounding box, not the centroid: a few far systems would
+       otherwise pull the middle off and waste half the frame. */
+    const c = [0, 1, 2].map(k => (Math.min(...P.map(p => p[k])) + Math.max(...P.map(p => p[k]))) / 2);
+    const R = Math.max(...P.map(p => Math.hypot(p[0] - c[0], p[1] - c[1], p[2] - c[2]))) || 1;
+    const yaw = rot.yaw * Math.PI / 180, pitch = rot.pitch * Math.PI / 180;
+    const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+    const pos = new Map(ids.map((id, i) => {
+      const x = P[i][0] - c[0], y = P[i][1] - c[1], z = P[i][2] - c[2];
+      /* EVE: +X east, +Y up, +Z north. Turn about the vertical axis, then
+         tilt: pitch 90° looks straight down (screen up = north), 0° looks
+         north from the side (screen up = up). */
+      const xr = x * cy - z * sy;
+      const zr = x * sy + z * cy;
+      const up = zr * sp + y * cp;
+      const depth = y * sp - zr * cp;   // toward the viewer
+      return [id, { x: xr, y: -up, z: depth / R }];
+    }));
+    /* Fitted to the frame for the current angle, like the 2D view. While a
+       drag turns the map the fit from its start is kept (fit3d), so nothing
+       jumps under the pointer; letting go fits again. */
+    if (!fit3d) {
+      const xs = [...pos.values()].map(p => p.x), ys = [...pos.values()].map(p => p.y);
+      const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+      fit3d = {
+        scale: Math.min((MAP_W - 2 * MAP_PAD) / ((maxX - minX) || 1), (MAP_H - 2 * MAP_PAD) / ((maxY - minY) || 1)),
+        cx: (minX + maxX) / 2, cy: (minY + maxY) / 2
+      };
+    }
+    for (const p of pos.values()) {
+      p.x = MAP_W / 2 + (p.x - fit3d.cx) * fit3d.scale;
+      p.y = MAP_H / 2 + (p.y - fit3d.cy) * fit3d.scale;
+    }
+    if (!keepFit) fit3d = null;
+    return pos;
+  }
+
   function renderMap(wz) {
-    const ids = data.systems
+    return `
+        <svg viewBox="0 0 ${MAP_W} ${MAP_H}" role="img">${mapInner(wz)}</svg>
+        <div class="map-controls">
+          <button type="button" data-zoom="in" title="${t("map_zoom_in")}">+</button>
+          <button type="button" data-zoom="out" title="${t("map_zoom_out")}">−</button>
+          <button type="button" data-zoom="reset" title="${t(mapView === "3d" ? "map_reset_3d" : "map_zoom_reset")}">⌂</button>
+        </div>
+        ${mapView === "3d" ? `<div class="map-hint">${t(matchMedia("(pointer: coarse)").matches ? "map_hint_3d_touch" : "map_hint_3d")}</div>` : ""}
+        <div class="map-legend">
+          <span><i style="background:${factionOf(wz.a).color}"></i>${esc(factionOf(wz.a).name)}</span>
+          <span><i style="background:${factionOf(wz.b).color}"></i>${esc(factionOf(wz.b).name)}</span>
+          <span><i style="background:var(--min)"></i>${t("st_critical")}</span>
+          <span><i style="background:var(--ama)"></i>${t("st_contested")}</span>
+        </div>
+    `;
+  }
+
+  function mapIds(wz) {
+    return data.systems
       .filter(s => s.occupier_faction_id === wz.a || s.occupier_faction_id === wz.b)
       .map(s => s.solar_system_id)
-      .filter(id => SDATA.fw[id]?.x != null);
-    if (ids.length === 0) return "";
+      .filter(id => mapView === "3d" ? SDATA.fw[id]?.p3 : SDATA.fw[id]?.x != null);
+  }
 
-    /* Geography alone puts most systems into two dense knots and spends the
-       frame on a few outliers (5.10.2026: about 70 of 90 Caldari–Gallente
-       systems in a fifth of the area, names on top of each other). Each axis
-       is therefore a blend of the true coordinate and the system's rank on
-       that axis. Both are monotone, so their mix keeps every east–west and
-       north–south order intact; only the spacing evens out. */
-    const RANK_WEIGHT = 0.55;
-    function axis(get) {
-      const vals = ids.map(get);
-      const min = Math.min(...vals), span = (Math.max(...vals) - min) || 1;
-      const order = [...ids].sort((a, b) => get(a) - get(b));
-      const rank = new Map(order.map((id, i) => [id, ids.length > 1 ? i / (ids.length - 1) : 0.5]));
-      return id => RANK_WEIGHT * rank.get(id) + (1 - RANK_WEIGHT) * (get(id) - min) / span;
-    }
-    const ax = axis(id => SDATA.fw[id].x);
-    const ay = axis(id => SDATA.fw[id].y);
-    /* SDE 2D y grows northward; SVG y grows downward — flip (y_img = -y_eve). */
-    const pos = new Map(ids.map(id => [id, {
-      x: MAP_PAD + ax(id) * (MAP_W - 2 * MAP_PAD),
-      y: MAP_H - MAP_PAD - ay(id) * (MAP_H - 2 * MAP_PAD)
-    }]));
-    relaxPositions(pos, ids, NODE_GAP);
+  /* Edges, nodes and names for the current view and rotation. In 3D this
+     runs on every drag step; 90 systems are cheap enough to redraw. */
+  function mapInner(wz) {
+    const ids = mapIds(wz);
+    if (ids.length === 0) return "";
+    const pos = layout(ids);
     const px = id => pos.get(id).x;
     const py = id => pos.get(id).y;
 
@@ -309,7 +389,10 @@ const [WarzonesView, MapView, FwData] = (() => {
       }
     }
 
-    const nodes = ids.map(id => {
+    /* In 3D the far side is drawn first and fainter, so what is in front
+       stays in front. */
+    const drawOrder = mapView === "3d" ? [...ids].sort((a, b) => pos.get(a).z - pos.get(b).z) : ids;
+    const nodes = drawOrder.map(id => {
       const s = byId.get(id);
       const fac = factionOf(s.occupier_faction_id);
       const enemy = factionOf(enemyFactionOf(s.occupier_faction_id));
@@ -335,7 +418,7 @@ const [WarzonesView, MapView, FwData] = (() => {
         `${t("th_jumps")}: ${jmp}`
       ].filter(Boolean).join(" · ");
       const insRing = ins
-        ? `<circle cx="${x}" cy="${y}" r="${r + 4}" data-r="${r + 4}" fill="none" stroke="${pirateOf(ins.pirate).color}" stroke-width="${ins.origin?.id === id ? 3 : 1.5}" stroke-opacity=".7"/>`
+        ? `<circle cx="${x}" cy="${y}" r="${r + 4}" data-r="${r + 4}" fill="none" stroke="${pirateOf(ins.pirate).color}" stroke-width="${ins.origin?.id === id ? 3 : 1.5}" style="stroke-opacity:calc(.7 * var(--o, 1))"/>`
         : "";
       /* Glow ring: stable systems only glow when selected (occupier color);
          contested/critical always glow, in the enemy's color — brighter
@@ -343,10 +426,11 @@ const [WarzonesView, MapView, FwData] = (() => {
       const glowColor = st.key === "stab" ? fac.color : enemy.color;
       const glowOpacity = st.key === "stab" ? (sel ? 0.3 : 0) : (sel ? 0.5 : 0.3);
       const glow = glowOpacity > 0
-        ? `<circle cx="${x}" cy="${y}" r="${r + 3}" data-r="${r + 3}" fill="none" stroke="${glowColor}" stroke-width="3" stroke-opacity="${glowOpacity}"/>`
+        ? `<circle cx="${x}" cy="${y}" r="${r + 3}" data-r="${r + 3}" fill="none" stroke="${glowColor}" stroke-width="3" style="stroke-opacity:calc(${glowOpacity} * var(--o, 1))"/>`
         : "";
       const fillPct = sel ? 60 : 28;
-      return `<g class="map-node${st.key === "crit" ? " critical" : ""}${sel ? " selected" : ""}" data-id="${id}">
+      const fade = mapView === "3d" ? ` style="--o:${(0.45 + 0.55 * (pos.get(id).z + 1) / 2).toFixed(2)}"` : "";
+      return `<g class="map-node${st.key === "crit" ? " critical" : ""}${sel ? " selected" : ""}" data-id="${id}"${fade}>
         ${insRing}
         ${glow}
         <rect class="diamond" x="${(x - r).toFixed(1)}" y="${(y - r).toFixed(1)}" width="${(r * 2).toFixed(1)}" height="${(r * 2).toFixed(1)}" transform="rotate(45 ${x} ${y})" data-r="${r}" data-cx="${x}" data-cy="${y}" style="fill:color-mix(in srgb, ${fac.color} ${fillPct}%, var(--surf));stroke:${fac.color};stroke-width:1.5"><title>${esc(tip)}</title></rect>
@@ -354,28 +438,15 @@ const [WarzonesView, MapView, FwData] = (() => {
       </g>`;
     }).join("");
 
-    return `
-        <svg viewBox="0 0 ${MAP_W} ${MAP_H}" role="img" style="--lfs:${lfs.toFixed(1)}px">
+    return `<g class="map-root" style="--lfs:${lfs.toFixed(1)}px">
           <g class="map-edges">${edges.join("")}</g>
           ${nodes}
-        </svg>
-        <div class="map-controls">
-          <button type="button" data-zoom="in" title="${t("map_zoom_in")}">+</button>
-          <button type="button" data-zoom="out" title="${t("map_zoom_out")}">−</button>
-          <button type="button" data-zoom="reset" title="${t("map_zoom_reset")}">⌂</button>
-        </div>
-        <div class="map-legend">
-          <span><i style="background:${factionOf(wz.a).color}"></i>${esc(factionOf(wz.a).name)}</span>
-          <span><i style="background:${factionOf(wz.b).color}"></i>${esc(factionOf(wz.b).name)}</span>
-          <span><i style="background:var(--min)"></i>${t("st_critical")}</span>
-          <span><i style="background:var(--ama)"></i>${t("st_contested")}</span>
-        </div>
-    `;
+        </g>`;
   }
 
   /* Pan/zoom via viewBox: wheel zooms toward the cursor, drag pans,
      double click or the home button resets. Zoomed in, all labels show. */
-  function bindMapInteractions(svg, startVb) {
+  function bindMapInteractions(svg, startVb, wz) {
     const base = { x: 0, y: 0, w: MAP_W, h: MAP_H };
     let vb = startVb ? { ...startVb } : { ...base };
     const MIN_W = MAP_W / 10;
@@ -429,10 +500,23 @@ const [WarzonesView, MapView, FwData] = (() => {
       zoomAt(e.deltaY < 0 ? 0.75 : 1 / 0.75, p.x, p.y);
     }, { passive: false });
 
+    /* 3D: dragging turns the map (Shift+drag still pans). Redrawn at most
+       once per frame. */
+    let frame = 0;
+    function redraw() {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        svg.innerHTML = mapInner(wz);
+        apply();
+      });
+    }
+
     let drag = null;
     let dragged = false;
     svg.addEventListener("pointerdown", e => {
-      drag = { px: e.clientX, py: e.clientY, vx: vb.x, vy: vb.y };
+      drag = { px: e.clientX, py: e.clientY, vx: vb.x, vy: vb.y, yaw: rot.yaw, pitch: rot.pitch, turn: mapView === "3d" && !e.shiftKey };
+      if (drag.turn) { keepFit = true; fit3d = null; layout3d(mapIds(wz)); }
       dragged = false;
       svg.setPointerCapture(e.pointerId);
       svg.classList.add("panning");
@@ -440,12 +524,23 @@ const [WarzonesView, MapView, FwData] = (() => {
     svg.addEventListener("pointermove", e => {
       if (!drag) return;
       if (Math.hypot(e.clientX - drag.px, e.clientY - drag.py) > 5) dragged = true;
+      if (drag.turn) {
+        rot.yaw = (drag.yaw + (e.clientX - drag.px) * 0.4) % 360;
+        rot.pitch = Math.min(90, Math.max(0, drag.pitch - (e.clientY - drag.py) * 0.4));
+        redraw();
+        return;
+      }
       const r = svg.getBoundingClientRect();
       vb.x = drag.vx - ((e.clientX - drag.px) / r.width) * vb.w;
       vb.y = drag.vy - ((e.clientY - drag.py) / r.height) * vb.h;
       apply();
     });
-    const endDrag = () => { drag = null; svg.classList.remove("panning"); };
+    const endDrag = () => {
+      const turned = drag?.turn && dragged;
+      drag = null;
+      svg.classList.remove("panning");
+      if (keepFit) { keepFit = false; fit3d = null; if (turned) redraw(); }
+    };
     svg.addEventListener("pointercancel", endDrag);
 
     /*
@@ -465,12 +560,17 @@ const [WarzonesView, MapView, FwData] = (() => {
       renderMapTab();
     });
 
-    svg.addEventListener("dblclick", () => { vb = { ...base }; apply(); });
+    function reset() {
+      vb = { ...base };
+      if (mapView === "3d") { rot = { ...ROT_TOP }; svg.innerHTML = mapInner(wz); }
+      apply();
+    }
+    svg.addEventListener("dblclick", reset);
 
     svg.parentElement.querySelectorAll(".map-controls button").forEach(btn => {
       btn.addEventListener("click", () => {
         const mode = btn.dataset.zoom;
-        if (mode === "reset") { vb = { ...base }; apply(); return; }
+        if (mode === "reset") { reset(); return; }
         zoomAt(mode === "in" ? 0.75 : 1 / 0.75, vb.x + vb.w / 2, vb.y + vb.h / 2);
       });
     });
@@ -487,8 +587,20 @@ const [WarzonesView, MapView, FwData] = (() => {
     const container = document.getElementById("page-chips");
     container.innerHTML = WZ_TABS.map(f => `
       <button class="chip${mapWz === f.id ? " active" : ""}" data-id="${f.id}">${f.label}</button>
+    `).join("") + `<span class="chip-sep"></span>` + ["2d", "3d"].map(v => `
+      <button class="chip${mapView === v ? " active" : ""}" data-view="${v}" title="${esc(t("map_view_" + v + "_title"))}">${t("map_view_" + v)}</button>
     `).join("");
-    container.querySelectorAll("button").forEach(btn => {
+    container.querySelectorAll("button[data-view]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (mapView === btn.dataset.view) return;
+        mapView = btn.dataset.view;
+        try { localStorage.setItem("tow_mapview", mapView); } catch { /* private mode */ }
+        rot = { ...ROT_TOP };
+        mapViewBox = null;
+        renderMapTab();
+      });
+    });
+    container.querySelectorAll("button[data-id]").forEach(btn => {
       btn.addEventListener("click", () => {
         if (mapWz === btn.dataset.id) return;
         mapWz = btn.dataset.id;
@@ -551,7 +663,7 @@ const [WarzonesView, MapView, FwData] = (() => {
     const wz = WARZONES.find(w => w.id === mapWz);
     document.getElementById("map-frame").innerHTML = renderMap(wz);
     const svg = document.querySelector("#map-frame svg");
-    if (svg) bindMapInteractions(svg, mapViewBox);
+    if (svg) bindMapInteractions(svg, mapViewBox, wz);
   }
 
   /* ---------- systems table ---------- */

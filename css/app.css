@@ -446,7 +446,14 @@ a.row-btn, a.trow, a.card, a.flip-row, a.log-row { color: inherit; text-decorati
 .map-edges line { vector-effect: non-scaling-stroke; }
 .map-node { cursor: pointer; }
 .map-node .diamond { transition: fill .2s; }
-.map-node.critical .diamond { animation: bp 2s ease-in-out infinite; }
+/* Depth fade in 3D as fill and stroke opacity: plain opacity, on the
+   group or the shapes, made the browser paint a light box behind them. */
+.map-node > .diamond { fill-opacity: var(--o, 1); stroke-opacity: var(--o, 1); }
+.map-node > text { fill-opacity: var(--o, 1); }
+/* The pulse runs on the stroke, not on opacity: an opacity animation gets
+   its own compositing layer, and that showed as a light box over the map. */
+@keyframes pulse-stroke { 0%, 100% { stroke-width: 1.5; } 50% { stroke-width: 4; } }
+.map-node.critical .diamond { animation: pulse-stroke 2s ease-in-out infinite; }
 /* Size in map units, counter-scaled with the zoom (--fk, set in
    js/warzones.js) so names stay readable instead of growing. */
 .map-label {
@@ -466,6 +473,11 @@ a.row-btn, a.trow, a.card, a.flip-row, a.log-row { color: inherit; text-decorati
 .map-legend > span { display: flex; align-items: center; gap: 0.35rem; font-size: var(--fs-xs); color: var(--txt2); }
 .map-legend i { width: 8px; height: 8px; transform: rotate(45deg); display: block; }
 
+.map-hint {
+  position: absolute; left: 0.8rem; top: 0.7rem;
+  font-size: var(--fs-xs); color: var(--dim); pointer-events: none;
+}
+.chip-sep { width: 1px; align-self: stretch; background: var(--line); margin: 0 0.35rem; }
 .map-controls { position: absolute; right: 0.7rem; top: 0.7rem; display: flex; flex-direction: column; gap: 0.25rem; }
 .map-controls button {
   width: 2rem; height: 2rem; border: 1px solid var(--line); border-radius: var(--r);
