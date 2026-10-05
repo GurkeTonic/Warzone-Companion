@@ -39,14 +39,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with: { node-version: '22' }
 
       # ESI responses with their expires and ETag (tools/esi_client.py). A new
       # key per run, restored from the newest: nothing is asked again before
       # ESI says it has changed.
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         with:
           path: .esi-cache
           key: esi-${{ github.run_id }}
@@ -86,7 +86,7 @@ jobs:
         if: always()
         run: python3 -c "import sys; sys.path.insert(0, 'tools'); import esi_client; esi_client.prune('.esi-cache')"
 
-      - uses: actions/cache/save@v4
+      - uses: actions/cache/save@v6
         if: always()
         with:
           path: .esi-cache
@@ -120,8 +120,13 @@ jobs:
           sleep 1
           node tools/smoke.mjs http://127.0.0.1:8099
 
-      - uses: actions/upload-pages-artifact@v3
-        with: { path: _site }
+      # From v4 on, the action leaves out dotfiles — among them
+      # /.well-known/security.txt (RFC 9116), which the tonicdock watcher
+      # checks. Hence included explicitly (5.10.2026, moving up from v3).
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+          include-hidden-files: true
 
       # Once a day, or when the branch is missing: keep a copy of the growing
       # state outside the live site.
@@ -154,4 +159,4 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
