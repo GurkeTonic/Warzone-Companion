@@ -19,11 +19,10 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="preload" href="/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/jetbrains-mono.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/app.css">
-<!-- Applied before first paint so a light-mode reload never flashes dark. -->
-<script>document.documentElement.dataset.theme = localStorage.getItem("tow_theme") || "dark";</script>
+<!-- Applied before first paint so a stored choice never flashes the other
+     scheme. Without one, the system decides (css/app.css). -->
+<script>try { const th = localStorage.getItem("tow_theme"); if (th) document.documentElement.dataset.theme = th; } catch {}</script>
 </head>
 <body data-tab="boards">
 
@@ -31,8 +30,8 @@
   <a class="hdr-brand" href="/">
     <div class="logo">WZ</div>
     <div class="brand-text">
-      <span class="brand-name">WARZONE COMPANION</span>
-      <span class="brand-tag" data-i18n="tagline">FRAKTIONSKRIEG · LIVE-LAGE</span>
+      <span class="brand-name">Warzone Companion</span>
+      <span class="brand-tag" data-i18n="tagline">Fraktionskrieg in EVE Online</span>
     </div>
   </a>
 
@@ -42,9 +41,9 @@
 
   <div class="hdr-actions">
     <span class="chip-live" id="live-chip"><span class="dot"></span><span id="live-label"></span></span>
-    <button class="btn" id="auto-refresh" data-i18n-title="auto_refresh_title">AUTO</button>
+    <button class="btn" id="auto-refresh" data-i18n="btn_auto" data-i18n-title="auto_refresh_title">Auto</button>
     <button class="btn" id="lang-toggle">EN</button>
-    <button class="btn" id="theme-toggle">HELL</button>
+    <button class="btn" id="theme-toggle">Hell</button>
   </div>
 </header>
 
@@ -167,6 +166,7 @@
 </div>
 
 <nav class="bottom-nav" id="bottom-nav"></nav>
+<div class="more-sheet hidden" id="more-sheet"></div>
 
 <script src="/js/data/staticdata.js"></script>
 <script src="/js/routes.js"></script>

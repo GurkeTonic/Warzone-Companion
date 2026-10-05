@@ -80,7 +80,7 @@ const HistoryView = (() => {
       return `
         <div class="log-row">
           <span class="log-date">${when}</span>
-          <span class="log-sys">${esc(name)} <span style="color:var(--dim);font:400 9.5px var(--fm)">${esc(region)}</span></span>
+          <span class="log-sys">${esc(name)} <span class="log-reg">${esc(region)}</span></span>
           <span class="log-move">
             <span class="from" style="color:${from.color}">${esc(from.name)}</span>
             <span style="color:var(--dim)">→</span>

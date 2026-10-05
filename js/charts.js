@@ -19,7 +19,7 @@ const Charts = (() => {
     const allPts = series.flatMap(s => s.points);
     if (allPts.length === 0) {
       return `${head}<div class="chart-legend">${legend}</div>
-        <p style="font:400 11px var(--fm);color:var(--dim);padding:24px 0">${t("hist_empty")}</p>`;
+        <p class="chart-empty">${t("hist_empty")}</p>`;
     }
 
     const ts = allPts.map(p => p[0]);

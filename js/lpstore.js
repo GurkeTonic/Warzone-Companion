@@ -36,7 +36,7 @@ const LpStoreView = (() => {
     const series = Object.keys(FACTIONS).map(facId => {
       const fac = factionOf(Number(facId));
       return {
-        label: fac.key.toUpperCase(),
+        label: fac.key.charAt(0).toUpperCase() + fac.key.slice(1),
         color: fac.color,
         points: entries
           .map(e => [e.t, e.m?.[facId]?.[1]])

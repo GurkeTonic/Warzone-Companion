@@ -59,7 +59,7 @@ const CampaignsView = (() => {
       const fac = factionOf(c.faction);
       const wz = warzoneOf(c.faction);
       const wzLabel = wz ? `${factionOf(wz.a).short} — ${factionOf(wz.b).short}` : "";
-      const sideLabel = (fac.name || "").toUpperCase();
+      const sideLabel = fac.name || "";
       const lc = liveCamps[c.id];
 
       /* Anything that is not "Active" (finished, expired, future states) is
@@ -121,7 +121,7 @@ const CampaignsView = (() => {
           ${progressBlock}
           ${objItems ? `
             <details class="cmp-obj">
-              <summary style="cursor:pointer;font:500 9.5px var(--fm);letter-spacing:.1em;text-transform:uppercase;color:var(--dim)">${t("cmp_objectives")} (${objectives.length})</summary>
+              <summary>${t("cmp_objectives")} (${objectives.length})</summary>
               <ul style="margin:0;padding:0">${objItems}</ul>
             </details>
           ` : ""}

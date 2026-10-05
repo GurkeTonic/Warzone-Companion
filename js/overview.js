@@ -71,8 +71,8 @@ const OverviewView = (() => {
             <span class="seg-b" style="width:${total ? (b / total * 100).toFixed(1) : 50}%;background:${facB.color}"></span>
           </div>
           <div class="frontbar-legend">
-            <span style="color:${facA.color}">${esc(facA.short)} · ${fmtNum(a)}</span>
-            <span style="color:${facB.color}">${fmtNum(b)} · ${esc(facB.short)}</span>
+            <span style="color:${facA.color}">${fmtNum(a)} <small>${esc(facA.name)}</small></span>
+            <span style="color:${facB.color}"><small>${esc(facB.name)}</small> ${fmtNum(b)}</span>
           </div>
           <div class="stats stats-3">
             ${stats.map(x => `<div><div class="stat-k">${esc(x.k)}</div><div class="stat-v" style="color:${x.color}">${x.v}</div></div>`).join("")}

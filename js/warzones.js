@@ -186,10 +186,17 @@ const [WarzonesView, MapView, FwData] = (() => {
   const MAP_H = 700;
   const MAP_PAD = 36;
   const NODE_R = 10;
-  const NODE_GAP = 25;
+  const NODE_GAP = 34;
+  /* Label font size in map units at base zoom. The 1000-unit map renders
+     at roughly 700–900 px, so 15 units come out near 11 px on screen. */
+  const LABEL_FS = 15;
+  /* Names should come out at least this large on screen. On a phone the
+     1000-unit map is ~340 px wide, so 15 units would be 5 px; the label size
+     in map units then grows, and fewer names fit before the zoom. */
+  const LABEL_MIN_PX = 11;
   /* Node radius by status — matches the Ops Room design's 10/13/16px
      diamond diameters (stable/contested/critical). */
-  const NODE_R_BY_STATUS = { stab: 5, cont: 6.5, crit: 8 };
+  const NODE_R_BY_STATUS = { stab: 6.5, cont: 8, crit: 9.5 };
 
   /* Push overlapping nodes apart so every system stays readable at base
      zoom. Small, symmetric displacements — geography stays recognizable. */
@@ -230,21 +237,26 @@ const [WarzonesView, MapView, FwData] = (() => {
       .filter(id => SDATA.fw[id]?.x != null);
     if (ids.length === 0) return "";
 
-    const xs = ids.map(id => SDATA.fw[id].x);
-    const ys = ids.map(id => SDATA.fw[id].y);
-    const minX = Math.min(...xs), maxX = Math.max(...xs);
-    const minY = Math.min(...ys), maxY = Math.max(...ys);
-    const spanX = maxX - minX || 1;
-    const spanY = maxY - minY || 1;
-    /* Uniform scale + centering: independent axis scaling would distort the
-       geography (developers.eveonline.com/docs/guides/map-data). */
-    const scale = Math.min((MAP_W - 2 * MAP_PAD) / spanX, (MAP_H - 2 * MAP_PAD) / spanY);
-    const offX = (MAP_W - spanX * scale) / 2;
-    const offY = (MAP_H - spanY * scale) / 2;
+    /* Geography alone puts most systems into two dense knots and spends the
+       frame on a few outliers (5.10.2026: about 70 of 90 Caldari–Gallente
+       systems in a fifth of the area, names on top of each other). Each axis
+       is therefore a blend of the true coordinate and the system's rank on
+       that axis. Both are monotone, so their mix keeps every east–west and
+       north–south order intact; only the spacing evens out. */
+    const RANK_WEIGHT = 0.55;
+    function axis(get) {
+      const vals = ids.map(get);
+      const min = Math.min(...vals), span = (Math.max(...vals) - min) || 1;
+      const order = [...ids].sort((a, b) => get(a) - get(b));
+      const rank = new Map(order.map((id, i) => [id, ids.length > 1 ? i / (ids.length - 1) : 0.5]));
+      return id => RANK_WEIGHT * rank.get(id) + (1 - RANK_WEIGHT) * (get(id) - min) / span;
+    }
+    const ax = axis(id => SDATA.fw[id].x);
+    const ay = axis(id => SDATA.fw[id].y);
     /* SDE 2D y grows northward; SVG y grows downward — flip (y_img = -y_eve). */
     const pos = new Map(ids.map(id => [id, {
-      x: offX + (SDATA.fw[id].x - minX) * scale,
-      y: MAP_H - offY - (SDATA.fw[id].y - minY) * scale
+      x: MAP_PAD + ax(id) * (MAP_W - 2 * MAP_PAD),
+      y: MAP_H - MAP_PAD - ay(id) * (MAP_H - 2 * MAP_PAD)
     }]));
     relaxPositions(pos, ids, NODE_GAP);
     const px = id => pos.get(id).x;
@@ -264,6 +276,39 @@ const [WarzonesView, MapView, FwData] = (() => {
     }
 
     const byId = new Map(data.systems.map(s => [s.solar_system_id, s]));
+    const frameW = document.getElementById("map-frame")?.clientWidth || 900;
+    const svgH = document.getElementById("map-frame")?.clientHeight || 630;
+    /* The svg keeps its aspect ratio, so the smaller of the two fits decides
+       how many map units one screen pixel is. */
+    const upp = Math.max(MAP_W / frameW, MAP_H / svgH);
+    const lfs = Math.max(LABEL_FS, LABEL_MIN_PX * upp);
+
+    /* Which names fit at base zoom: placed greedily in order of importance
+       (selected, critical, contested, frontline, command, the rest); a name
+       that would overlap a node or a name already placed waits for the
+       zoom. Zoomed in to 2x, every name shows (.zoomed in css/app.css). */
+    const labelled = new Set();
+    {
+      const rank = id => {
+        if (id === mapSel) return 0;
+        const st = statusTag(pct(byId.get(id))).key;
+        if (st === "crit") return 1;
+        if (st === "cont") return 2;
+        const cls = classes.get(id);
+        return cls === "frontline" ? 3 : cls === "command" ? 4 : 5;
+      };
+      const boxes = ids.map(id => ({ x0: px(id) - 7, x1: px(id) + 7, y0: py(id) - 7, y1: py(id) + 7 }));
+      const hit = b => boxes.some(o => b.x0 < o.x1 && b.x1 > o.x0 && b.y0 < o.y1 && b.y1 > o.y0);
+      for (const id of [...ids].sort((a, b) => rank(a) - rank(b))) {
+        const w = sysName(id).length * lfs * 0.56;
+        const y = py(id) + 9;
+        const b = { x0: px(id) - w / 2, x1: px(id) + w / 2, y0: y, y1: y + lfs + 1 };
+        if (b.x0 < 0 || b.x1 > MAP_W || b.y1 > MAP_H || hit(b)) continue;
+        boxes.push(b);
+        labelled.add(id);
+      }
+    }
+
     const nodes = ids.map(id => {
       const s = byId.get(id);
       const fac = factionOf(s.occupier_faction_id);
@@ -305,12 +350,12 @@ const [WarzonesView, MapView, FwData] = (() => {
         ${insRing}
         ${glow}
         <rect class="diamond" x="${(x - r).toFixed(1)}" y="${(y - r).toFixed(1)}" width="${(r * 2).toFixed(1)}" height="${(r * 2).toFixed(1)}" transform="rotate(45 ${x} ${y})" data-r="${r}" data-cx="${x}" data-cy="${y}" style="fill:color-mix(in srgb, ${fac.color} ${fillPct}%, var(--surf));stroke:${fac.color};stroke-width:1.5"><title>${esc(tip)}</title></rect>
-        <text x="${x}" y="${(Number(y) + r + 9).toFixed(1)}" class="map-label" text-anchor="middle">${esc(sysName(id))}</text>
+        <text x="${x}" y="${(Number(y) + r + lfs).toFixed(1)}" class="map-label${labelled.has(id) ? "" : " map-label-extra"}" text-anchor="middle">${esc(sysName(id))}</text>
       </g>`;
     }).join("");
 
     return `
-        <svg viewBox="0 0 ${MAP_W} ${MAP_H}" role="img">
+        <svg viewBox="0 0 ${MAP_W} ${MAP_H}" role="img" style="--lfs:${lfs.toFixed(1)}px">
           <g class="map-edges">${edges.join("")}</g>
           ${nodes}
         </svg>
@@ -434,8 +479,8 @@ const [WarzonesView, MapView, FwData] = (() => {
   }
 
   const WZ_TABS = [
-    { id: "cal-gal", label: "CALDARI — GALLENTE" },
-    { id: "ama-min", label: "AMARR — MINMATAR" }
+    { id: "cal-gal", label: "Caldari – Gallente" },
+    { id: "ama-min", label: "Amarr – Minmatar" }
   ];
 
   function renderMapChips() {
@@ -724,7 +769,7 @@ const [WarzonesView, MapView, FwData] = (() => {
             <span class="tag" style="color:var(--dim2)">${esc(t("class_" + cls))}</span>
             <span>Δ24h <b style="color:${deltaColor}">${deltaTxt}</b></span>
             <span>ADV <b>${fmtAdv(netAdv)}</b></span>
-            <span>KILLS <b>${fmtNum(k)}</b></span>
+            <span>${esc(t("th_kills1h"))} <b>${fmtNum(k)}</b></span>
           </span>`;
       } else {
         el.className = "trow" + (st.key === "crit" ? " crit" : "");

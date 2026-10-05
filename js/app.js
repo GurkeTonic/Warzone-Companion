@@ -34,7 +34,8 @@ const App = (() => {
      never re-triggers the skeleton over an already-visible table. */
   const everLoaded = new Set();
   let autoTimer = null;
-  let currentTheme = "dark";
+  let updatedText = "";
+  const BOTTOM_N = 4;
 
   const $ = (id) => document.getElementById(id);
   const isNarrow = () => NARROW.matches;
@@ -55,11 +56,35 @@ const App = (() => {
       </a>`).join("");
 
     $("rail").innerHTML = links("rail") +
-      `<div class="rail-foot">${esc(t("updated_label"))}<br><span id="rail-updated"></span></div>`;
-    $("bottom-nav").innerHTML = links("bot");
+      `<div class="rail-foot">${esc(t("updated_label"))}<br><span id="rail-updated">${esc(updatedText)}</span></div>`;
+
+    /* Phone: the first four in the bar, the rest behind "More" — eight
+       labels do not fit 390px (before 5.10.2026 two of them ran off the
+       edge). "More" carries the active marker when one of its tabs is open. */
+    const ids = Object.keys(TABS);
+    const main = ids.slice(0, BOTTOM_N), rest = ids.slice(BOTTOM_N);
+    const link = (id, prefix) => `
+      <a href="${TABS[id].path}" id="${prefix}-tab-${id}" class="${id === activeTab ? "active" : ""}">
+        <span class="rail-icon">${TABS[id].icon}</span>
+        <span class="rail-label">${esc(t("tab_" + id))}</span>
+      </a>`;
+    $("bottom-nav").innerHTML = main.map(id => link(id, "bot")).join("") + `
+      <button type="button" id="bot-more" class="${rest.includes(activeTab) ? "active" : ""}" aria-expanded="false" aria-controls="more-sheet">
+        <span class="rail-icon">⋯</span>
+        <span class="rail-label">${esc(t("tab_more"))}</span>
+      </button>`;
+    $("more-sheet").innerHTML = rest.map(id => link(id, "more")).join("");
+  }
+
+  function toggleMore(open) {
+    const btn = $("bot-more");
+    const show = open ?? $("more-sheet").classList.contains("hidden");
+    $("more-sheet").classList.toggle("hidden", !show);
+    btn?.setAttribute("aria-expanded", String(show));
   }
 
   function setUpdated(text) {
+    updatedText = text;
     const el = $("rail-updated");
     if (el) el.textContent = text;
   }
@@ -69,7 +94,10 @@ const App = (() => {
       $(tab.panel).classList.toggle("hidden", id !== tabId);
       $("rail-tab-" + id)?.classList.toggle("active", id === tabId);
       $("bot-tab-" + id)?.classList.toggle("active", id === tabId);
+      $("more-tab-" + id)?.classList.toggle("active", id === tabId);
     }
+    $("bot-more")?.classList.toggle("active", Object.keys(TABS).indexOf(tabId) >= BOTTOM_N);
+    toggleMore(false);
     $("page-title").textContent = t("pt_" + tabId);
     $("page-sub").textContent = t("ps_" + tabId);
     /* Each view owns the chip row; anything left from the previous tab goes. */
@@ -134,17 +162,23 @@ const App = (() => {
     renderNav();
     $("page-title").textContent = t("pt_" + activeTab);
     $("page-sub").textContent = t("ps_" + activeTab);
-    $("theme-toggle").textContent = currentTheme === "dark" ? t("theme_to_light") : t("theme_to_dark");
+    setTheme(null);
     updateLiveChip(!!autoTimer);
     for (const tabId of loaded) TABS[tabId].view.render();
   }
 
-  /* Button label names what clicking switches *to*, not the current state. */
+  /* No stored choice follows the system, like the Almanach. The button
+     names what clicking switches *to*, not the current state. */
+  function currentTheme() {
+    return document.documentElement.dataset.theme
+      || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+  }
   function setTheme(theme) {
-    currentTheme = theme;
-    document.documentElement.dataset.theme = theme;
-    localStorage.setItem("tow_theme", theme);
-    $("theme-toggle").textContent = theme === "dark" ? t("theme_to_light") : t("theme_to_dark");
+    if (theme) {
+      document.documentElement.dataset.theme = theme;
+      try { localStorage.setItem("tow_theme", theme); } catch { /* private mode */ }
+    }
+    $("theme-toggle").textContent = currentTheme() === "dark" ? t("theme_to_light") : t("theme_to_dark");
   }
 
   function setAutoRefresh(on) {
@@ -177,9 +211,14 @@ const App = (() => {
     });
 
     $("theme-toggle").addEventListener("click", () => {
-      setTheme(document.documentElement.dataset.theme === "light" ? "dark" : "light");
+      setTheme(currentTheme() === "light" ? "dark" : "light");
     });
-    setTheme(localStorage.getItem("tow_theme") || "dark");
+    setTheme(null);
+
+    document.addEventListener("click", (e) => {
+      if (e.target.closest("#bot-more")) { toggleMore(); return; }
+      if (!e.target.closest("#more-sheet")) toggleMore(false);
+    });
 
     /* Crossing the table/card breakpoint changes what the views emit, so the
        loaded ones have to be asked for their other layout. */
