@@ -79,6 +79,12 @@ jobs:
           mkdir _site
           git ls-files | grep -v -E '^(\.github/|tools/|.*\.md$|serve\.py$|LICENSE$|\.gitignore$)' | xargs cp --parents -t _site
           cp -r data _site/
+          # Cache busting: Cloudflare and browsers keep /js and /css for up to
+          # 10 minutes. Without a version in the URL a visitor could get the new
+          # HTML with old scripts right after a deploy.
+          v=${GITHUB_SHA::8}
+          find _site -name '*.html' -exec sed -i -E "s#(src|href)=\"/(js|css)/([^\"?]+)\"#\1=\"/\2/\3?v=$v\"#g" {} +
+          grep -c "?v=$v" _site/index.html
 
       - name: Every page in a real browser
         run: |
