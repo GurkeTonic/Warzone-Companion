@@ -21,6 +21,12 @@ jobs:
       - name: Fetch warzone data
         run: python3 tools/mirror_warzone.py
 
+      # A broken or empty snapshot must never reach the live site: the site is
+      # served straight from main. On failure nothing is committed and the
+      # last good snapshot stays.
+      - name: Check data
+        run: python3 tools/check_site.py --data
+
       - name: Commit if changed
         run: |
           if [ -z "$(git status --porcelain data)" ]; then

@@ -1,0 +1,38 @@
+name: Check site
+
+# Runs after every push to main. The site is served straight from main
+# (GitHub Pages, deploy from branch), so this is an alarm, not a gate: a red
+# run means the live site has a problem, and GitHub mails the failure.
+# Data and SDE commits are checked before they are made (see the other
+# workflows); their bot pushes do not trigger this workflow.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+
+      - name: Data, static data and generated pages
+        run: python3 tools/check_site.py --data --static --pages
+
+      - name: Every page in a real browser
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.63.0
+          npx playwright install --with-deps chromium
+          python3 -m http.server 8099 --bind 127.0.0.1 &
+          sleep 1
+          node tools/smoke.mjs http://127.0.0.1:8099

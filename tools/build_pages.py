@@ -92,6 +92,21 @@ def build_page(template, page):
         html, count=1,
     )
     html = re.sub(
+        r'<meta property="og:title" content="[^"]*">',
+        f'<meta property="og:title" content="{page["title"]}">',
+        html, count=1,
+    )
+    html = re.sub(
+        r'<meta property="og:description" content="[^"]*">',
+        f'<meta property="og:description" content="{page["description"]}">',
+        html, count=1,
+    )
+    html = re.sub(
+        r'<meta property="og:url" content="[^"]*">',
+        f'<meta property="og:url" content="{BASE_URL}/{page["dir"]}/">',
+        html, count=1,
+    )
+    html = re.sub(
         r'<link rel="canonical" href="[^"]*">',
         f'<link rel="canonical" href="{BASE_URL}/{page["dir"]}/">',
         html, count=1,

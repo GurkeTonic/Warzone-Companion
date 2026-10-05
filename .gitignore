@@ -9,3 +9,5 @@ history.db-journal
 # OS noise
 .DS_Store
 Thumbs.db
+
+node_modules/
