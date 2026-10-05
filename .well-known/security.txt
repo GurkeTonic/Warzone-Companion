@@ -1,0 +1,7 @@
+# Sicherheitslücken bitte an diese Adresse melden.
+# Please report security issues to this address.
+# RFC 9116. Läuft ab und wird vor Ablauf erneuert (tonicdock tools/watch.py prüft das).
+Contact: mailto:webmaster@tonicbeacon.com
+Expires: 2027-10-05T00:00:00.000Z
+Preferred-Languages: de, en
+Canonical: https://warzone.tonicdock.com/.well-known/security.txt
