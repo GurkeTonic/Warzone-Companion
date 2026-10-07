@@ -190,6 +190,8 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 .strip-bar > span { position: absolute; left: 0; top: 0; bottom: 0; }
 
 .hdr-actions { display: flex; align-items: center; gap: 0.3rem; }
+/* Pages without the front strip (legal): actions still go to the right. */
+.hdr-brand + .hdr-actions { margin-left: auto; }
 
 .chip-live {
   display: inline-flex; align-items: center; gap: 0.4rem;
@@ -203,7 +205,7 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 .btn, .chip {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
   min-height: 1.75rem; padding: 0.2rem 0.7rem;
-  font-size: var(--fs-s); line-height: 1.2; white-space: nowrap;
+  font-size: var(--fs-s); line-height: 1.2; white-space: nowrap; text-decoration: none;
   color: var(--txt2); background: var(--surf2);
   border: 1px solid var(--line); border-radius: var(--r);
   transition: background-color 140ms, color 140ms, border-color 140ms;

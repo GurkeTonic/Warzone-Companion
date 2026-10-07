@@ -110,7 +110,7 @@ const OverviewView = (() => {
       else if (typeof delta === "number" && delta < 0) { deltaTxt = `▼ ${Math.abs(delta).toFixed(1)}%`; }
 
       return `
-        <a class="row-btn" href="/map/">
+        <a class="row-btn" href="${localPath("/map/")}">
           <span class="row-accent" style="background:${st.color}"></span>
           <span class="row-main">
             <span class="row-name">${esc(FwData.sysName(id))}</span>

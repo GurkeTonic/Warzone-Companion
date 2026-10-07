@@ -452,9 +452,17 @@ const I18N = {
   }
 };
 
-/* Persisted so a language choice survives a reload; German stays the default
-   for a first visit, matching <html lang="de"> in the served markup. */
-let LANG = localStorage.getItem("tow_lang") === "en" ? "en" : "de";
+/* The language comes from the URL: English at the root, German under /de/
+   (tools/build_pages.py writes <html lang> accordingly). Nothing is stored;
+   a choice kept from before 7.10.2026 is dropped. */
+const LANG = document.documentElement.lang === "de" ? "de" : "en";
+try { localStorage.removeItem("tow_lang"); } catch { /* private mode */ }
+
+/* A site path in the page's own language: localPath("/map/") is /map/ on
+   English pages and /de/map/ on German ones. */
+function localPath(path) {
+  return (LANG === "de" ? "/de" : "") + path;
+}
 
 function t(key) {
   return (I18N[LANG] && I18N[LANG][key]) || key;
@@ -514,7 +522,4 @@ function applyI18n() {
   document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
     el.placeholder = t(el.dataset.i18nPlaceholder);
   });
-  /* One toggle, labelled with the language it switches TO. */
-  document.getElementById("lang-toggle").textContent = LANG === "de" ? "EN" : "DE";
-  document.documentElement.lang = LANG;
 }

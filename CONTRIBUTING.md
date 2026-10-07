@@ -27,7 +27,7 @@ Contributions are welcome — this is a community tool for all four militias.
 
 ```
 python serve.py            # http://localhost:8080 with the /api proxies
-python tools/build_pages.py       # after editing index.html (regenerates subpages)
+python tools/build_pages.py       # after editing index.html (regenerates /… and /de/…)
 python tools/build_static_data.py <sde-zip>   # after an SDE release
 python tools/mirror_warzone.py    # war report, history  (data/ is not in git)
 python tools/fetch_esi.py         # ESI snapshot the frontend reads (data/esi/)

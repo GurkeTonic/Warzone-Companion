@@ -10,8 +10,9 @@ is made:
             commit, and the site keeps the last good snapshot.
   --static  before the SDE workflow commits js/data/staticdata.js: the file is
             there, is not truncated, and is valid JavaScript (node --check).
-  --pages   on every push: the subpages, routes.js and sitemap.xml match what
-            tools/build_pages.py generates from index.html.
+  --pages   on every push: the pages in both languages, routes.js and
+            sitemap.xml match what tools/build_pages.py generates from
+            index.html, and every page names its language versions.
   --esi     the snapshot from tools/fetch_esi.py is complete and fresh.
   --history PREV   history.json did not lose data against the previous
             published version PREV (a shrinking history means a broken run).
@@ -138,14 +139,53 @@ def check_pages():
     if r.returncode:
         fail(f"build_pages.py failed: {r.stderr.strip()[:200]}")
         return
-    # Only what build_pages.py writes; index.html is its source, not its output.
-    d = subprocess.run(["git", "diff", "--name-only", "--", "*/index.html", "js/routes.js", "sitemap.xml"],
-                       capture_output=True, text=True, cwd=ROOT)
-    changed = d.stdout.split()
+    # What build_pages.py writes. index.html is its source and the English
+    # home page at once, so building it from itself must not change it.
+    # Against the index, so a staged build passes before it is committed;
+    # a page that was never added shows up as untracked.
+    spec = ["--", "index.html", "*/index.html", "js/routes.js", "sitemap.xml"]
+    changed = []
+    for cmd in (["git", "diff", "--name-only"], ["git", "ls-files", "--others", "--exclude-standard"]):
+        changed += subprocess.run(cmd + spec, capture_output=True, text=True, cwd=ROOT).stdout.split()
     if changed:
         fail("generated files out of date, run tools/build_pages.py: " + ", ".join(changed))
     else:
-        ok("subpages, routes.js and sitemap.xml match index.html")
+        ok("pages in both languages, routes.js and sitemap.xml match index.html")
+    check_languages()
+
+
+def check_languages():
+    """Every page: <html lang> from its path, canonical on itself, hreflang
+    en/de/x-default to both versions (x-default English), and the EN/DE link
+    to the other version."""
+    base = "https://warzone.tonicdock.com"
+    pages = sorted(p for p in ROOT.glob("**/index.html")
+                   if not any(part.startswith(".") or part in ("node_modules", "data", "tools")
+                              for part in p.relative_to(ROOT).parts))
+    bad = []
+    for p in pages:
+        parent = p.relative_to(ROOT).parent.as_posix()
+        rel = "/" if parent == "." else f"/{parent}/"
+        lang = "de" if rel.startswith("/de/") else "en"
+        en = rel[3:] if lang == "de" else rel
+        de = "/de" + en
+        html = p.read_text(encoding="utf-8")
+        need = [f'<html lang="{lang}">',
+                f'<link rel="canonical" href="{base}{rel}">',
+                f'<link rel="alternate" hreflang="en" href="{base}{en}">',
+                f'<link rel="alternate" hreflang="de" href="{base}{de}">',
+                f'<link rel="alternate" hreflang="x-default" href="{base}{en}">']
+        other = (de, "de") if lang == "en" else (en, "en")
+        need.append(f'id="lang-toggle" href="{other[0]}" hreflang="{other[1]}"')
+        missing = [n for n in need if n not in html]
+        if missing:
+            bad.append(f"{rel}: {missing[0]}")
+        if not (ROOT / (de if lang == "en" else en).strip("/") / "index.html").exists():
+            bad.append(f"{rel}: no counterpart")
+    if bad:
+        fail("language versions: " + "; ".join(bad))
+    else:
+        ok(f"{len(pages)} pages: lang, canonical, hreflang and EN/DE link in place")
 
 
 def check_esi():

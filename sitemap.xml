@@ -1,11 +1,100 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://warzone.tonicdock.com/</loc></url>
-  <url><loc>https://warzone.tonicdock.com/warzones/</loc></url>
-  <url><loc>https://warzone.tonicdock.com/map/</loc></url>
-  <url><loc>https://warzone.tonicdock.com/history/</loc></url>
-  <url><loc>https://warzone.tonicdock.com/lp/</loc></url>
-  <url><loc>https://warzone.tonicdock.com/leaderboards/</loc></url>
-  <url><loc>https://warzone.tonicdock.com/campaigns/</loc></url>
-  <url><loc>https://warzone.tonicdock.com/faq/</loc></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://warzone.tonicdock.com/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://warzone.tonicdock.com/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://warzone.tonicdock.com/de/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://warzone.tonicdock.com/"/>
+  </url>
+  <url>
+    <loc>https://warzone.tonicdock.com/de/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://warzone.tonicdock.com/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://warzone.tonicdock.com/de/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://warzone.tonicdock.com/"/>
+  </url>
+  <url>
+    <loc>https://warzone.tonicdock.com/warzones/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://warzone.tonicdock.com/warzones/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://warzone.tonicdock.com/de/warzones/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://warzone.tonicdock.com/warzones/"/>
+  </url>
+  <url>
+    <loc>https://warzone.tonicdock.com/de/warzones/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://warzone.tonicdock.com/warzones/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://warzone.tonicdock.com/de/warzones/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://warzone.tonicdock.com/warzones/"/>
+  </url>
+  <url>
+    <loc>https://warzone.tonicdock.com/map/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://warzone.tonicdock.com/map/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://warzone.tonicdock.com/de/map/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://warzone.tonicdock.com/map/"/>
+  </url>
+  <url>
+    <loc>https://warzone.tonicdock.com/de/map/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://warzone.tonicdock.com/map/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://warzone.tonicdock.com/de/map/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://warzone.tonicdock.com/map/"/>
+  </url>
+  <url>
+    <loc>https://warzone.tonicdock.com/history/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://warzone.tonicdock.com/history/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://warzone.tonicdock.com/de/history/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://warzone.tonicdock.com/history/"/>
+  </url>
+  <url>
+    <loc>https://warzone.tonicdock.com/de/history/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://warzone.tonicdock.com/history/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://warzone.tonicdock.com/de/history/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://warzone.tonicdock.com/history/"/>
+  </url>
+  <url>
+    <loc>https://warzone.tonicdock.com/lp/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://warzone.tonicdock.com/lp/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://warzone.tonicdock.com/de/lp/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://warzone.tonicdock.com/lp/"/>
+  </url>
+  <url>
+    <loc>https://warzone.tonicdock.com/de/lp/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://warzone.tonicdock.com/lp/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://warzone.tonicdock.com/de/lp/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://warzone.tonicdock.com/lp/"/>
+  </url>
+  <url>
+    <loc>https://warzone.tonicdock.com/leaderboards/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://warzone.tonicdock.com/leaderboards/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://warzone.tonicdock.com/de/leaderboards/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://warzone.tonicdock.com/leaderboards/"/>
+  </url>
+  <url>
+    <loc>https://warzone.tonicdock.com/de/leaderboards/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://warzone.tonicdock.com/leaderboards/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://warzone.tonicdock.com/de/leaderboards/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://warzone.tonicdock.com/leaderboards/"/>
+  </url>
+  <url>
+    <loc>https://warzone.tonicdock.com/campaigns/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://warzone.tonicdock.com/campaigns/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://warzone.tonicdock.com/de/campaigns/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://warzone.tonicdock.com/campaigns/"/>
+  </url>
+  <url>
+    <loc>https://warzone.tonicdock.com/de/campaigns/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://warzone.tonicdock.com/campaigns/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://warzone.tonicdock.com/de/campaigns/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://warzone.tonicdock.com/campaigns/"/>
+  </url>
+  <url>
+    <loc>https://warzone.tonicdock.com/faq/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://warzone.tonicdock.com/faq/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://warzone.tonicdock.com/de/faq/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://warzone.tonicdock.com/faq/"/>
+  </url>
+  <url>
+    <loc>https://warzone.tonicdock.com/de/faq/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://warzone.tonicdock.com/faq/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://warzone.tonicdock.com/de/faq/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://warzone.tonicdock.com/faq/"/>
+  </url>
 </urlset>

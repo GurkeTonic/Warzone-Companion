@@ -10,8 +10,9 @@
 "use strict";
 
 const App = (() => {
-  /* Order defines the rail and the bottom nav. `path` must match a key in
-     ROUTES so soft navigation and the static subpages agree. */
+  /* Order defines the rail and the bottom nav. `path` is the English path;
+     localPath() turns it into the page's own language, and the result must
+     be a key in ROUTES so soft navigation and the static pages agree. */
   const TABS = {
     overview:  { view: OverviewView,  panel: "panel-overview",  path: "/",              icon: "◈" },
     warzones:  { view: WarzonesView,  panel: "panel-warzones",  path: "/warzones/",     icon: "▤" },
@@ -50,7 +51,7 @@ const App = (() => {
      middle-click, "open in new tab" and crawlers all still work. */
   function renderNav() {
     const links = (extra) => Object.entries(TABS).map(([id, tab]) => `
-      <a href="${tab.path}" id="${extra}-tab-${id}" class="${id === activeTab ? "active" : ""}" title="${esc(t("tab_" + id))}">
+      <a href="${localPath(tab.path)}" id="${extra}-tab-${id}" class="${id === activeTab ? "active" : ""}" title="${esc(t("tab_" + id))}">
         <span class="rail-icon">${tab.icon}</span>
         <span class="rail-label">${esc(t("tab_" + id))}</span>
       </a>`).join("");
@@ -64,7 +65,7 @@ const App = (() => {
     const ids = Object.keys(TABS);
     const main = ids.slice(0, BOTTOM_N), rest = ids.slice(BOTTOM_N);
     const link = (id, prefix) => `
-      <a href="${TABS[id].path}" id="${prefix}-tab-${id}" class="${id === activeTab ? "active" : ""}">
+      <a href="${localPath(TABS[id].path)}" id="${prefix}-tab-${id}" class="${id === activeTab ? "active" : ""}">
         <span class="rail-icon">${TABS[id].icon}</span>
         <span class="rail-label">${esc(t("tab_" + id))}</span>
       </a>`;
@@ -157,16 +158,6 @@ const App = (() => {
       </div>`).join("");
   }
 
-  function rerenderAll() {
-    applyI18n();
-    renderNav();
-    $("page-title").textContent = t("pt_" + activeTab);
-    $("page-sub").textContent = t("ps_" + activeTab);
-    setTheme(null);
-    updateLiveChip(!!autoTimer);
-    for (const tabId of loaded) TABS[tabId].view.render();
-  }
-
   /* No stored choice follows the system, like the Almanach. The button
      names what clicking switches *to*, not the current state. */
   function currentTheme() {
@@ -203,12 +194,6 @@ const App = (() => {
       if (on) { loaded.delete(activeTab); runTab(activeTab, true); }
     });
     setAutoRefresh(localStorage.getItem("tow_auto_refresh") === "1");
-
-    $("lang-toggle").addEventListener("click", () => {
-      LANG = LANG === "de" ? "en" : "de";
-      localStorage.setItem("tow_lang", LANG);
-      rerenderAll();
-    });
 
     $("theme-toggle").addEventListener("click", () => {
       setTheme(currentTheme() === "light" ? "dark" : "light");

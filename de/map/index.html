@@ -1,24 +1,22 @@
 <!DOCTYPE html>
-<!-- Source template and the English home page. After editing, run:
-     python tools/build_pages.py — it regenerates every page in both
-     languages (/…, /de/…), js/routes.js and sitemap.xml. -->
-<html lang="en">
+<!-- Generated from index.html by tools/build_pages.py — do not edit by hand. -->
+<html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Warzone Companion — EVE Online Factional Warfare</title>
-<meta name="description" content="Factional Warfare companion for EVE Online: both warzones at a glance, live maps, frontline roles, LP store optimizer, leaderboards and Military Campaigns.">
-<link rel="canonical" href="https://warzone.tonicdock.com/">
-<link rel="alternate" hreflang="en" href="https://warzone.tonicdock.com/">
-<link rel="alternate" hreflang="de" href="https://warzone.tonicdock.com/de/">
-<link rel="alternate" hreflang="x-default" href="https://warzone.tonicdock.com/">
+<title>Karte der Warzones — Warzone Companion</title>
+<meta name="description" content="Interaktive Karten der Warzones im Fraktionskrieg von EVE Online: Besatzung, Frontlinie, Advantage, Insurgencies und Aktivität je System.">
+<link rel="canonical" href="https://warzone.tonicdock.com/de/map/">
+<link rel="alternate" hreflang="en" href="https://warzone.tonicdock.com/map/">
+<link rel="alternate" hreflang="de" href="https://warzone.tonicdock.com/de/map/">
+<link rel="alternate" hreflang="x-default" href="https://warzone.tonicdock.com/map/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Warzone Companion">
-<meta property="og:locale" content="en_US">
-<meta property="og:locale:alternate" content="de_DE">
-<meta property="og:title" content="Warzone Companion — EVE Online Factional Warfare">
-<meta property="og:description" content="Factional Warfare companion for EVE Online: both warzones at a glance, live maps, frontline roles, LP store optimizer, leaderboards and Military Campaigns.">
-<meta property="og:url" content="https://warzone.tonicdock.com/">
+<meta property="og:locale" content="de_DE">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:title" content="Karte der Warzones — Warzone Companion">
+<meta property="og:description" content="Interaktive Karten der Warzones im Fraktionskrieg von EVE Online: Besatzung, Frontlinie, Advantage, Insurgencies und Aktivität je System.">
+<meta property="og:url" content="https://warzone.tonicdock.com/de/map/">
 <meta property="og:image" content="https://warzone.tonicdock.com/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -31,14 +29,14 @@
      scheme. Without one, the system decides (css/app.css). -->
 <script>try { const th = localStorage.getItem("tow_theme"); if (th) document.documentElement.dataset.theme = th; } catch {}</script>
 </head>
-<body data-tab="overview">
+<body data-tab="map">
 
 <header class="hdr">
-  <a class="hdr-brand" href="/">
+  <a class="hdr-brand" href="/de/">
     <div class="logo">WZ</div>
     <div class="brand-text">
       <span class="brand-name">Warzone Companion</span>
-      <span class="brand-tag" data-i18n="tagline">Factional Warfare in EVE Online</span>
+      <span class="brand-tag" data-i18n="tagline">Fraktionskrieg in EVE Online</span>
     </div>
   </a>
 
@@ -49,8 +47,8 @@
   <div class="hdr-actions">
     <span class="chip-live" id="live-chip"><span class="dot"></span><span id="live-label"></span></span>
     <button class="btn" id="auto-refresh" data-i18n="btn_auto" data-i18n-title="auto_refresh_title">Auto</button>
-    <a class="btn" id="lang-toggle" href="/de/" hreflang="de" lang="de">DE</a>
-    <button class="btn" id="theme-toggle">Light</button>
+    <a class="btn" id="lang-toggle" href="/map/" hreflang="en" lang="en">EN</a>
+    <button class="btn" id="theme-toggle">Hell</button>
   </div>
 </header>
 
@@ -62,7 +60,7 @@
 
     <div class="page-head">
       <div>
-        <h1 id="page-title">Situation</h1>
+        <h1 id="page-title">Karte</h1>
         <p id="page-sub"></p>
       </div>
       <div class="page-chips" id="page-chips"></div>
@@ -77,14 +75,14 @@
         <div class="grid-cc">
           <section class="panel">
             <div class="panel-head">
-              <h2 data-i18n="sec_critical">Critical Systems</h2>
+              <h2 data-i18n="sec_critical">Kritische Systeme</h2>
               <span class="panel-count" id="ov-crit-count"></span>
             </div>
             <div id="ov-criticals"></div>
           </section>
           <div class="stack">
             <section class="panel">
-              <div class="panel-head"><h2 data-i18n="sec_flips">System flips</h2></div>
+              <div class="panel-head"><h2 data-i18n="sec_flips">Systemwechsel</h2></div>
               <div id="ov-flips"></div>
             </section>
             <section class="panel ins-panel hidden" id="ov-ins-panel">
@@ -118,7 +116,7 @@
       <div class="stack">
         <div class="grid-two" id="hist-charts"></div>
         <section class="panel">
-          <div class="panel-head"><h2 data-i18n="sec_fliplog">Full Flip Log</h2></div>
+          <div class="panel-head"><h2 data-i18n="sec_fliplog">Vollständiges Wechsel-Protokoll</h2></div>
           <div id="flips-body"></div>
         </section>
       </div>
@@ -127,7 +125,7 @@
     <!-- LP store -->
     <section id="panel-lp" class="hidden">
       <div style="margin-bottom:16px">
-        <div class="chip-group-label" data-i18n="lp_militia">Militia corporation</div>
+        <div class="chip-group-label" data-i18n="lp_militia">Militia-Corporation</div>
         <div class="chip-group" id="lp-corp-chips"></div>
       </div>
       <div id="lp-trend" style="margin-bottom:16px"></div>
@@ -136,18 +134,18 @@
         <div id="lp-body"></div>
       </div>
       <div class="cards" id="lp-cards"></div>
-      <p class="lp-foot"><span id="lp-mode"></span> · <span data-i18n="lp_footnote">Market value = Jita 4-4 buy order. ISK/LP = (market value − ISK cost) / LP.</span></p>
+      <p class="lp-foot"><span id="lp-mode"></span> · <span data-i18n="lp_footnote">Marktwert = Jita 4-4 Buy-Order. ISK/LP = (Marktwert − ISK-Kosten) / LP.</span></p>
     </section>
 
     <!-- Leaderboards -->
     <section id="panel-boards" class="hidden">
       <div style="display:flex;flex-wrap:wrap;gap:18px;margin-bottom:16px">
         <div>
-          <div class="chip-group-label" data-i18n="lb_category">Category</div>
+          <div class="chip-group-label" data-i18n="lb_category">Kategorie</div>
           <div class="chip-group" id="lb-cat-chips"></div>
         </div>
         <div>
-          <div class="chip-group-label" data-i18n="lb_period">Period</div>
+          <div class="chip-group-label" data-i18n="lb_period">Zeitraum</div>
           <div class="chip-group" id="lb-period-chips"></div>
         </div>
       </div>
@@ -165,9 +163,9 @@
     </section>
 
     <footer class="site-foot">
-      <div data-i18n="footer_source">Data source: EVE Swagger Interface (ESI), public endpoints only. Fetched every 30 minutes when the site is built, not by your browser.</div>
+      <div data-i18n="footer_source">Datenquelle: EVE Swagger Interface (ESI), ausschließlich öffentliche Endpoints. Alle 30 Minuten beim Bau der Seite abgerufen, nicht von deinem Browser.</div>
       <div>&copy; CCP hf. All rights reserved. "EVE", "EVE Online", "CCP", and all related logos and images are trademarks or registered trademarks of CCP hf. This material is used with limited permission of CCP Games. No official affiliation or endorsement by CCP Games is stated or implied.</div>
-      <div class="ver">v0.5 · <a href="https://github.com/GurkeTonic/Warzone-Companion" target="_blank" rel="noopener">GitHub</a> · <a id="legal-link" href="/legal/">Privacy &amp; legal</a></div>
+      <div class="ver">v0.5 · <a href="https://github.com/GurkeTonic/Warzone-Companion" target="_blank" rel="noopener">GitHub</a> · <a id="legal-link" href="/de/legal/">Datenschutz &amp; Rechtliches</a></div>
     </footer>
   </main>
 </div>
