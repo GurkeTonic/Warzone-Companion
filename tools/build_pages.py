@@ -23,60 +23,68 @@ BASE_URL = "https://warzone.tonicdock.com"
 ROOT_PAGE = {
     "tab": "overview",
     "dir": "",
-    "title": "Warzone Companion — EVE Online Factional Warfare",
-    "description": "Factional Warfare companion for EVE Online: both warzones at a glance, live maps, "
-                   "frontline roles, LP store optimizer, leaderboards, and Military Campaigns.",
+    "h1": "Lage",
+    "title": "Warzone Companion — Fraktionskrieg (Factional Warfare) in EVE Online",
+    "description": "Fraktionskrieg in EVE Online: beide Warzones auf einen Blick, Live-Karten, "
+                   "Frontlinien, LP-Store-Rechner, Ranglisten und Military Campaigns.",
 }
 
 PAGES = [
     {
         "tab": "warzones",
         "dir": "warzones",
+        "h1": "Warzones",
         "title": "Warzones — Warzone Companion",
-        "description": "Every contested EVE Online Factional Warfare system with its occupier, "
-                       "frontline role, victory points, Advantage, and kills in the last hour.",
+        "description": "Jedes umkämpfte System im Fraktionskrieg von EVE Online mit Besatzer, "
+                       "Frontlinien-Rolle, Siegpunkten, Advantage und Kills der letzten Stunde.",
     },
     {
         "tab": "map",
         "dir": "map",
-        "title": "Warzone Map — Warzone Companion",
-        "description": "Interactive EVE Online Factional Warfare warzone maps: "
-                       "occupancy, frontline status, Advantage, insurgencies, and activity per system.",
+        "h1": "Karte",
+        "title": "Karte der Warzones — Warzone Companion",
+        "description": "Interaktive Karten der Warzones im Fraktionskrieg von EVE Online: "
+                       "Besatzung, Frontlinie, Advantage, Insurgencies und Aktivität je System.",
     },
     {
         "tab": "history",
         "dir": "history",
-        "title": "Warzone History — Warzone Companion",
-        "description": "EVE Online Factional Warfare over time: systems held, pilots, "
-                       "LP value per militia, and a full system flip log.",
+        "h1": "Verlauf",
+        "title": "Verlauf — Warzone Companion",
+        "description": "Der Fraktionskrieg in EVE Online über die Zeit: gehaltene Systeme, Piloten, "
+                       "LP-Wert je Miliz und ein vollständiges Wechsel-Protokoll.",
     },
     {
         "tab": "lp",
         "dir": "lp",
-        "title": "LP Store Optimizer — Warzone Companion",
-        "description": "ISK per LP ranking for all EVE Online militia LP stores, "
-                       "with live Jita order-book pricing and market depth.",
+        "h1": "LP-Store",
+        "title": "LP-Store-Rechner — Warzone Companion",
+        "description": "ISK pro LP für alle Milizen-LP-Stores in EVE Online, "
+                       "mit Live-Preisen aus dem Jita-Orderbuch und Markttiefe.",
     },
     {
         "tab": "boards",
         "dir": "leaderboards",
-        "title": "Leaderboards — Warzone Companion",
-        "description": "EVE Online Factional Warfare leaderboards: top characters and "
-                       "corporations by kills and victory points.",
+        "h1": "Ranglisten",
+        "title": "Ranglisten — Warzone Companion",
+        "description": "Ranglisten im Fraktionskrieg von EVE Online: die besten Charaktere und "
+                       "Corporations nach Kills und Siegpunkten.",
     },
     {
         "tab": "campaigns",
         "dir": "campaigns",
-        "title": "Military Campaigns — Warzone Companion",
-        "description": "EVE Online Military Campaigns with live progress, participation, "
-                       "official titles, objectives, and rewards.",
+        "h1": "Kampagnen",
+        "title": "Kampagnen (Military Campaigns) — Warzone Companion",
+        "description": "Military Campaigns in EVE Online mit Live-Fortschritt, Beteiligung, "
+                       "offiziellen Titeln, Zielen und Belohnungen.",
     },
     {
         "tab": "faq",
         "dir": "faq",
-        "title": "FAQ — Warzone Companion",
-        "description": "How the Warzone Companion works: data sources, frontline rules, "
-                       "Advantage, insurgencies, and the flip feed.",
+        "h1": "Häufige Fragen",
+        "title": "Häufige Fragen — Warzone Companion",
+        "description": "Wie der Warzone Companion arbeitet: Datenquellen, Frontlinien-Regeln, "
+                       "Advantage, Insurgencies und der Wechsel-Feed.",
     },
 ]
 
@@ -107,6 +115,11 @@ def build_page(template, page):
     html = re.sub(
         r'<link rel="canonical" href="[^"]*">',
         f'<link rel="canonical" href="{BASE_URL}/{page["dir"]}/">',
+        html, count=1,
+    )
+    html = re.sub(
+        r'<h1 id="page-title">[^<]*</h1>',
+        f'<h1 id="page-title">{page["h1"]}</h1>',
         html, count=1,
     )
     html = html.replace('<body data-tab="overview">', f'<body data-tab="{page["tab"]}">', 1)
@@ -147,7 +160,7 @@ def build_routes_js():
 def main():
 
     template = TEMPLATE.read_text(encoding="utf-8")
-    for marker in ('<body data-tab="overview">', "<title>", 'rel="canonical"'):
+    for marker in ('<body data-tab="overview">', "<title>", 'rel="canonical"', '<h1 id="page-title">'):
         if marker not in template:
             sys.exit(f"template marker missing: {marker}")
 
