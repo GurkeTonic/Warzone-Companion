@@ -27,9 +27,15 @@ permissions:
   pages: write
   id-token: write
 
+# A newer run replaces the one before it. On 2026-10-07 the deploy job of
+# the 10:50 UTC run hung in "waiting" on the github-pages environment (no
+# reviewers, no timer), as eve-freelancer's did twice on 2026-10-06, holding
+# this group so every later run queued or was cancelled behind it. With the
+# next run 30 minutes away, cancelling an older run loses nothing: an
+# interrupted Pages deploy leaves the previous site up.
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   SITE: https://warzone.tonicdock.com
