@@ -149,7 +149,7 @@ const BoardsView = (() => {
       const pct = Math.max(0, Math.round(e.amount / maxV * 100));
       return `
         <div class="lb-row${i === 0 ? " top" : ""}">
-          <span class="lb-rank${rankCls}">${String(i + 1).padStart(2, "0")}</span>
+          <span class="lb-rank${rankCls}">${i + 1}</span>
           <span class="lb-who">
             <span class="lb-name">${esc(ESI.name(id))}</span>
             <span class="lb-militia" style="color:${facColor}">${esc(facLabel)}</span>

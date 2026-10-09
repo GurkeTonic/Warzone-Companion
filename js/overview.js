@@ -25,6 +25,10 @@ const OverviewView = (() => {
   const MAP_H = 600;
   const PAD = 26;
   const MIN_GAP = 24;         // dots closer than this are nudged apart
+  /* A contested system needs room for its ring: two rings stay this far
+     apart, a ring and a dot RING_GAP/2 + MIN_GAP/2. Without it the dense
+     knot around Klogori and Ontorn drew rings over each other. */
+  const RING_GAP = 38;
   const DOT_R = 6;
   const RING_R = 12;
   const TICK = 7;             // half length of a front mark, in screen px
@@ -69,7 +73,7 @@ const OverviewView = (() => {
 
   /* ---------- the front, drawn ---------- */
 
-  function layout(ids) {
+  function layout(ids, ringed) {
     const xs = ids.map(id => SDATA.fw[id].x);
     const ys = ids.map(id => SDATA.fw[id].y);
     const minX = Math.min(...xs), maxX = Math.max(...xs);
@@ -81,15 +85,16 @@ const OverviewView = (() => {
       x: PAD + (SDATA.fw[id].x - minX) * scale,
       y: MAP_H - PAD - (SDATA.fw[id].y - minY) * scale
     }]));
-    for (let iter = 0; iter < 80; iter++) {
+    for (let iter = 0; iter < 120; iter++) {
       let moved = false;
       for (let i = 0; i < ids.length; i++) {
         for (let j = i + 1; j < ids.length; j++) {
           const a = pos.get(ids[i]), b = pos.get(ids[j]);
           let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
           if (d < 0.01) { dx = 1; dy = 0; d = 1; }
-          if (d < MIN_GAP) {
-            const push = (MIN_GAP - d) / 2;
+          const gap = ((ringed.has(ids[i]) ? RING_GAP : MIN_GAP) + (ringed.has(ids[j]) ? RING_GAP : MIN_GAP)) / 2;
+          if (d < gap) {
+            const push = (gap - d) / 2;
             a.x -= dx / d * push; a.y -= dy / d * push;
             b.x += dx / d * push; b.y += dy / d * push;
             moved = true;
@@ -115,7 +120,8 @@ const OverviewView = (() => {
       .map(s => s.solar_system_id);
     if (!ids.length) return "";
 
-    const { pos, W } = layout(ids);
+    const ringed = new Set(ids.filter(id => byId.get(id).contested !== "uncontested" && FwData.pct(byId.get(id)) >= CRIT_MIN));
+    const { pos, W } = layout(ids, ringed);
     const inZone = new Set(ids);
     const occ = id => byId.get(id).occupier_faction_id;
     const f1 = v => v.toFixed(1);
@@ -203,10 +209,21 @@ const OverviewView = (() => {
   }
 
   /* Names go where they fit at the size the map is actually drawn: the most
-     advanced attack first, each tried right, left, above and below its dot;
-     a name that fits nowhere stays out (the table lists it anyway). Runs
-     again when the maps change size. */
-  const SIDES = { r: "side-r", l: "side-l", t: "side-t", b: "side-b" };
+     advanced attack first, each tried in eight places around its ring; no
+     name may cover another name, a dot or a ring. A critical name that fits
+     nowhere still shows, on a ground-coloured plate; any other stays out
+     (the table lists it anyway). Runs again when the maps change size. */
+  const G = 14;   // px from the dot's centre to the name
+  const SPOTS = {  // [dx px, dy px, share of own width, share of own height]
+    r: [G, 0, 0, -0.5], l: [-G, 0, -1, -0.5],
+    t: [0, -G + 2, -0.5, -1], b: [0, G - 2, -0.5, 0],
+    rt: [G - 4, -G + 4, 0, -1], rb: [G - 4, G - 4, 0, 0],
+    lt: [-G + 4, -G + 4, -1, -1], lb: [-G + 4, G - 4, -1, 0]
+  };
+  function spot(el, key) {
+    const [dx, dy, ax, ay] = SPOTS[key];
+    el.style.transform = `translate(calc(${ax * 100}% + ${dx}px), calc(${ay * 100}% + ${dy}px))`;
+  }
   function placeNames() {
     for (const map of document.querySelectorAll("#ov-warzones .wz-map")) {
       const frame = map.getBoundingClientRect();
@@ -214,27 +231,38 @@ const OverviewView = (() => {
       map.style.setProperty("--u", (MAP_H / frame.height).toFixed(3));
       const placed = [];
       const names = [...map.querySelectorAll(".wz-name")].sort((a, b) => b.dataset.p - a.dataset.p);
-      const dots = [...map.querySelectorAll(".dot")].map(d => d.getBoundingClientRect());
+      const marks = [...map.querySelectorAll(".dot, .ring-bed")].map(d => d.getBoundingClientRect());
       for (const el of names) {
         el.hidden = false;
-        const order = el.dataset.side === "r" ? ["r", "l", "t", "b"] : ["l", "r", "t", "b"];
+        el.classList.remove("plate");
+        const order = el.dataset.side === "r"
+          ? ["r", "rt", "rb", "l", "lt", "lb", "t", "b"]
+          : ["l", "lt", "lb", "r", "rt", "rb", "t", "b"];
         let ok = false;
-        for (const side of order) {
-          el.className = el.className.replace(/ side-\w/g, "") + " " + SIDES[side];
+        for (const key of order) {
+          spot(el, key);
           const r = el.getBoundingClientRect();
           const box = { l: r.left - 2, r: r.right + 2, t: r.top - 1, b: r.bottom + 1 };
           const hits = o => box.l < o.right && box.r > o.left && box.t < o.bottom && box.b > o.top;
-          if (box.l < frame.left || box.r > frame.right) continue;
-          /* A critical name may cover a dot, never another name. */
-          if (placed.some(hits) || (!el.classList.contains("is-crit") && dots.some(hits))) continue;
+          if (box.l < frame.left || box.r > frame.right || box.t < frame.top - 4) continue;
+          if (placed.some(hits) || marks.some(hits)) continue;
           placed.push(r);
           ok = true;
           break;
         }
-        if (!ok && el.classList.contains("is-crit")) {
-          el.className = el.className.replace(/ side-\w/g, "") + " " + SIDES[order[0]];
+        if (ok) continue;
+        if (el.classList.contains("is-crit")) {
+          /* First spot that clears the other names, on a plate. */
+          el.classList.add("plate");
+          const key = order.find(k => {
+            spot(el, k);
+            const r = el.getBoundingClientRect();
+            return r.left >= frame.left && r.right <= frame.right &&
+              !placed.some(o => r.left < o.right && r.right > o.left && r.top < o.bottom && r.bottom > o.top);
+          }) || order[0];
+          spot(el, key);
           placed.push(el.getBoundingClientRect());
-        } else if (!ok) el.hidden = true;
+        } else el.hidden = true;
       }
     }
   }

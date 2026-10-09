@@ -12,10 +12,13 @@
  *   2. No boxes. Order comes from one left edge and space; rules only
  *      between table rows. The maps sit on the page ground, unframed.
  *   3. System font only, one family. Classic scale 12/14/16/18/21/24/36 px.
- *      Numbers as tabular figures in the same face; monospace stays only
- *      where the other tabs still ask for it (var(--mono)).
+ *      Numbers as tabular figures in the same face.
  *   4. Ground is a cool grey in light and a blue slate in dark, taken from
  *      the cold of EVE's own interface; not cream, not near-black.
+ *
+ * Since the second pass the same day the other tabs follow too: no
+ * monospace anywhere, the critical row marker in ink, both warzones beside
+ * the timestamp on every tab but the overview.
  *
  * Kept from before: layout as token swaps at a few breakpoints, table OR
  * cards in the DOM (JS reads the same 900px breakpoint), one small radius.
@@ -61,8 +64,10 @@
 
   --sans: system-ui, -apple-system, "Segoe UI Variable Text", "Segoe UI",
           Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
-  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
-          "Liberation Mono", "DejaVu Sans Mono", monospace;
+  /* No monospace any more (9.10.2026): numbers are tabular figures in the
+     system face (body, below). The name stays because the views write it
+     into inline styles. */
+  --mono: var(--sans);
   /* Old names, still used in inline styles the views write. */
   --fb: var(--sans);
   --fm: var(--mono);
@@ -117,6 +122,7 @@ body {
   font-family: var(--sans);
   font-size: 1rem;
   line-height: 1.5;
+  font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
 }
@@ -177,7 +183,7 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 }
 .btn:hover, .chip:hover { background: var(--surf2); color: var(--txt); }
 .hdr .btn { border-color: transparent; }
-.page-meta .btn { border-color: transparent; padding-inline: 0.4rem; text-decoration: underline; text-decoration-color: var(--lineS); text-underline-offset: 3px; }
+.page-meta .btn { border-color: transparent; padding-inline: 0; text-decoration: underline; text-decoration-color: var(--lineS); text-underline-offset: 3px; }
 .btn[aria-pressed="true"] { color: var(--txt); text-decoration: none; }
 .btn[aria-pressed="true"]::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 @media (pointer: coarse) { .btn, .chip { min-height: 2.75rem; padding-inline: 0.85rem; } }
@@ -212,12 +218,25 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 /* ============================================================ PAGE HEAD */
 .page-head {
   display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap;
-  gap: 1rem 2rem; margin-bottom: 2rem;
+  gap: 0.75rem 2rem; margin-bottom: 2rem;
 }
 .page-head h1 { font-size: var(--fs-3xl); font-weight: 700; letter-spacing: -0.025em; line-height: 1.1; }
 .page-head p { font-size: var(--fs-l); color: var(--txt2); margin-top: 0.4rem; max-width: 60ch; text-wrap: pretty; }
-.page-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: var(--fs-s); color: var(--dim); }
+/* Its own line under the heading, left like everything else; at the side
+   it changed lines when the front strip filled in (layout shift). */
+.page-meta { display: flex; align-items: center; flex-wrap: wrap; flex-basis: 100%; gap: 0.5rem 1.5rem; font-size: var(--fs-s); color: var(--dim); }
 .page-meta .num { color: var(--txt2); }
+/* Its own line, reserved before the data arrives, so nothing below moves
+   when it fills (layout shift). The overview has the maps instead. */
+.front-strip { display: flex; flex-wrap: wrap; min-height: 1.5em; min-width: min(100%, 31rem); gap: 0.25rem 1.5rem; color: var(--txt2); }
+@media (max-width: 560px) { .front-strip { min-height: 3.25em; } }
+.front-strip[hidden], body[data-tab="overview"] .front-strip { display: none; }
+/* Tabs whose chips arrive with the data keep their row from the start. */
+body:is([data-tab="warzones"], [data-tab="map"], [data-tab="history"]) .page-chips { display: flex; min-height: 2rem; }
+@media (pointer: coarse) { body:is([data-tab="warzones"], [data-tab="map"], [data-tab="history"]) .page-chips { min-height: 2.75rem; } }
+.fs-cell { display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
+.fs-cell b { color: var(--txt); font-weight: 600; }
+.fs-bar { width: 3.5rem; height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--a) var(--p), var(--surf) var(--p), var(--surf) calc(var(--p) + 2px), var(--b) calc(var(--p) + 2px)); }
 /* Room for the timestamp before it arrives, so the button beside it stays put. */
 #rail-updated { display: inline-block; min-width: 10.5em; }
 .page-chips { display: flex; gap: 0.35rem; flex-wrap: wrap; flex-basis: 100%; }
@@ -230,13 +249,14 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 .chip-group-label { font-size: var(--fs-s); color: var(--dim); margin-bottom: 0.35rem; }
 
 /* ============================================================ PANELS (other tabs) */
-.panel { border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
-.panel-pad { padding: 1rem 1.15rem; }
+/* No boxes here either: a panel is a heading and its rows. */
+.panel { overflow: hidden; }
+.panel-pad { padding: 0; }
 .panel-head {
   display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem;
-  padding: 0.7rem 1.15rem; border-bottom: 1px solid var(--line2);
+  padding: 0 0 0.6rem; border-bottom: 1px solid var(--line);
 }
-.panel-head h2, .panel-pad > h2 { font-size: var(--fs-m); font-weight: 600; color: var(--txt); }
+.panel-head h2, .panel-pad > h2 { font-size: var(--fs-l); font-weight: 650; color: var(--txt); }
 .panel-count { font-size: var(--fs-s); font-variant-numeric: tabular-nums; color: var(--txt2); }
 
 .stack { display: flex; flex-direction: column; gap: 1.5rem; }
@@ -254,16 +274,13 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 .stat-k { font-size: var(--fs-s); color: var(--dim); }
 .stat-v { font-size: var(--fs-l); font-weight: 600; font-variant-numeric: tabular-nums; }
 
-.tag {
-  display: inline-block; padding: 0.05rem 0.45rem;
-  border: 1px solid currentColor; border-radius: var(--r);
-  font-size: var(--fs-xs); line-height: 1.4; white-space: nowrap;
-}
-.tag-lg { font-size: var(--fs-s); padding: 0.1rem 0.5rem; }
+/* A tag is a word, not a badge. */
+.tag { display: inline-block; font-size: var(--fs-s); line-height: 1.4; white-space: nowrap; }
+.tag-lg { font-size: var(--fs-m); }
 
 .row-btn {
   display: flex; align-items: center; gap: 0.8rem; width: 100%;
-  padding: 0.55rem 1.15rem; border-top: 1px solid var(--line2); text-align: left;
+  padding: 0.55rem 0; border-top: 1px solid var(--line2); text-align: left;
 }
 .row-btn:first-child { border-top: 0; }
 a.row-btn, a.trow, a.card, a.flip-row, a.log-row { color: inherit; text-decoration: none; }
@@ -314,13 +331,11 @@ a.row-btn, a.trow, a.card, a.flip-row, a.log-row { color: inherit; text-decorati
 .wz .ring-in { animation: ring-fill 1.1s cubic-bezier(.2, .7, .2, 1) .15s both; }
 
 .wz-name {
-  position: absolute; transform: translate(0.85rem, -50%);
+  position: absolute; left: 0; top: 0;
   font-size: var(--fs-xs); line-height: 1.2; color: var(--txt2); white-space: nowrap; pointer-events: none;
   text-shadow: 0 0 2px var(--surf), 0 0 2px var(--surf), 0 0 4px var(--surf);
 }
-.wz-name.side-l { transform: translate(calc(-100% - 0.85rem), -50%); }
-.wz-name.side-t { transform: translate(-50%, calc(-100% - 0.7rem)); }
-.wz-name.side-b { transform: translate(-50%, 0.7rem); }
+.wz-name.plate { background: var(--surf); padding: 0 0.2rem; border-radius: 2px; }
 .wz-name.is-crit { color: var(--txt); font-weight: 700; font-size: var(--fs-s); }
 
 .wz-foot { margin-top: 0.75rem; font-size: var(--fs-s); color: var(--dim); max-width: 46ch; }
@@ -371,21 +386,21 @@ ul.flips { list-style: none; margin-top: 0.75rem; }
 .ins-bars .meter { grid-column: 1 / -1; width: 100%; margin: 0.3rem 0 0; }
 
 /* ============================================================ TABLES + CARDS */
-.table { display: var(--tbl); border: 1px solid var(--line); background: var(--surf); border-radius: var(--r); overflow-x: auto; }
-.thead { display: flex; padding: 0 1rem; background: var(--bg); border-bottom: 1px solid var(--line); }
+.table { display: var(--tbl); overflow-x: auto; }
+.thead { display: flex; padding: 0; border-bottom: 1px solid var(--line); }
 .thead > * {
   padding: 0.5rem 0.4rem; text-align: left;
-  font-size: var(--fs-xs); font-weight: 600; color: var(--txt2); white-space: nowrap;
+  font-size: var(--fs-s); font-weight: 500; color: var(--dim); white-space: nowrap;
 }
 .thead button:hover { color: var(--txt); }
 .thead .sorted { color: var(--accent); }
 .trow {
   display: flex; align-items: center; width: 100%;
-  padding: 0.42rem 1rem; border-top: 1px solid var(--line2); text-align: left;
+  padding: 0.42rem 0 0.42rem 0.6rem; border-top: 1px solid var(--line2); text-align: left;
 }
 .trow:first-child { border-top: 0; }
 .trow:hover { background: var(--surfH); }
-.trow.crit { box-shadow: inset 3px 0 0 var(--crit); }
+.trow.crit { box-shadow: inset 3px 0 0 var(--txt); }
 .trow.crit:hover { background: var(--surfH); }
 
 .cards { display: var(--card); flex-direction: column; gap: 0; border-top: 1px solid var(--line2); }
@@ -491,17 +506,22 @@ ul.flips { list-style: none; margin-top: 0.75rem; }
 .chart-legend i { width: 14px; height: 2px; display: block; border-radius: 1px; }
 .chart-legend b { font-weight: 600; font-family: var(--mono); }
 .chart { display: block; width: 100%; height: 210px; }
+/* Room for the two charts while the history loads (layout shift). */
+#hist-charts:empty { min-height: 19.5rem; }
+@media (max-width: 1100px) { #hist-charts:empty { min-height: 40.5rem; } }
 .chart-axis { display: flex; justify-content: space-between; font: var(--fs-xs) var(--mono); color: var(--dim); margin-top: 0.4rem; }
 
 .log-row {
   display: flex; align-items: baseline; gap: 0.9rem; flex-wrap: wrap;
-  padding: 0.5rem 1.15rem; border-top: 1px solid var(--line2);
+  padding: 0.5rem 0; border-top: 1px solid var(--line2);
 }
 .log-row:first-child { border-top: 0; }
 .log-date { flex: 0 0 7.5rem; font: var(--fs-s) var(--mono); color: var(--dim); }
 .log-sys { flex: 1 1 150px; font-weight: 600; color: var(--txt); }
 .log-move { flex: 0 0 auto; display: flex; align-items: center; gap: 0.5rem; font-size: var(--fs-s); }
-.log-move .from { opacity: .7; }
+.log-move { gap: 0.9rem; }
+.log-move .fac { color: var(--txt); }
+.log-move .from { color: var(--dim); }
 .log-reg { font-weight: 400; font-size: var(--fs-s); color: var(--dim); margin-left: 0.3rem; }
 .chart-empty { color: var(--dim); font-size: var(--fs-s); padding: 1.5rem 0; }
 
@@ -516,17 +536,20 @@ ul.flips { list-style: none; margin-top: 0.75rem; }
 .c-ratio .bar { flex: 1; }
 .table-lp .thead, .table-lp .trow { min-width: 900px; }
 .table-lp .trow { cursor: default; }
+/* Room for the trend chart and the rows while they load (layout shift). */
+#lp-trend:empty { min-height: 21.5rem; }
+/* Room for the rows while the prices load (layout shift). */
+.table-lp:has(#lp-body:empty) { min-height: 60rem; }
 .lp-foot { font-size: var(--fs-s); color: var(--dim); margin-top: 0.8rem; }
 
 /* ============================================================ LEADERBOARDS */
 .lb-row {
   display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
-  padding: 0.55rem 1.15rem; border-top: 1px solid var(--line2);
+  padding: 0.55rem 0; border-top: 1px solid var(--line2);
 }
 .lb-row:first-child { border-top: 0; }
 .lb-rank { flex: 0 0 2rem; font: 600 var(--fs-base) var(--mono); color: var(--dim); text-align: right; }
-.lb-rank.g1 { color: var(--ama); }
-.lb-rank.g2 { color: var(--txt2); }
+.lb-rank.g1, .lb-rank.g2 { color: var(--txt); }
 .lb-who { flex: 2 1 200px; min-width: 0; }
 .lb-name { display: block; font-weight: 600; color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lb-militia { display: block; font-size: var(--fs-s); }
@@ -535,9 +558,9 @@ ul.flips { list-style: none; margin-top: 0.75rem; }
 .lb-val .num { flex: 0 0 4.5rem; text-align: right; font: 600 var(--fs-base) var(--mono); color: var(--txt); }
 
 /* ============================================================ CAMPAIGNS */
-.cmp-card { border-top-width: 3px; border-top-style: solid; padding: 1rem 1.15rem; }
+.cmp-card { border-top: 1px solid var(--line); padding-top: 1rem; }
 .cmp-top { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
-.cmp-side { font-size: var(--fs-s); color: var(--dim); }
+.cmp-side { font-size: var(--fs-s); color: var(--txt2); }
 .cmp-card h2 { font-size: var(--fs-xl); font-weight: 650; letter-spacing: -0.015em; color: var(--txt); margin-top: 0.6rem; }
 .cmp-text { font-size: var(--fs-m); color: var(--dim2); margin-top: 0.4rem; text-wrap: pretty; max-width: 72ch; }
 .cmp-obj { margin-top: 0.9rem; }
@@ -546,7 +569,7 @@ ul.flips { list-style: none; margin-top: 0.75rem; }
 .cmp-foot { display: flex; justify-content: space-between; gap: 0.6rem; margin-top: 0.8rem; font-size: var(--fs-s); }
 .cmp-foot .lbl { color: var(--dim); }
 .cmp-foot .val { color: var(--txt); font-weight: 600; font-family: var(--mono); }
-.cmp-card.done { opacity: .7; }
+/* Finished campaigns are named by their state word; no fading, it cost contrast. */
 
 /* ============================================================ FAQ */
 .faq-list { display: flex; flex-direction: column; max-width: 72ch; border-top: 1px solid var(--line); }
@@ -575,6 +598,7 @@ body:not(.ready) .site-foot { visibility: hidden; }
 /* ============================================================ LEGAL */
 .legal { max-width: 72ch; padding: 1.4rem var(--pad) 4rem; }
 .legal h2 { font-size: var(--fs-l); font-weight: 650; color: var(--txt); margin: 1.8rem 0 0.5rem; }
+.legal h1 { font-size: var(--fs-3xl); font-weight: 700; letter-spacing: -0.025em; line-height: 1.1; margin-bottom: 1rem; }
 .legal h2:first-child { margin-top: 0; }
 .legal h3 { font-size: var(--fs-base); font-weight: 600; color: var(--txt); margin: 1.1rem 0 0.3rem; }
 .legal p, .legal li { color: var(--dim2); }

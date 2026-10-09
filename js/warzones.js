@@ -278,7 +278,7 @@ const [WarzonesView, MapView, FwData] = (() => {
 
   function renderMap(wz) {
     return `
-        <svg viewBox="0 0 ${MAP_W} ${MAP_H}" role="img">${mapInner(wz)}</svg>
+        <svg viewBox="0 0 ${MAP_W} ${MAP_H}" role="img" aria-label="${esc(factionOf(wz.a).name)} ${esc(t("ov_vs"))} ${esc(factionOf(wz.b).name)}">${mapInner(wz)}</svg>
         <div class="map-controls">
           <button type="button" data-zoom="in" title="${t("map_zoom_in")}">+</button>
           <button type="button" data-zoom="out" title="${t("map_zoom_out")}">−</button>
@@ -384,7 +384,7 @@ const [WarzonesView, MapView, FwData] = (() => {
         adv && adv.occ !== null ? `${t("th_adv")}: ${adv.occ}:${adv.enemy}` : null,
         ins ? `${pirateOf(ins.pirate).name} — ${t("ins_corruption")} ${ins.corrPct.toFixed(0)}% / ${t("ins_suppression")} ${ins.suppPct.toFixed(0)}%` : null,
         `${t("th_jumps")}: ${jmp}`
-      ].filter(Boolean).join(" · ");
+      ].filter(Boolean).join("\n");
       const insRing = ins
         ? `<circle cx="${x}" cy="${y}" r="${r + 4}" data-r="${r + 4}" fill="none" stroke="${pirateOf(ins.pirate).color}" stroke-width="${ins.origin?.id === id ? 3 : 1.5}" style="stroke-opacity:calc(.7 * var(--o, 1))"/>`
         : "";
@@ -842,7 +842,7 @@ const [WarzonesView, MapView, FwData] = (() => {
             <span class="card-title">${esc(sysName(id))}</span>
             <span class="card-num" style="color:${enemy.color}">${p.toFixed(1)}%</span>
           </span>
-          <span class="card-meta">${esc(sysRegion(id))} · ${esc(fac.name)}</span>
+          <span class="card-meta">${esc(sysRegion(id))}, ${esc(fac.name)}</span>
           <span class="bar" style="margin:10px 0"><span style="width:${Math.min(100, p).toFixed(1)}%;background:${enemy.color}"></span></span>
           <span class="card-facts">
             <span class="tag" style="color:${st.color}">${st.label}</span>

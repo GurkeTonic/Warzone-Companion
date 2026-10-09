@@ -74,7 +74,12 @@ const App = (() => {
     btn?.setAttribute("aria-expanded", String(show));
   }
 
-  function setUpdated(text) {
+  /* The stamp is ISO from the build; shown as a date people read: DE in
+     the visitor's clock, EN in EVE time (fmtDateTime in js/i18n.js). */
+  function setUpdated(iso) {
+    const d = new Date(iso);
+    const text = isNaN(d) ? "" : fmtDateTime(d, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hour12: false }, true)
+      + (LANG === "de" ? " Uhr" : "");
     updatedText = text;
     const el = $("rail-updated");
     if (el) el.textContent = text;
@@ -91,6 +96,8 @@ const App = (() => {
     }
     $("bot-more")?.classList.toggle("active", Object.keys(TABS).indexOf(tabId) >= BOTTOM_N);
     toggleMore(false);
+    $("front-strip").hidden = tabId === "overview";
+    document.body.dataset.tab = tabId;   // css keys the reserved rows on it
     $("page-title").textContent = t("pt_" + tabId);
     $("page-sub").textContent = t("ps_" + tabId);
     /* Each view owns the chip row; anything left from the previous tab goes. */
@@ -112,6 +119,7 @@ const App = (() => {
     activeTab = tabId;
     showPanel(tabId);
     setStatus("idle"); // clear any error left over from a previous tab
+    if (tabId !== "overview") fillFrontStrip();
     const tab = TABS[tabId];
 
     if (loaded.has(tabId) && !force) {
@@ -129,7 +137,7 @@ const App = (() => {
          fetched, not when the browser loaded it. Set before render() so a
          view with a better answer (the campaigns mirror) can overwrite it. */
       const stamp = await ESI.fetched("fw");
-      setUpdated((stamp || new Date().toISOString()).slice(0, 16).replace("T", " ") + " UTC");
+      setUpdated(stamp || new Date().toISOString());
       tab.view.render();
       setStatus("idle");
     } catch (err) {
@@ -140,18 +148,36 @@ const App = (() => {
     document.body.classList.add("ready");
   }
 
-  /* The header strip summarises both warzones on every tab, so it is fed by
-     whichever view last loaded occupancy rather than by the overview alone. */
+  /* Both warzones in one line beside the timestamp, on every tab but the
+     overview, whose maps already say it. Was a strip in the header until
+     9.10.2026; the header now carries the nav. */
   function renderFrontStrip(rows) {
-    if (!$("front-strip")) return;   // the strip left the header on 9.10.2026
-    if (!rows || !rows.length) { $("front-strip").innerHTML = ""; return; }
-    $("front-strip").innerHTML = rows.map(r => `
-      <div class="strip-cell">
-        <span class="strip-tag">${esc(r.tag)}</span>
-        <span class="strip-val" style="color:${r.aColor}">${r.a}</span>
-        <span class="strip-bar"><span style="width:${r.pct};background:${r.aColor}"></span></span>
-        <span class="strip-val" style="color:${r.bColor}">${r.b}</span>
-      </div>`).join("");
+    const el = $("front-strip");
+    if (!el) return;
+    if (!rows || !rows.length) { el.innerHTML = ""; return; }
+    const name = id => factionOf(id).name.split(" ")[0];
+    el.innerHTML = rows.map((r, i) => {
+      const wz = WARZONES[i];
+      return `<span class="fs-cell" title="${esc(factionOf(wz.a).name)} ${r.a}, ${esc(factionOf(wz.b).name)} ${r.b}">
+        ${esc(name(wz.a))} <b class="num">${r.a}</b>
+        <span class="fs-bar" style="--a:${r.aColor};--b:${r.bColor};--p:${r.pct}" aria-hidden="true"></span>
+        <b class="num">${r.b}</b> ${esc(name(wz.b))}</span>`;
+    }).join("");
+  }
+
+  /* Every tab but the overview shows the strip, so it cannot wait for the
+     Warzones view to load: occupancy alone is one small file. */
+  async function fillFrontStrip() {
+    if ($("front-strip").childElementCount) return;
+    try {
+      const systems = await ESI.get("/fw/systems");
+      renderFrontStrip(WARZONES.map(wz => {
+        const a = systems.filter(x => x.occupier_faction_id === wz.a).length;
+        const b = systems.filter(x => x.occupier_faction_id === wz.b).length;
+        return { a, b, aColor: factionOf(wz.a).color, bColor: factionOf(wz.b).color,
+                 pct: `${(a + b ? a / (a + b) * 100 : 50).toFixed(1)}%` };
+      }));
+    } catch { /* the strip stays empty; the tab itself reports errors */ }
   }
 
   /* No stored choice follows the system, like the Almanach. The button

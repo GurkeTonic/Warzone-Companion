@@ -50,6 +50,7 @@
         <p id="page-sub">Wie die einzelnen Ansichten zu lesen sind und woher die Daten kommen.</p>
       </div>
       <div class="page-meta">
+        <span class="front-strip" id="front-strip"></span>
         <span><span data-i18n="updated_label">Stand</span> <span id="rail-updated" class="num"></span></span>
         <button class="btn" id="auto-refresh" aria-pressed="false" data-i18n="btn_auto" data-i18n-title="auto_refresh_title">Alle 5 Min. neu laden</button>
       </div>
@@ -76,7 +77,7 @@
             <div id="ov-flips"></div>
           </section>
           <section class="ov-block hidden" id="ov-ins-panel">
-            <h2 data-i18n="sec_insurgency">Piraten-Insurgency</h2>
+            <h2 data-i18n="sec_insurgency">Piratenaufstand</h2>
             <div id="ov-insurgencies"></div>
           </section>
         </div>
@@ -96,7 +97,7 @@
     <section id="panel-map" class="hidden">
       <div class="grid-cc">
         <div class="map-frame" id="map-frame"></div>
-        <aside class="detail" id="map-detail"></aside>
+        <div class="detail" id="map-detail"></div>
       </div>
     </section>
 
@@ -123,7 +124,7 @@
         <div id="lp-body"></div>
       </div>
       <div class="cards" id="lp-cards"></div>
-      <p class="lp-foot"><span id="lp-mode"></span> · <span data-i18n="lp_footnote">Marktwert = Jita 4-4 Buy-Order. ISK/LP = (Marktwert − ISK-Kosten) / LP.</span></p>
+      <p class="lp-foot"><span id="lp-mode"></span>. <span data-i18n="lp_footnote">Marktwert = Jita 4-4 Buy-Order. ISK/LP = (Marktwert − ISK-Kosten) / LP.</span></p>
     </section>
 
     <!-- Leaderboards -->

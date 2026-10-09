@@ -82,9 +82,8 @@ const HistoryView = (() => {
           <span class="log-date">${when}</span>
           <span class="log-sys">${esc(name)} <span class="log-reg">${esc(region)}</span></span>
           <span class="log-move">
-            <span class="from" style="color:${from.color}">${esc(from.name)}</span>
-            <span style="color:var(--dim)">→</span>
-            <span style="color:${to.color}">${esc(to.name)}</span>
+            <span class="fac" style="--c:${to.color}"><i></i>${esc(to.name)}</span>
+            <span class="from">${esc(t("ov_flip_prev"))} ${esc(from.name)}</span>
           </span>
         </div>
       `;

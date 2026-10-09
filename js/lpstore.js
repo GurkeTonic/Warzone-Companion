@@ -272,7 +272,8 @@ const LpStoreView = (() => {
   function rowFacts(r) {
     const thin = r.depth !== null && r.depth < r.quantity;
     const ratio = Math.round(r.iskPerLp);
-    const ratioColor = !jitaMode ? "var(--dim)" : (ratio >= 1500 ? "var(--gal)" : (ratio >= 1000 ? "var(--ama)" : "var(--dim2)"));
+    /* Ink for a good rate, grey below: the faction colours mean factions. */
+    const ratioColor = !jitaMode ? "var(--dim)" : (ratio >= 1500 ? "var(--txt)" : (ratio >= 1000 ? "var(--txt2)" : "var(--dim)"));
     const req = (r.required_items || [])
       .map(x => `${fmtNum(x.quantity)}× ${ESI.name(x.type_id)}`)
       .join(", ") || t("req_none");
@@ -308,7 +309,7 @@ const LpStoreView = (() => {
               <span class="card-title">${esc(ESI.name(r.type_id))}</span>
               <span class="card-num" style="color:${ratioColor}">${jitaMode ? fmtNum(ratio) : "—"}</span>
             </div>
-            <span class="card-meta">×${fmtNum(r.quantity)} · ${esc(req)}</span>
+            <span class="card-meta">×${fmtNum(r.quantity)}, ${esc(req)}</span>
             <div class="bar" style="margin:10px 0"><span style="width:${pct}%;background:${ratioColor}"></span></div>
             <div class="card-facts">
               <span>LP <b>${fmtNum(r.lp_cost)}</b></span>
