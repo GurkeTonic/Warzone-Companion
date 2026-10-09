@@ -30,35 +30,17 @@ const [WarzonesView, MapView, FwData] = (() => {
   let fit3d = null;      // { scale, cx, cy } held while a drag turns the map
   let keepFit = false;
 
-  /* Insurgency state (Havoc): same proxy/mirror pattern as Advantage. */
+  /* Insurgency state (Havoc): the static mirror, like Advantage. */
   async function loadInsurgency() {
     insurgency = null;
     let campaigns = null;
     try {
-      const res = await fetch("/api/insurgency");
-      if (res.ok) {
-        campaigns = (await res.json())
-          .filter(c => c.state === "ACTIVE")
-          .map(c => ({
-            pirate: c.pirateFactionId,
-            origin: { id: c.originSolarSystem?.id, name: c.originSolarSystem?.name },
-            systems: Object.fromEntries((c.insurgencies || []).map(e => [
-              e.solarSystem?.id,
-              [e.corruptionState || 0, e.corruptionPercentage || 0,
-               e.suppressionState || 0, e.suppressionPercentage || 0]
-            ]))
-          }));
-      }
-    } catch { /* proxy unavailable — try the static mirror */ }
-    if (!campaigns) {
-      try {
-        const res = await fetch("/data/insurgency.json", { cache: "no-cache" });
-        if (!res.ok) return;
-        const mirror = await res.json();
-        if (Date.now() - Date.parse(mirror.fetched) > MIRROR_MAX_AGE_MS) return;
-        campaigns = mirror.campaigns || [];
-      } catch { return; }
-    }
+      const res = await fetch("/data/insurgency.json", { cache: "no-cache" });
+      if (!res.ok) return;
+      const mirror = await res.json();
+      if (Date.now() - Date.parse(mirror.fetched) > MIRROR_MAX_AGE_MS) return;
+      campaigns = mirror.campaigns || [];
+    } catch { return; }
     insurgency = { campaigns, bySystem: new Map() };
     for (const c of campaigns) {
       for (const [id, v] of Object.entries(c.systems || {})) {
@@ -73,30 +55,16 @@ const [WarzonesView, MapView, FwData] = (() => {
 
   /*
    * Advantage comes from the war report API on www.eveonline.com, which has
-   * no CORS headers. Two optional sources, in order:
-   *   1. /api/warzone — live proxy in serve.py (local development)
-   *   2. data/warzone.json — static mirror committed by the scheduled
-   *      GitHub Action (hosted site), discarded when older than 24 h
-   * Without either, the column simply stays empty.
+   * no CORS headers, so the scheduled GitHub Action mirrors it to
+   * data/warzone.json; older than 24 h it is discarded. Until 9.10.2026 the
+   * browser first asked /api/warzone, a proxy only serve.py has: on the
+   * hosted site that was a 404 in every visitor's console.
+   * Without the mirror, the column simply stays empty.
    */
   const MIRROR_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
   async function loadAdvantage() {
     advantage = null;
-    try {
-      const res = await fetch("/api/warzone");
-      if (res.ok) {
-        const rows = await res.json();
-        advantage = new Map(rows.map(r => {
-          const entries = (r.advantage || []).filter(a => FACTIONS[a.factionID]);
-          const occ = entries.find(a => a.factionID === r.occupierFaction)?.totalAmount ?? null;
-          const enemy = Math.max(0,
-            ...entries.filter(a => a.factionID !== r.occupierFaction).map(a => a.totalAmount));
-          return [r.solarsystemID, { occ, enemy }];
-        }));
-        return;
-      }
-    } catch { /* proxy unavailable — try the static mirror */ }
     try {
       const res = await fetch("/data/warzone.json", { cache: "no-cache" });
       if (!res.ok) return;
@@ -320,8 +288,8 @@ const [WarzonesView, MapView, FwData] = (() => {
         <div class="map-legend">
           <span><i style="background:${factionOf(wz.a).color}"></i>${esc(factionOf(wz.a).name)}</span>
           <span><i style="background:${factionOf(wz.b).color}"></i>${esc(factionOf(wz.b).name)}</span>
-          <span><i style="background:var(--min)"></i>${t("st_critical")}</span>
-          <span><i style="background:var(--ama)"></i>${t("st_contested")}</span>
+          <span><i class="ring ring-crit"></i>${t("st_critical")}</span>
+          <span><i class="ring"></i>${t("st_contested")}</span>
         </div>
     `;
   }
@@ -672,12 +640,12 @@ const [WarzonesView, MapView, FwData] = (() => {
      per the Ops Room design: >=85 critical, >=30 contested, else stable. */
   function statusTag(p) {
     if (p >= 85) return {
-      key: "crit", label: t("st_critical"), color: "var(--min)",
-      bg: "color-mix(in srgb, var(--min) 14%, transparent)", border: "color-mix(in srgb, var(--min) 35%, transparent)"
+      key: "crit", label: t("st_critical"), color: "var(--txt)",
+      bg: "color-mix(in srgb, var(--txt) 10%, transparent)", border: "color-mix(in srgb, var(--txt) 35%, transparent)"
     };
     if (p >= 30) return {
-      key: "cont", label: t("st_contested"), color: "var(--ama)",
-      bg: "color-mix(in srgb, var(--ama) 12%, transparent)", border: "color-mix(in srgb, var(--ama) 35%, transparent)"
+      key: "cont", label: t("st_contested"), color: "var(--txt2)",
+      bg: "color-mix(in srgb, var(--txt2) 10%, transparent)", border: "color-mix(in srgb, var(--txt2) 30%, transparent)"
     };
     return {
       key: "stab", label: t("st_stable"), color: "var(--dim2)",

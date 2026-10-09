@@ -32,21 +32,9 @@
 <body data-tab="lp">
 
 <header class="hdr">
-  <a class="hdr-brand" href="/">
-    <div class="logo">WZ</div>
-    <div class="brand-text">
-      <span class="brand-name">Warzone Companion</span>
-      <span class="brand-tag" data-i18n="tagline">Factional Warfare in EVE Online</span>
-    </div>
-  </a>
-
-  <div class="hdr-strip-wrap">
-    <div class="hdr-strip" id="front-strip"></div>
-  </div>
-
+  <a class="hdr-brand" href="/">Warzone Companion</a>
+  <nav class="topnav" id="rail" aria-label="Sections"></nav>
   <div class="hdr-actions">
-    <span class="chip-live" id="live-chip"><span class="dot"></span><span id="live-label"></span></span>
-    <button class="btn" id="auto-refresh" data-i18n="btn_auto" data-i18n-title="auto_refresh_title">Auto</button>
     <a class="btn" id="lang-toggle" href="/de/lp/" hreflang="de" lang="de">DE</a>
     <button class="btn" id="theme-toggle">Light</button>
   </div>
@@ -54,14 +42,16 @@
 
 <div class="shell">
 
-  <nav class="rail" id="rail"></nav>
-
   <main class="main">
 
     <div class="page-head">
       <div>
         <h1 id="page-title">LP store</h1>
-        <p id="page-sub"></p>
+        <p id="page-sub">Which loyalty point rewards return the most ISK per LP right now.</p>
+      </div>
+      <div class="page-meta">
+        <span><span data-i18n="updated_label">As of</span> <span id="rail-updated" class="num"></span></span>
+        <button class="btn" id="auto-refresh" aria-pressed="false" data-i18n="btn_auto" data-i18n-title="auto_refresh_title">Reload every 5 min</button>
       </div>
       <div class="page-chips" id="page-chips"></div>
     </div>
@@ -70,26 +60,25 @@
 
     <!-- Overview -->
     <section id="panel-overview" class="hidden">
-      <div class="stack">
-        <div class="grid-two" id="ov-warzones"></div>
-        <div class="grid-cc">
-          <section class="panel">
-            <div class="panel-head">
-              <h2 data-i18n="sec_critical">Critical Systems</h2>
-              <span class="panel-count" id="ov-crit-count"></span>
-            </div>
-            <div id="ov-criticals"></div>
+      <div class="ov">
+        <div class="ov-front">
+          <div class="ov-maps" id="ov-warzones"></div>
+          <p class="ov-legend" data-i18n="ov_legend">Dot: who holds the system. Ring: how far the attacker is with the capture. Cross mark: stargate between the two sides.</p>
+        </div>
+        <section class="ov-block ov-side">
+          <h2 data-i18n="sec_critical">Close to flipping</h2>
+          <p class="ov-note" data-i18n="ov_crit_note">From 30 % attacker progress, with the change since yesterday.</p>
+          <div id="ov-criticals"></div>
+        </section>
+        <div class="ov-more">
+          <section class="ov-block">
+            <h2 data-i18n="sec_flips">Flipped in the last 48 hours</h2>
+            <div id="ov-flips"></div>
           </section>
-          <div class="stack">
-            <section class="panel">
-              <div class="panel-head"><h2 data-i18n="sec_flips">System flips</h2></div>
-              <div id="ov-flips"></div>
-            </section>
-            <section class="panel ins-panel hidden" id="ov-ins-panel">
-              <div class="panel-head"><h2 data-i18n="sec_insurgency">Insurgencies</h2></div>
-              <div id="ov-insurgencies"></div>
-            </section>
-          </div>
+          <section class="ov-block hidden" id="ov-ins-panel">
+            <h2 data-i18n="sec_insurgency">Pirate insurgency</h2>
+            <div id="ov-insurgencies"></div>
+          </section>
         </div>
       </div>
     </section>
@@ -163,9 +152,9 @@
     </section>
 
     <footer class="site-foot">
-      <div data-i18n="footer_source">Data source: EVE Swagger Interface (ESI), public endpoints only. Fetched every 30 minutes when the site is built, not by your browser.</div>
+      <div data-i18n="footer_source">The site is built every 30 minutes from ESI, public endpoints only; your browser never asks CCP. Page views are counted by Cloudflare Web Analytics, without cookies according to Cloudflare.</div>
       <div>&copy; CCP hf. All rights reserved. "EVE", "EVE Online", "CCP", and all related logos and images are trademarks or registered trademarks of CCP hf. This material is used with limited permission of CCP Games. No official affiliation or endorsement by CCP Games is stated or implied.</div>
-      <div class="ver">v0.5 · <a href="https://github.com/GurkeTonic/Warzone-Companion" target="_blank" rel="noopener">GitHub</a> · <a id="legal-link" href="/legal/">Privacy &amp; legal</a></div>
+      <div class="ver"><span>v0.5</span> <a href="https://github.com/GurkeTonic/Warzone-Companion" target="_blank" rel="noopener">GitHub</a> <a id="legal-link" href="/legal/">Privacy &amp; legal</a></div>
     </footer>
   </main>
 </div>

@@ -14,14 +14,14 @@ const App = (() => {
      localPath() turns it into the page's own language, and the result must
      be a key in ROUTES so soft navigation and the static pages agree. */
   const TABS = {
-    overview:  { view: OverviewView,  panel: "panel-overview",  path: "/",              icon: "◈" },
-    warzones:  { view: WarzonesView,  panel: "panel-warzones",  path: "/warzones/",     icon: "▤" },
-    map:       { view: MapView,       panel: "panel-map",       path: "/map/",          icon: "◇" },
-    history:   { view: HistoryView,   panel: "panel-history",   path: "/history/",      icon: "◠" },
-    lp:        { view: LpStoreView,   panel: "panel-lp",        path: "/lp/",           icon: "≡" },
-    boards:    { view: BoardsView,    panel: "panel-boards",    path: "/leaderboards/", icon: "▲" },
-    campaigns: { view: CampaignsView, panel: "panel-campaigns", path: "/campaigns/",    icon: "✶" },
-    faq:       { view: FaqView,       panel: "panel-faq",       path: "/faq/",          icon: "?" }
+    overview:  { view: OverviewView,  panel: "panel-overview",  path: "/" },
+    warzones:  { view: WarzonesView,  panel: "panel-warzones",  path: "/warzones/" },
+    map:       { view: MapView,       panel: "panel-map",       path: "/map/" },
+    history:   { view: HistoryView,   panel: "panel-history",   path: "/history/" },
+    lp:        { view: LpStoreView,   panel: "panel-lp",        path: "/lp/" },
+    boards:    { view: BoardsView,    panel: "panel-boards",    path: "/leaderboards/" },
+    campaigns: { view: CampaignsView, panel: "panel-campaigns", path: "/campaigns/" },
+    faq:       { view: FaqView,       panel: "panel-faq",       path: "/faq/" }
   };
 
   /* Matches the --tbl/--card swap in css/app.css. Views ask this instead of
@@ -42,22 +42,18 @@ const App = (() => {
   const isNarrow = () => NARROW.matches;
 
   function updateLiveChip(on) {
-    $("live-chip").classList.toggle("paused", !on);
-    $("live-label").textContent = on ? t("live_label") : t("paused_label");
-    $("auto-refresh").classList.toggle("active", on);
+    $("auto-refresh").setAttribute("aria-pressed", String(on));
   }
 
-  /* Rail and bottom nav render from the same TABS order; real <a href> so
-     middle-click, "open in new tab" and crawlers all still work. */
+  /* Header nav and bottom nav render from the same TABS order; real <a href>
+     so middle-click, "open in new tab" and crawlers all still work. The
+     header nav replaced the left rail on 9.10.2026: the overview's two maps
+     need the width, and eight words fit in one line from 1100px. */
   function renderNav() {
-    const links = (extra) => Object.entries(TABS).map(([id, tab]) => `
-      <a href="${localPath(tab.path)}" id="${extra}-tab-${id}" class="${id === activeTab ? "active" : ""}" title="${esc(t("tab_" + id))}">
-        <span class="rail-icon">${tab.icon}</span>
-        <span class="rail-label">${esc(t("tab_" + id))}</span>
-      </a>`).join("");
-
-    $("rail").innerHTML = links("rail") +
-      `<div class="rail-foot">${esc(t("updated_label"))}<br><span id="rail-updated">${esc(updatedText)}</span></div>`;
+    $("rail").setAttribute("aria-label", t("nav_label"));
+    $("bottom-nav").setAttribute("aria-label", t("nav_label"));
+    $("rail").innerHTML = Object.entries(TABS).map(([id, tab]) => `
+      <a href="${localPath(tab.path)}" id="rail-tab-${id}" class="${id === activeTab ? "active" : ""}"${id === activeTab ? ' aria-current="page"' : ""}>${esc(t("tab_" + id))}</a>`).join("");
 
     /* Phone: the first four in the bar, the rest behind "More" — eight
        labels do not fit 390px (before 5.10.2026 two of them ran off the
@@ -65,15 +61,9 @@ const App = (() => {
     const ids = Object.keys(TABS);
     const main = ids.slice(0, BOTTOM_N), rest = ids.slice(BOTTOM_N);
     const link = (id, prefix) => `
-      <a href="${localPath(TABS[id].path)}" id="${prefix}-tab-${id}" class="${id === activeTab ? "active" : ""}">
-        <span class="rail-icon">${TABS[id].icon}</span>
-        <span class="rail-label">${esc(t("tab_" + id))}</span>
-      </a>`;
+      <a href="${localPath(TABS[id].path)}" id="${prefix}-tab-${id}" class="${id === activeTab ? "active" : ""}">${esc(t("tab_" + id))}</a>`;
     $("bottom-nav").innerHTML = main.map(id => link(id, "bot")).join("") + `
-      <button type="button" id="bot-more" class="${rest.includes(activeTab) ? "active" : ""}" aria-expanded="false" aria-controls="more-sheet">
-        <span class="rail-icon">⋯</span>
-        <span class="rail-label">${esc(t("tab_more"))}</span>
-      </button>`;
+      <button type="button" id="bot-more" class="${rest.includes(activeTab) ? "active" : ""}" aria-expanded="false" aria-controls="more-sheet">${esc(t("tab_more"))}</button>`;
     $("more-sheet").innerHTML = rest.map(id => link(id, "more")).join("");
   }
 
@@ -94,6 +84,8 @@ const App = (() => {
     for (const [id, tab] of Object.entries(TABS)) {
       $(tab.panel).classList.toggle("hidden", id !== tabId);
       $("rail-tab-" + id)?.classList.toggle("active", id === tabId);
+      if (id === tabId) $("rail-tab-" + id)?.setAttribute("aria-current", "page");
+      else $("rail-tab-" + id)?.removeAttribute("aria-current");
       $("bot-tab-" + id)?.classList.toggle("active", id === tabId);
       $("more-tab-" + id)?.classList.toggle("active", id === tabId);
     }
@@ -143,11 +135,15 @@ const App = (() => {
     } catch (err) {
       reportError(err);
     }
+    /* The footer waits for the first render (css/app.css): shown at once it
+       sat under an empty panel and jumped away, a layout shift. */
+    document.body.classList.add("ready");
   }
 
   /* The header strip summarises both warzones on every tab, so it is fed by
      whichever view last loaded occupancy rather than by the overview alone. */
   function renderFrontStrip(rows) {
+    if (!$("front-strip")) return;   // the strip left the header on 9.10.2026
     if (!rows || !rows.length) { $("front-strip").innerHTML = ""; return; }
     $("front-strip").innerHTML = rows.map(r => `
       <div class="strip-cell">

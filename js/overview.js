@@ -1,164 +1,309 @@
-/* Overview ("Lage") view: both warzones on one screen — front line per
-   warzone with the headline numbers, the systems closest to flipping, the
-   most recent flips, and any running pirate insurgency.
+/* Overview ("Lage") view: where the front runs in both warzones and which
+   systems are about to change sides.
+
+   Redrawn 9.10.2026 around one picture: each warzone as CCP's schematic map
+   (SDE position2D and stargates), every system a dot in its holder's colour,
+   every gate between the two sides marked as the front, and a ring around
+   each contested system that fills as far as the attacker has got. Colour
+   means faction and nothing else; "critical" is said by the ring and the
+   name next to it, not by a red that would read as Minmatar.
 
    Reads its data through FwData, the facade the Warzones/Map views expose,
    so opening this tab reuses their fetch instead of issuing a second round
    of ESI requests.
-   Depends on config.js, i18n.js, warzones.js (FwData). */
+   Depends on config.js, i18n.js, fwlogic.js, warzones.js (FwData). */
 "use strict";
 
 const OverviewView = (() => {
-  /* A system is "critical" once the attacker is close enough to flipping it
-     that it is worth showing here; same threshold the systems table tints on. */
   const CRIT_ROWS = 8;
-  const FLIP_ROWS = 8;
+  const CRIT_MIN = 30;        // % attacker progress to count as contested
+  const FLIP_ROWS = 6;
   const FLIP_WINDOW_H = 48;
+
+  /* Map units. Height is fixed, width follows the warzone's own shape, so
+     both maps share a height and keep CCP's proportions. */
+  const MAP_H = 600;
+  const PAD = 26;
+  const MIN_GAP = 24;         // dots closer than this are nudged apart
+  const DOT_R = 6;
+  const RING_R = 12;
+  const TICK = 7;             // half length of a front mark, in screen px
+
+  let animated = false;       // the rings fill once per page load, not on every refresh
 
   async function load() {
     await FwData.load();
   }
 
   function skeleton() {
-    document.getElementById("ov-warzones").innerHTML = Array.from({ length: 2 }, () => `
-      <section class="panel panel-pad">
-        <div class="skel-fill" style="height:17px;width:55%;margin-bottom:16px"></div>
-        <div class="skel-fill" style="height:22px;margin-bottom:9px"></div>
-        <div class="skel-fill" style="height:12px;width:70%"></div>
-      </section>`).join("");
-    document.getElementById("ov-criticals").innerHTML = Array.from({ length: 6 }, () =>
-      `<div class="row-btn"><span class="skel-fill" style="height:26px;width:100%"></span></div>`).join("");
+    document.getElementById("ov-warzones").innerHTML = WARZONES.map(() => `
+      <figure class="wz"><div class="skel-fill" style="height:min(60vh,480px)"></div></figure>`).join("");
+    document.getElementById("ov-criticals").innerHTML =
+      `<div class="skel-fill" style="height:33rem;margin-top:0.75rem"></div>`;
   }
 
-  /* ---------- warzone cards ---------- */
+  /* ---------- helpers ---------- */
 
-  function statsFor(facId) {
-    return FwData.stats().find(x => x.faction_id === facId) || {};
+  const shortName = facId => factionOf(facId).name.split(" ")[0];
+
+  function fmtPct(p) {
+    const s = p.toLocaleString(LANG === "de" ? "de-DE" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    return LANG === "de" ? `${s} %` : `${s}%`;
   }
 
-  function renderWarzones() {
+  function fmtDelta(d) {
+    const s = Math.abs(d).toLocaleString(LANG === "de" ? "de-DE" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    return (d > 0 ? "+" : d < 0 ? "−" : "") + s;
+  }
+
+  function agoLabel(seconds) {
+    const h = Math.max(1, Math.floor(seconds / 3600));
+    const d = Math.floor(h / 24);
+    const n = LANG === "de"
+      ? (d >= 1 ? `${d} ${d === 1 ? "Tag" : "Tagen"}` : `${h} Std.`)
+      : (d >= 1 ? `${d} d` : `${h} h`);
+    return t("ov_ago").replace("{n}", n);
+  }
+
+  const fill = (key, vals) => Object.entries(vals).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, v), t(key));
+
+  /* ---------- the front, drawn ---------- */
+
+  function layout(ids) {
+    const xs = ids.map(id => SDATA.fw[id].x);
+    const ys = ids.map(id => SDATA.fw[id].y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const scale = (MAP_H - 2 * PAD) / ((maxY - minY) || 1);
+    const W = Math.round((maxX - minX) * scale + 2 * PAD);
+    /* position2D like the in-game 2D map: x east, y north (screen up). */
+    const pos = new Map(ids.map(id => [id, {
+      x: PAD + (SDATA.fw[id].x - minX) * scale,
+      y: MAP_H - PAD - (SDATA.fw[id].y - minY) * scale
+    }]));
+    for (let iter = 0; iter < 80; iter++) {
+      let moved = false;
+      for (let i = 0; i < ids.length; i++) {
+        for (let j = i + 1; j < ids.length; j++) {
+          const a = pos.get(ids[i]), b = pos.get(ids[j]);
+          let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
+          if (d < 0.01) { dx = 1; dy = 0; d = 1; }
+          if (d < MIN_GAP) {
+            const push = (MIN_GAP - d) / 2;
+            a.x -= dx / d * push; a.y -= dy / d * push;
+            b.x += dx / d * push; b.y += dy / d * push;
+            moved = true;
+          }
+        }
+      }
+      if (!moved) break;
+    }
+    for (const p of pos.values()) {
+      p.x = Math.min(W - PAD / 2, Math.max(PAD / 2, p.x));
+      p.y = Math.min(MAP_H - PAD / 2, Math.max(PAD / 2, p.y));
+    }
+    return { pos, W };
+  }
+
+  function frontMap(wz) {
     const systems = FwData.systems();
     const classes = FwData.classes();
     const kills = FwData.kills();
+    const byId = new Map(systems.map(s => [s.solar_system_id, s]));
+    const ids = systems
+      .filter(s => (s.occupier_faction_id === wz.a || s.occupier_faction_id === wz.b) && SDATA.fw[s.solar_system_id]?.x != null)
+      .map(s => s.solar_system_id);
+    if (!ids.length) return "";
 
-    document.getElementById("ov-warzones").innerHTML = WARZONES.map(wz => {
-      const facA = factionOf(wz.a);
-      const facB = factionOf(wz.b);
-      const inZone = systems.filter(s => s.occupier_faction_id === wz.a || s.occupier_faction_id === wz.b);
-      const a = inZone.filter(s => s.occupier_faction_id === wz.a).length;
-      const b = inZone.filter(s => s.occupier_faction_id === wz.b).length;
-      const total = a + b;
+    const { pos, W } = layout(ids);
+    const inZone = new Set(ids);
+    const occ = id => byId.get(id).occupier_faction_id;
+    const f1 = v => v.toFixed(1);
 
-      const frontlines = inZone.filter(s => classes?.get(s.solar_system_id) === "frontline").length;
-      const killsH = inZone.reduce((sum, s) => sum + (kills.get(s.solar_system_id) || 0), 0);
-      const pilots = (statsFor(wz.a).pilots || 0) + (statsFor(wz.b).pilots || 0);
+    const gates = [], marks = [];
+    const seen = new Set();
+    for (const id of ids) {
+      for (const n of FwLogic.fwNeighbors.get(id) || []) {
+        if (!inZone.has(n)) continue;
+        const key = id < n ? `${id}-${n}` : `${n}-${id}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const a = pos.get(id), b = pos.get(n);
+        const hostile = occ(id) !== occ(n);
+        gates.push(`<line x1="${f1(a.x)}" y1="${f1(a.y)}" x2="${f1(b.x)}" y2="${f1(b.y)}"/>`);
+        if (hostile) {
+          /* The front: a short bar across the gate, halfway between. */
+          /* Drawn at the origin and scaled by --u in css, so the mark has
+             the same length on screen however large the map is. */
+          const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+          const deg = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+          marks.push(`<g transform="translate(${f1(mx)} ${f1(my)}) rotate(${f1(deg)})"><line x1="0" y1="-${TICK}" x2="0" y2="${TICK}"/></g>`);
+        }
+      }
+    }
 
-      const stats = [
-        { k: t("ov_stat_frontlines"), v: fmtNum(frontlines), color: "var(--txt)" },
-        { k: t("ov_stat_kills"), v: fmtNum(killsH), color: killsH > 0 ? "var(--crit)" : "var(--txt)" },
-        { k: t("ov_stat_pilots"), v: fmtNum(pilots), color: "var(--txt)" }
-      ];
-
-      return `
-        <section class="panel panel-pad wz-card">
-          <div class="wz-card-head">
-            <h2>${esc(facA.name)} — ${esc(facB.name)}</h2>
-            <span class="wz-card-total">${fmtNum(total)} ${esc(t("systems_held"))}</span>
-          </div>
-          <div class="frontbar">
-            <span class="seg-a" style="width:${total ? (a / total * 100).toFixed(1) : 50}%;background:${facA.color}"></span>
-            <span class="seg-gap"></span>
-            <span class="seg-b" style="width:${total ? (b / total * 100).toFixed(1) : 50}%;background:${facB.color}"></span>
-          </div>
-          <div class="frontbar-legend">
-            <span style="color:${facA.color}">${fmtNum(a)} <small>${esc(facA.name)}</small></span>
-            <span style="color:${facB.color}"><small>${esc(facB.name)}</small> ${fmtNum(b)}</span>
-          </div>
-          <div class="stats stats-3">
-            ${stats.map(x => `<div><div class="stat-k">${esc(x.k)}</div><div class="stat-v" style="color:${x.color}">${x.v}</div></div>`).join("")}
-          </div>
-        </section>`;
+    const contested = [];
+    const dots = ids.map(id => {
+      const s = byId.get(id);
+      const p = FwData.pct(s);
+      const holder = factionOf(s.occupier_faction_id);
+      const { x, y } = pos.get(id);
+      const tip = `${FwData.sysName(id)}, ${FwData.sysRegion(id)}: ${holder.name}` + (p > 0 ? `, ${fmtPct(p)}` : "");
+      let ring = "";
+      if (s.contested !== "uncontested" && p >= CRIT_MIN) {
+        const att = factionOf(enemyFactionOf(s.occupier_faction_id));
+        contested.push({ id, p, x, y });
+        ring = `
+          <circle class="ring-bed" cx="${f1(x)}" cy="${f1(y)}" r="${RING_R}"/>
+          <circle class="ring-arc${animated ? "" : " ring-in"}" cx="${f1(x)}" cy="${f1(y)}" r="${RING_R}" pathLength="100"
+            stroke-dasharray="${f1(Math.min(100, p))} 100" transform="rotate(-90 ${f1(x)} ${f1(y)})" style="stroke:${att.color}"/>`;
+      }
+      return `<g>${ring}<circle class="dot" cx="${f1(x)}" cy="${f1(y)}" r="${DOT_R}" style="fill:${holder.color}"><title>${esc(tip)}</title></circle></g>`;
     }).join("");
+
+    /* Names in HTML, positioned in percent, so they keep their size on a
+       phone where the map shrinks to a third. Only the contested ones. */
+    const labels = contested.map(({ id, p, x, y }) => {
+      const right = x / W < 0.62;
+      return `<span class="wz-name${p >= 85 ? " is-crit" : ""}" data-p="${p.toFixed(1)}" data-side="${right ? "r" : "l"}" style="left:${(x / W * 100).toFixed(2)}%;top:${(y / MAP_H * 100).toFixed(2)}%">${esc(FwData.sysName(id))}</span>`;
+    }).join("");
+
+    const a = ids.filter(id => occ(id) === wz.a).length;
+    const b = ids.length - a;
+    const front = ids.filter(id => classes?.get(id) === "frontline").length;
+    const killsH = ids.reduce((sum, id) => sum + (kills.get(id) || 0), 0);
+    const pilots = [wz.a, wz.b].reduce((sum, f) => sum + (FwData.stats().find(x => x.faction_id === f)?.pilots || 0), 0);
+    const label = fill("ov_map_label", { a: shortName(wz.a), b: shortName(wz.b), na: a, nb: b, g: marks.length });
+
+    return `
+      <figure class="wz" style="--w:${W};flex-grow:${(W / MAP_H).toFixed(3)}">
+        <figcaption>
+          <h2>${esc(shortName(wz.a))} ${esc(t("ov_vs"))} ${esc(shortName(wz.b))}</h2>
+          <p class="wz-key">
+            <span style="--c:${factionOf(wz.a).color}"><i></i>${esc(shortName(wz.a))} <b class="num">${fmtNum(a)}</b></span>
+            <span style="--c:${factionOf(wz.b).color}"><i></i>${esc(shortName(wz.b))} <b class="num">${fmtNum(b)}</b></span>
+          </p>
+        </figcaption>
+        <div class="wz-map" style="aspect-ratio:${W} / ${MAP_H}">
+          <svg viewBox="0 0 ${W} ${MAP_H}" role="img" aria-label="${esc(label)}">
+            <g class="gates">${gates.join("")}</g>
+            <g class="front-halo">${marks.join("")}</g>
+            <g class="front">${marks.join("")}</g>
+            ${dots}
+          </svg>
+          ${labels}
+        </div>
+        <p class="wz-foot"><span class="num">${fmtNum(front)}</span> ${esc(t("ov_n_front"))}, <span class="num">${fmtNum(killsH)}</span> ${esc(t("ov_n_kills"))}, <span class="num">${fmtNum(pilots)}</span> ${esc(t("ov_n_pilots"))}.</p>
+      </figure>`;
   }
+
+  function renderWarzones() {
+    document.getElementById("ov-warzones").innerHTML = WARZONES.map(frontMap).join("");
+    placeNames();
+  }
+
+  /* Names go where they fit at the size the map is actually drawn: the most
+     advanced attack first, each tried right, left, above and below its dot;
+     a name that fits nowhere stays out (the table lists it anyway). Runs
+     again when the maps change size. */
+  const SIDES = { r: "side-r", l: "side-l", t: "side-t", b: "side-b" };
+  function placeNames() {
+    for (const map of document.querySelectorAll("#ov-warzones .wz-map")) {
+      const frame = map.getBoundingClientRect();
+      if (!frame.height) continue;
+      map.style.setProperty("--u", (MAP_H / frame.height).toFixed(3));
+      const placed = [];
+      const names = [...map.querySelectorAll(".wz-name")].sort((a, b) => b.dataset.p - a.dataset.p);
+      const dots = [...map.querySelectorAll(".dot")].map(d => d.getBoundingClientRect());
+      for (const el of names) {
+        el.hidden = false;
+        const order = el.dataset.side === "r" ? ["r", "l", "t", "b"] : ["l", "r", "t", "b"];
+        let ok = false;
+        for (const side of order) {
+          el.className = el.className.replace(/ side-\w/g, "") + " " + SIDES[side];
+          const r = el.getBoundingClientRect();
+          const box = { l: r.left - 2, r: r.right + 2, t: r.top - 1, b: r.bottom + 1 };
+          const hits = o => box.l < o.right && box.r > o.left && box.t < o.bottom && box.b > o.top;
+          if (box.l < frame.left || box.r > frame.right) continue;
+          /* A critical name may cover a dot, never another name. */
+          if (placed.some(hits) || (!el.classList.contains("is-crit") && dots.some(hits))) continue;
+          placed.push(r);
+          ok = true;
+          break;
+        }
+        if (!ok && el.classList.contains("is-crit")) {
+          el.className = el.className.replace(/ side-\w/g, "") + " " + SIDES[order[0]];
+          placed.push(el.getBoundingClientRect());
+        } else if (!ok) el.hidden = true;
+      }
+    }
+  }
+  let resizeTimer = null;
+  new ResizeObserver(() => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(placeNames, 80);
+  }).observe(document.getElementById("ov-warzones"));
 
   /* ---------- systems closest to flipping ---------- */
 
   function renderCriticals() {
     const rows = FwData.systems()
       .filter(s => s.contested !== "uncontested")
-      .map(s => ({ s, pct: FwData.pct(s) }))
-      .filter(x => x.pct >= 30)
-      .sort((a, b) => b.pct - a.pct)
+      .map(s => ({ s, p: FwData.pct(s) }))
+      .filter(x => x.p >= CRIT_MIN)
+      .sort((a, b) => b.p - a.p)
       .slice(0, CRIT_ROWS);
 
-    document.getElementById("ov-crit-count").textContent = rows.length ? `${rows.length}` : "";
     const body = document.getElementById("ov-criticals");
-
     if (rows.length === 0) {
-      body.innerHTML = `<div class="row-btn">${t("ov_crit_none")}</div>`;
+      body.innerHTML = `<p class="ov-empty">${esc(t("ov_crit_none"))}</p>`;
       return;
     }
 
-    body.innerHTML = rows.map(({ s, pct: p }) => {
-      const id = s.solar_system_id;
-      const enemy = factionOf(enemyFactionOf(s.occupier_faction_id));
-      const st = FwData.statusTag(p);
-      const delta = FwData.delta24h(id, p, s.occupier_faction_id);
-      let deltaTxt = "", deltaColor = "var(--dim)";
-      if (delta === "flip") { deltaTxt = t("delta_flip"); deltaColor = enemy.color; }
-      else if (typeof delta === "number" && delta > 0) { deltaTxt = `▲ ${delta.toFixed(1)}%`; deltaColor = enemy.color; }
-      else if (typeof delta === "number" && delta < 0) { deltaTxt = `▼ ${Math.abs(delta).toFixed(1)}%`; }
-
-      return `
-        <a class="row-btn" href="${localPath("/map/")}">
-          <span class="row-accent" style="background:${st.color}"></span>
-          <span class="row-main">
-            <span class="row-name">${esc(FwData.sysName(id))}</span>
-            <span class="row-meta">${esc(FwData.sysRegion(id))} · ${esc(st.label)}</span>
-          </span>
-          <span class="row-num">
-            <b style="color:${st.color}">${p.toFixed(1)}%</b>
-            <span style="color:${deltaColor}">${deltaTxt}</span>
-          </span>
-          <span class="bar" style="flex:0 0 62px"><span style="width:${Math.min(100, p).toFixed(1)}%;background:${st.color}"></span></span>
-        </a>`;
-    }).join("");
+    body.innerHTML = `
+      <table class="crit">
+        <thead><tr>
+          <th scope="col">${esc(t("ov_col_sys"))}</th>
+          <th scope="col">${esc(t("ov_col_att"))}</th>
+          <th scope="col" class="r">${esc(t("ov_col_prog"))}</th>
+          <th scope="col" class="r">${esc(t("ov_col_24"))}</th>
+        </tr></thead>
+        <tbody>${rows.map(({ s, p }) => {
+          const id = s.solar_system_id;
+          const att = enemyFactionOf(s.occupier_faction_id);
+          const delta = FwData.delta24h(id, p, s.occupier_faction_id);
+          const d = delta === "flip" ? esc(t("delta_flip")) : typeof delta === "number" ? fmtDelta(delta) : "";
+          return `<tr${p >= 85 ? ' class="is-crit"' : ""}>
+            <th scope="row"><span class="sys">${esc(FwData.sysName(id))}</span><span class="reg">${esc(FwData.sysRegion(id))}</span></th>
+            <td><span class="fac" style="--c:${factionOf(att).color}"><i></i>${esc(shortName(att))}</span></td>
+            <td class="r"><span class="meter" style="--c:${factionOf(att).color}"><span style="width:${Math.min(100, p).toFixed(1)}%"></span></span><span class="num">${fmtPct(p)}</span></td>
+            <td class="r num d">${d}</td>
+          </tr>`;
+        }).join("")}</tbody>
+      </table>`;
   }
 
   /* ---------- recent flips ---------- */
 
-  function agoLabel(seconds) {
-    const h = Math.floor(seconds / 3600);
-    return h >= 24 ? `${Math.floor(h / 24)}${t("ago_d")}` : `${h}${t("ago_h")}`;
-  }
-
   function renderFlips() {
-    const cutoff = Date.now() / 1000 - FLIP_WINDOW_H * 3600;
+    const now = Date.now() / 1000;
     const recent = FwData.flips()
-      .filter(f => f.t >= cutoff)
+      .filter(f => f.t >= now - FLIP_WINDOW_H * 3600)
       .sort((a, b) => b.t - a.t)
       .slice(0, FLIP_ROWS);
 
     const body = document.getElementById("ov-flips");
     if (recent.length === 0) {
-      body.innerHTML = `<div class="flip-row">${t("ov_flips_none")}</div>`;
+      body.innerHTML = `<p class="ov-empty">${esc(t("ov_flips_none"))}</p>`;
       return;
     }
-
-    body.innerHTML = recent.map(f => {
-      const from = factionOf(f.from);
-      const to = factionOf(f.to);
-      return `
-        <div class="flip-row">
-          <span class="flip-ago">${agoLabel(Date.now() / 1000 - f.t)}</span>
-          <span class="flip-sys">${esc(FwData.sysName(f.id))}</span>
-          <span class="flip-move">
-            <span class="flip-from" style="color:${from.color}">${esc(from.short)}</span>
-            <span class="flip-arrow">→</span>
-            <span style="color:${to.color}">${esc(to.short)}</span>
-          </span>
-        </div>`;
-    }).join("");
+    body.innerHTML = `<ul class="flips">${recent.map(f => `
+      <li>
+        <span class="sys">${esc(FwData.sysName(f.id))}</span>
+        <span class="fac" style="--c:${factionOf(f.to).color}"><i></i>${esc(shortName(f.to))}</span>
+        <span class="prev">${esc(t("ov_flip_prev"))} ${esc(shortName(f.from))}</span>
+        <span class="ago">${esc(agoLabel(now - f.t))}</span>
+      </li>`).join("")}</ul>`;
   }
 
   /* ---------- insurgencies ---------- */
@@ -173,44 +318,36 @@ const OverviewView = (() => {
     panel.classList.remove("hidden");
 
     document.getElementById("ov-insurgencies").innerHTML = ins.campaigns.map(c => {
-      const pirate = pirateOf(c.pirate);
       const entries = Object.values(c.systems || {});
-      /* Corruption and suppression run 0-5 per system; the headline number is
-         how far the whole campaign has pushed each, averaged over its systems. */
+      /* Corruption and suppression run 0-5 per system; the number is how far
+         the whole campaign has pushed each, averaged over its systems. */
       const avg = idx => entries.length
         ? entries.reduce((sum, v) => sum + (v[idx] || 0), 0) / entries.length / 5 * 100
         : 0;
-      const bars = [
-        { k: t("ins_corruption"), v: avg(0) },
-        { k: t("ins_suppression"), v: avg(2) }
-      ];
-      const started = c.started ? fmtDate(new Date(c.started), { day: "2-digit", month: "2-digit" }) : "";
-
+      const started = c.started ? fmtDate(new Date(c.started), { day: "2-digit", month: "2-digit" }) : "?";
+      const line = fill("ov_ins_line", {
+        pirate: esc(pirateOf(c.pirate).name), date: esc(started),
+        origin: esc(c.origin?.name ?? "?"), n: entries.length
+      });
       return `
-        <div class="ins-row">
-          <div class="ins-head">
-            <span class="ins-name">${esc(pirate.name)}</span>
-            <span class="ins-since">${esc(started)}</span>
-          </div>
-          <div class="ins-origin">${t("ins_origin")} ${esc(c.origin?.name ?? "?")} · ${entries.length} ${t("ins_affected")}</div>
-          <div class="ins-bars">
-            ${bars.map(b => `
-              <div>
-                <div class="ins-bar-k"><span>${esc(b.k)}</span><b>${b.v.toFixed(0)}%</b></div>
-                <div class="bar bar-4"><span style="width:${b.v.toFixed(1)}%;background:var(--pir)"></span></div>
-              </div>`).join("")}
-          </div>
+        <p class="ins-line">${line}</p>
+        <div class="ins-bars">
+          ${[[t("ins_corruption"), avg(0)], [t("ins_suppression"), avg(2)]].map(([k, v]) => `
+            <div>
+              <span>${esc(k)}</span><span class="num">${v.toFixed(0)}${LANG === "de" ? " %" : "%"}</span>
+              <span class="meter" style="--c:var(--pir)"><span style="width:${v.toFixed(1)}%"></span></span>
+            </div>`).join("")}
         </div>`;
     }).join("");
   }
 
   function render() {
     if (!FwData.systems().length) return;
-    App.renderFrontStrip(FwData.frontStripRows());
     renderWarzones();
     renderCriticals();
     renderFlips();
     renderInsurgencies();
+    animated = true;
   }
 
   return { load, render, skeleton };

@@ -203,6 +203,10 @@ def build_page(template, page, lang, i18n):
     html = sub1(r'<h1 id="page-title">[^<]*</h1>',
                 f'<h1 id="page-title">{htmllib.escape(i18n[lang]["pt_" + page["tab"]], quote=False)}</h1>', html)
 
+    # The subtitle too, so it is there at first paint and nothing below it
+    # moves when the script sets the same text (layout shift).
+    html = sub1(r'<p id="page-sub">[^<]*</p>',
+                f'<p id="page-sub">{htmllib.escape(i18n[lang]["ps_" + page["tab"]], quote=False)}</p>', html)
     # Texts the script would otherwise only set after load.
     def fill(m):
         key = m.group(3)
