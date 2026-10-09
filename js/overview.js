@@ -177,6 +177,16 @@ const OverviewView = (() => {
     const a = ids.filter(id => occ(id) === wz.a).length;
     const b = ids.length - a;
     const front = ids.filter(id => classes?.get(id) === "frontline").length;
+    const contestedN = ids.filter(id => byId.get(id).contested !== "uncontested").length;
+    /* Held systems against the snapshot from a day ago; only changes are named. */
+    const changes = [[wz.a, a], [wz.b, b]].map(([f, now]) => {
+      const then = FwData.heldDayAgo(f);
+      return then === null ? null : [f, now - then];
+    });
+    const since = changes.some(c => c === null) ? ""
+      : changes.every(([, d]) => d === 0) ? ` ${esc(t("ov_no_change"))}`
+      : ` ${esc(t("ov_since_yesterday"))}: ${changes.filter(([, d]) => d !== 0)
+          .map(([f, d]) => `${esc(shortName(f))} <span class="num">${d > 0 ? "+" : "−"}${Math.abs(d)}</span>`).join(", ")}.`;
     const killsH = ids.reduce((sum, id) => sum + (kills.get(id) || 0), 0);
     const pilots = [wz.a, wz.b].reduce((sum, f) => sum + (FwData.stats().find(x => x.faction_id === f)?.pilots || 0), 0);
     const label = fill("ov_map_label", { a: shortName(wz.a), b: shortName(wz.b), na: a, nb: b, g: marks.length });
@@ -199,7 +209,8 @@ const OverviewView = (() => {
           </svg>
           ${labels}
         </div>
-        <p class="wz-foot"><span class="num">${fmtNum(front)}</span> ${esc(t("ov_n_front"))}, <span class="num">${fmtNum(killsH)}</span> ${esc(t("ov_n_kills"))}, <span class="num">${fmtNum(pilots)}</span> ${esc(t("ov_n_pilots"))}.</p>
+        <p class="wz-foot"><span class="num">${fmtNum(front)}</span> ${esc(t("ov_n_front"))}, <span class="num">${fmtNum(contestedN)}</span> ${esc(t("ov_n_contested"))}, <span class="num">${fmtNum(killsH)}</span> ${esc(t("ov_n_kills"))}, <span class="num">${fmtNum(pilots)}</span> ${esc(t("ov_n_pilots"))}.${since}</p>
+        <p class="wz-open"><a href="${localPath("/map/")}?wz=${wz.id}">${esc(t("ov_open_map"))}</a></p>
       </figure>`;
   }
 

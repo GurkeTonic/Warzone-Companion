@@ -78,8 +78,10 @@ const App = (() => {
      the visitor's clock, EN in EVE time (fmtDateTime in js/i18n.js). */
   function setUpdated(iso) {
     const d = new Date(iso);
+    /* EVE time (UTC) beside the local clock: timers and downtime in the
+       game run on it. EN shows UTC alone, which is EVE time already. */
     const text = isNaN(d) ? "" : fmtDateTime(d, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hour12: false }, true)
-      + (LANG === "de" ? " Uhr" : "");
+      + (LANG === "de" ? ` Uhr, ${d.toISOString().slice(11, 16)} EVE` : "");
     updatedText = text;
     const el = $("rail-updated");
     if (el) el.textContent = text;

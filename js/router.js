@@ -52,8 +52,9 @@ const Router = (() => {
     if (!route || route.lang !== LANG) return;
 
     e.preventDefault();
-    if (url.pathname === location.pathname) return;
-    history.pushState({ path: url.pathname }, "", url.pathname);
+    /* The query is kept: /map/?wz=ama-min opens that warzone's map. */
+    if (url.pathname + url.search === location.pathname + location.search) return;
+    history.pushState({ path: url.pathname }, "", url.pathname + url.search);
     applyRoute(route);
   }
 
@@ -67,7 +68,7 @@ const Router = (() => {
        links too. onNavClick already ignores anything not in ROUTES. */
     document.addEventListener("click", onNavClick);
     window.addEventListener("popstate", onPopState);
-    history.replaceState({ path: location.pathname }, "", location.pathname);
+    history.replaceState({ path: location.pathname }, "", location.pathname + location.search);
   }
 
   return { init };

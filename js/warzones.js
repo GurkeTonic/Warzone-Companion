@@ -12,6 +12,7 @@ const [WarzonesView, MapView, FwData] = (() => {
   let advantage = null;    // system_id -> { occ, enemy } or null when unavailable
   let histSystems = null;  // per-system snapshots from data/history.json
   let histFlips = [];      // flip events from data/history.json
+  let histFactions = [];   // per-faction snapshots {t, f: {id: [systems, pilots]}}
   let insurgency = null;   // system_id -> { pirate, corrState, corrPct, suppState, suppPct, origin }
   let wzFilter = "all";    // all | cal-gal | ama-min — which warzone's systems to show
   let sortKey = "vp";      // system | region | occ | vp | delta | adv | kills | jumps
@@ -83,6 +84,7 @@ const [WarzonesView, MapView, FwData] = (() => {
       if (!res.ok) return;
       const history = await res.json();
       if (Array.isArray(history.systems)) histSystems = history.systems;
+      if (Array.isArray(history.factions)) histFactions = history.factions;
       if (Array.isArray(history.flips)) histFlips = history.flips;
     } catch { /* trend column stays empty */ }
   }
@@ -105,6 +107,18 @@ const [WarzonesView, MapView, FwData] = (() => {
     const oldOcc = entry ? entry[0] : currentOcc;
     if (oldOcc !== currentOcc) return "flip";
     return currentPct - oldPct;
+  }
+
+  /* Systems a faction held ~24 h ago, from the snapshot closest to then;
+     null without one within 3 h. */
+  function heldDayAgo(facId) {
+    const target = Date.now() / 1000 - 24 * 3600;
+    let best = null;
+    for (const e of histFactions) {
+      if (best === null || Math.abs(e.t - target) < Math.abs(best.t - target)) best = e;
+    }
+    if (!best || Math.abs(best.t - target) > 3 * 3600) return null;
+    return best.f?.[String(facId)]?.[0] ?? null;
   }
 
   /* Shared by the Warzones and Map tabs; a short reuse window avoids
@@ -574,6 +588,7 @@ const [WarzonesView, MapView, FwData] = (() => {
         mapWz = btn.dataset.id;
         mapSel = null;
         mapViewBox = null;
+        history.replaceState(history.state, "", `${location.pathname}?wz=${mapWz}`);
         renderMapTab();
       });
     });
@@ -622,9 +637,19 @@ const [WarzonesView, MapView, FwData] = (() => {
     `;
   }
 
+  /* Deep link: /map/?wz=ama-min opens that warzone; picking one writes it
+     back, so the address can be shared. Read on every visit to the tab, so
+     a link from the overview switches the map even when it was open. */
+  function wzFromUrl() {
+    const q = new URLSearchParams(location.search).get("wz");
+    return WARZONES.some(w => w.id === q) ? q : null;
+  }
+
   function renderMapTab() {
     if (!data) return;
     App.renderFrontStrip(frontStripRows());
+    const linked = wzFromUrl();
+    if (linked && linked !== mapWz) { mapWz = linked; mapSel = null; mapViewBox = null; }
     if (!mapWz) mapWz = WARZONES[0].id;
     renderMapChips();
     renderMapDetail();
@@ -911,6 +936,7 @@ const [WarzonesView, MapView, FwData] = (() => {
     classes: () => classes,
     insurgency: () => insurgency,
     flips: () => histFlips,
+    heldDayAgo,
     frontStripRows, sysName, sysRegion, pct, statusTag, delta24h
   };
 

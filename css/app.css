@@ -238,7 +238,7 @@ body:is([data-tab="warzones"], [data-tab="map"], [data-tab="history"]) .page-chi
 .fs-cell b { color: var(--txt); font-weight: 600; }
 .fs-bar { width: 3.5rem; height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--a) var(--p), var(--surf) var(--p), var(--surf) calc(var(--p) + 2px), var(--b) calc(var(--p) + 2px)); }
 /* Room for the timestamp before it arrives, so the button beside it stays put. */
-#rail-updated { display: inline-block; min-width: 10.5em; }
+#rail-updated { display: inline-block; min-width: 14.5em; }
 .page-chips { display: flex; gap: 0.35rem; flex-wrap: wrap; flex-basis: 100%; }
 .page-chips:empty { display: none; }
 
@@ -340,6 +340,7 @@ a.row-btn, a.trow, a.card, a.flip-row, a.log-row { color: inherit; text-decorati
 
 .wz-foot { margin-top: 0.75rem; font-size: var(--fs-s); color: var(--dim); max-width: 46ch; }
 .wz-foot .num { color: var(--txt2); }
+.wz-open { margin-top: 0.35rem; font-size: var(--fs-s); }
 .ov-legend { margin-top: 1.5rem; font-size: var(--fs-s); color: var(--dim); max-width: 70ch; }
 
 /* Narrow: one map under the other. */
