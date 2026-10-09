@@ -604,5 +604,5 @@ body:not(.ready) .site-foot { visibility: hidden; }
 .legal p, .legal li { color: var(--dim2); }
 .legal p + p { margin-top: 0.6rem; }
 .legal ul { margin: 0.5rem 0 0 1.2rem; }
-.legal-back { display: inline-block; margin-bottom: 1.2rem; }
+.legal-back { display: inline-block; margin-top: 2rem; }
 .legal hr { border: 0; border-top: 1px solid var(--line); margin: 1.6rem 0; }
