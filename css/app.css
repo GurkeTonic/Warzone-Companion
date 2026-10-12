@@ -584,7 +584,7 @@ ul.flips { list-style: none; margin-top: 0.75rem; }
 .plex-row h2 { font-size: var(--fs-l); font-weight: 650; letter-spacing: -0.01em; line-height: 1.3; }
 .plex-row ul { list-style: none; display: flex; flex-direction: column; gap: 0.9rem; }
 .plex-variant {
-  display: grid; grid-template-columns: 8.5rem 14.5rem minmax(0, 1fr); gap: 0.2rem 1.25rem; align-items: baseline;
+  display: grid; grid-template-columns: 8.5rem 16.5rem minmax(0, 1fr); gap: 0.2rem 1.25rem; align-items: baseline;
 }
 .plex-codes { font-weight: 600; color: var(--txt); white-space: nowrap; }
 .plex-size { display: inline-flex; align-items: center; gap: 0.6rem; white-space: nowrap; color: var(--txt); }
