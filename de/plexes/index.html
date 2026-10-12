@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<!-- Generated from index.html by tools/build_pages.py — do not edit by hand. -->
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Komplexe: zugelassene Schiffe — Warzone Companion</title>
+<meta name="description" content="Welche Schiffe in welchen Komplex des Fraktionskriegs in EVE Online dürfen: Späher, klein, mittelgroß, groß und Schlachtfeld, NVY und ADV, aus CCPs Static Data Export.">
+<link rel="canonical" href="https://warzone.tonicdock.com/de/plexes/">
+<link rel="alternate" hreflang="en" href="https://warzone.tonicdock.com/plexes/">
+<link rel="alternate" hreflang="de" href="https://warzone.tonicdock.com/de/plexes/">
+<link rel="alternate" hreflang="x-default" href="https://warzone.tonicdock.com/plexes/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Warzone Companion">
+<meta property="og:locale" content="de_DE">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:title" content="Komplexe: zugelassene Schiffe — Warzone Companion">
+<meta property="og:description" content="Welche Schiffe in welchen Komplex des Fraktionskriegs in EVE Online dürfen: Späher, klein, mittelgroß, groß und Schlachtfeld, NVY und ADV, aus CCPs Static Data Export.">
+<meta property="og:url" content="https://warzone.tonicdock.com/de/plexes/">
+<meta property="og:image" content="https://warzone.tonicdock.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/css/app.css">
+<!-- Applied before first paint so a stored choice never flashes the other
+     scheme. Without one, the system decides (css/app.css). -->
+<script>try { const th = localStorage.getItem("tow_theme"); if (th) document.documentElement.dataset.theme = th; } catch {}</script>
+</head>
+<body data-tab="plexes">
+
+<header class="hdr">
+  <a class="hdr-brand" href="/de/">Warzone Companion</a>
+  <nav class="topnav" id="rail" aria-label="Sections"></nav>
+  <div class="hdr-actions">
+    <a class="btn" id="lang-toggle" href="/plexes/" hreflang="en" lang="en">EN</a>
+    <button class="btn" id="theme-toggle">Hell</button>
+  </div>
+</header>
+
+<div class="shell">
+
+  <main class="main">
+
+    <div class="page-head">
+      <div>
+        <h1 id="page-title">Komplexe</h1>
+        <p id="page-sub">Welche Schiffe in welchen Komplex des Fraktionskriegs dürfen.</p>
+      </div>
+      <div class="page-meta">
+        <span class="front-strip" id="front-strip"></span>
+        <span><span data-i18n="updated_label">Stand</span> <span id="rail-updated" class="num"></span></span>
+        <button class="btn" id="auto-refresh" aria-pressed="false" data-i18n="btn_auto" data-i18n-title="auto_refresh_title">Alle 5 Min. neu laden</button>
+      </div>
+      <div class="page-chips" id="page-chips"></div>
+    </div>
+
+    <div class="error-box hidden" id="error"></div>
+
+    <!-- Overview -->
+    <section id="panel-overview" class="hidden">
+      <div class="ov">
+        <div class="ov-front">
+          <div class="ov-maps" id="ov-warzones"></div>
+          <p class="ov-legend" data-i18n="ov_legend">Punkt: wer das System hält. Ring: wie weit der Angreifer mit der Übernahme ist. Querstrich: Stargate zwischen beiden Seiten.</p>
+        </div>
+        <section class="ov-block ov-side">
+          <h2 data-i18n="sec_critical">Kurz vor dem Wechsel</h2>
+          <p class="ov-note" data-i18n="ov_crit_note">Ab 30 % Fortschritt des Angreifers, mit der Veränderung seit gestern.</p>
+          <div id="ov-criticals"></div>
+        </section>
+        <div class="ov-more">
+          <section class="ov-block">
+            <h2 data-i18n="sec_flips">Gewechselt in den letzten 48 Stunden</h2>
+            <div id="ov-flips"></div>
+          </section>
+          <section class="ov-block hidden" id="ov-ins-panel">
+            <h2 data-i18n="sec_insurgency">Piratenaufstand</h2>
+            <div id="ov-insurgencies"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- Warzones -->
+    <section id="panel-warzones" class="hidden">
+      <div class="table table-sys">
+        <div class="thead" id="sys-head"></div>
+        <div id="sys-body"></div>
+      </div>
+      <div class="cards" id="sys-cards"></div>
+    </section>
+
+    <!-- Map -->
+    <section id="panel-map" class="hidden">
+      <div class="grid-cc">
+        <div class="map-frame" id="map-frame"></div>
+        <div class="detail" id="map-detail"></div>
+      </div>
+    </section>
+
+    <!-- History -->
+    <section id="panel-history" class="hidden">
+      <div class="stack">
+        <div class="grid-two" id="hist-charts"></div>
+        <section class="panel">
+          <div class="panel-head"><h2 data-i18n="sec_fliplog">Vollständiges Wechsel-Protokoll</h2></div>
+          <div id="flips-body"></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- LP store -->
+    <section id="panel-lp" class="hidden">
+      <div style="margin-bottom:16px">
+        <div class="chip-group-label" data-i18n="lp_militia">Militia-Corporation</div>
+        <div class="chip-group" id="lp-corp-chips"></div>
+      </div>
+      <div id="lp-trend" style="margin-bottom:16px"></div>
+      <div class="table table-lp">
+        <div class="thead" id="lp-head"></div>
+        <div id="lp-body"></div>
+      </div>
+      <div class="cards" id="lp-cards"></div>
+      <p class="lp-foot"><span id="lp-mode"></span>. <span data-i18n="lp_footnote">Marktwert = Jita 4-4 Buy-Order. ISK/LP = (Marktwert − ISK-Kosten) / LP.</span></p>
+    </section>
+
+    <!-- Leaderboards -->
+    <section id="panel-boards" class="hidden">
+      <div style="display:flex;flex-wrap:wrap;gap:18px;margin-bottom:16px">
+        <div>
+          <div class="chip-group-label" data-i18n="lb_category">Kategorie</div>
+          <div class="chip-group" id="lb-cat-chips"></div>
+        </div>
+        <div>
+          <div class="chip-group-label" data-i18n="lb_period">Zeitraum</div>
+          <div class="chip-group" id="lb-period-chips"></div>
+        </div>
+      </div>
+      <div class="panel" id="lb-body"></div>
+    </section>
+
+    <!-- Campaigns -->
+    <section id="panel-campaigns" class="hidden">
+      <div class="grid-two" id="campaigns" style="align-items:start"></div>
+    </section>
+
+    <!-- Complexes -->
+    <section id="panel-plexes" class="hidden">
+      <div class="plex-list" id="plexes"></div>
+      <p class="plex-foot" data-i18n="plex_foot">Aus CCPs Static Data Export (SDE): die Schiffsliste jedes Komplexes. Welcher Komplex in welchem System liegt, steht dort nicht.</p>
+    </section>
+
+    <!-- FAQ -->
+    <section id="panel-faq" class="hidden">
+      <div class="faq-list" id="faq"></div>
+    </section>
+
+    <footer class="site-foot">
+      <div data-i18n="footer_source">Die Daten holt der Bau dieser Seite alle 30 Minuten von ESI, nur öffentliche Endpunkte; dein Browser fragt nicht bei CCP an. Seitenaufrufe zählt Cloudflare Web Analytics, nach Angabe von Cloudflare ohne Cookies.</div>
+      <div>&copy; CCP hf. All rights reserved. "EVE", "EVE Online", "CCP", and all related logos and images are trademarks or registered trademarks of CCP hf. This material is used with limited permission of CCP Games. No official affiliation or endorsement by CCP Games is stated or implied.</div>
+      <div class="ver"><span>v0.5</span> <a href="https://github.com/GurkeTonic/Warzone-Companion" target="_blank" rel="noopener">GitHub</a> <a id="legal-link" href="/de/legal/">Datenschutz &amp; Rechtliches</a></div>
+    </footer>
+  </main>
+</div>
+
+<nav class="bottom-nav" id="bottom-nav"></nav>
+<div class="more-sheet hidden" id="more-sheet"></div>
+
+<script src="/js/data/staticdata.js"></script>
+<script src="/js/routes.js"></script>
+<script src="/js/config.js"></script>
+<script src="/js/i18n.js"></script>
+<script src="/js/esi.js"></script>
+<script src="/js/charts.js"></script>
+<script src="/js/fwlogic.js"></script>
+<script src="/js/warzones.js"></script>
+<script src="/js/overview.js"></script>
+<script src="/js/history.js"></script>
+<script src="/js/lpstore.js"></script>
+<script src="/js/boards.js"></script>
+<script src="/js/campaigns.js"></script>
+<script src="/js/plexes.js"></script>
+<script src="/js/faq.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/router.js"></script>
+</body>
+</html>

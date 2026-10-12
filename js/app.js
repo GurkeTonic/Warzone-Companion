@@ -21,6 +21,7 @@ const App = (() => {
     lp:        { view: LpStoreView,   panel: "panel-lp",        path: "/lp/" },
     boards:    { view: BoardsView,    panel: "panel-boards",    path: "/leaderboards/" },
     campaigns: { view: CampaignsView, panel: "panel-campaigns", path: "/campaigns/" },
+    plexes:    { view: PlexesView,    panel: "panel-plexes",    path: "/plexes/" },
     faq:       { view: FaqView,       panel: "panel-faq",       path: "/faq/" }
   };
 

@@ -108,6 +108,16 @@ PAGES = [
                               "offiziellen Titeln, Zielen und Belohnungen."},
     },
     {
+        "tab": "plexes",
+        "dir": "plexes",
+        "en": {"title": "Complexes: allowed ships — Warzone Companion",
+               "description": "Which ships each EVE Online Factional Warfare complex lets in: "
+                              "scout, small, medium, large and battlefield, NVY and ADV, from CCP's static data."},
+        "de": {"title": "Komplexe: zugelassene Schiffe — Warzone Companion",
+               "description": "Welche Schiffe in welchen Komplex des Fraktionskriegs in EVE Online dürfen: "
+                              "Späher, klein, mittelgroß, groß und Schlachtfeld, NVY und ADV, aus CCPs Static Data Export."},
+    },
+    {
         "tab": "faq",
         "dir": "faq",
         "en": {"title": "FAQ — Warzone Companion",

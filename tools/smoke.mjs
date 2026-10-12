@@ -9,7 +9,7 @@
 import { chromium } from 'playwright';
 
 const base = (process.argv[2] || 'http://127.0.0.1:8099').replace(/\/$/, '');
-const EN = ['/', '/warzones/', '/map/', '/history/', '/lp/', '/leaderboards/', '/campaigns/', '/faq/', '/legal/'];
+const EN = ['/', '/warzones/', '/map/', '/history/', '/lp/', '/leaderboards/', '/campaigns/', '/plexes/', '/faq/', '/legal/'];
 const PAGES = [...EN, ...EN.map((p) => '/de' + p)];
 const own = new URL(base).host;
 const problems = [];
