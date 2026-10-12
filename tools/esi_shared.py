@@ -16,6 +16,11 @@ REPO_URL = "https://github.com/GurkeTonic/Warzone-Companion"
 USER_AGENT = f"{APP_NAME}/{APP_VERSION} ({CONTACT_EMAIL}; +{REPO_URL})"
 
 ESI_BASE = "https://esi.evetech.net"
+# Raising this changes the schema of every route at once. Known breaks
+# after 2026-06-09, from ESI /meta/changelog:
+#   2026-07-21  GET /corporations/{id}: faction_id -> enlisted_faction_id
+#               (tools/fetch_esi.py reads both; check_site.py --esi guards)
+# Read the changelog for the new date before raising it.
 COMPAT_DATE = "2026-06-09"
 
 # The /military-campaigns routes only exist from this compatibility date on.

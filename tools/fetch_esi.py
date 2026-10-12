@@ -151,7 +151,12 @@ try:
 
     def corp_faction(cid):
         try:
-            return cid, request(f"/corporations/{cid}").get("faction_id")
+            row = request(f"/corporations/{cid}")
+            # Renamed to enlisted_faction_id from compatibility date
+            # 2026-07-21 (ESI /meta/changelog, "breaking"); both are read so
+            # raising COMPAT_DATE cannot make every corp silently factionless.
+            # tools/check_site.py --esi fails if none has a faction.
+            return cid, row.get("enlisted_faction_id", row.get("faction_id"))
         except Exception as e:  # one unknown corp must not lose the board
             print(f"  corporation {cid}: {e}")
             return cid, None

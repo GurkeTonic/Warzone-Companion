@@ -203,6 +203,18 @@ def check_esi():
             continue
         if not d:
             fail(f"esi/{rel}: empty")
+    # A renamed field reads as None without an error (ESI renamed the
+    # corporation's faction_id on 2026-07-21): the militia corps are always
+    # on the corporation board, so at least one must carry a faction.
+    try:
+        corps = json.loads((base / "corporations.json").read_text(encoding="utf-8"))
+        with_faction = sum(1 for v in corps.values() if v)
+        if corps and not with_faction:
+            fail(f"esi/corporations.json: none of {len(corps)} corporations has a faction")
+        else:
+            ok(f"esi/corporations.json: {with_faction} of {len(corps)} corporations with a faction")
+    except (OSError, ValueError, AttributeError) as e:
+        fail(f"esi/corporations.json: {e}")
     try:
         meta = json.loads((base / "meta.json").read_text(encoding="utf-8"))
         recent("esi/meta.json fw", meta.get("fw"), 1)
